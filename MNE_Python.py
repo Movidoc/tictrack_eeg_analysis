@@ -12,6 +12,7 @@
 # raw.compute_psd(fmax=50).plot(picks="data", exclude="bads", amplitude=False)
 # raw.plot(duration=5, n_channels=30)
 
+# Comment test to Git
 
 # Libraries
 import mne
