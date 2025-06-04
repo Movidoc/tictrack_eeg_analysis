@@ -15,18 +15,33 @@
 # Comment test to Git
 
 # Libraries
+import os
 import mne
 import matplotlib.pyplot as plt
 
 # 1. Define the path to the .vhdr file
-vhdr_file = "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\Indira Test\\MOVIDOCTicTrack000005.vhdr"
+FolderPath = "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\Sujets\\IndiraLAVOCAT" # need to adapt the last folder to suit the subject
+# Looking for the .vhdr file in the folder
+for file in os.listdir(FolderPath):
+    if file.endswith(".vhdr"):
+        FilePath = os.path.join(FolderPath, file)
+        break
+print(FilePath)
 
 # 2. Load the data
-raw = mne.io.read_raw_brainvision(vhdr_file, preload=True)
-print(raw)
-print(raw.info)
+raw = mne.io.read_raw_brainvision(FilePath, preload=True)
+raw.info
+print(raw.ch_names)
+print(raw.info['description']) # gives a note about the channels when there is one
 
-# 3. Quick plot
+##########
+
+# 3. Define the montage ???
+raw.set_montage("easycap-M1", on_missing = "ignore")
+fig1 = raw.plot_sensors(show_names=True)
+#raw.set_montage("standard_1020") # to prevent error during the topography step
+
+# 4. Plot the data
 raw.plot(duration=5, n_channels=30)
 raw.compute_psd(fmax=50).plot(picks="data", exclude="bads", amplitude=False)
 
