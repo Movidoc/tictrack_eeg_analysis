@@ -17,7 +17,9 @@
 # Libraries
 import os
 import mne
+import pandas as pd
 import matplotlib.pyplot as plt
+
 
 # 1. Define the path to the .vhdr file
 FolderPath = "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\Sujets\\IndiraLAVOCAT" # need to adapt the last folder to suit the subject
@@ -28,13 +30,36 @@ for file in os.listdir(FolderPath):
         break
 print(FilePath)
 
+
 # 2. Load the data
 raw = mne.io.read_raw_brainvision(FilePath, preload=True)
 raw.info
 print(raw.ch_names)
 print(raw.info['description']) # gives a note about the channels when there is one
 
+# Create an event dicionnary
+events, event_id = mne.events_from_annotations(raw)
+print("Events list (stimulus) :")
+print(event_id)
+
+# Display the tab of events
+print("Events (sample, previous_id, event_id) :")
+print(events)
+
+# Convert the timestamps into seconds
+events_times_sec = events[:, 0] / raw.info['sfreq'] # converts the timestamps into seconds
+for time, eid in zip(events_times_sec, events[:, 2]): # links each time in seconds to its event ID
+    print(f"Stimulus {eid} à {time:.3f} s") # formats the number with 3 decimal
+
+# Alternative to display the stimulus name (and not its ID) with its timestamp in seconds
+id_to_name = {v: k for k, v in event_id.items()}
+for time, eid in zip(events_times_sec, events[:, 2]):
+    name = id_to_name.get(eid, f"ID {eid}")
+    print(f"{name} à {time:.3f} s")
+
+
 ##########
+
 
 # 3. Define the montage ???
 raw.set_montage("easycap-M1", on_missing = "ignore")
