@@ -40,11 +40,12 @@ print(raw.info['description']) # gives a note about the channels when there is o
 
 # 3. Define the montage
 raw.set_montage("standard_1020") # to adapt according to the montage used during the exepriments
-fig1 = raw.plot_sensors(show_names=True)
+Sensors_Montage_Figure_1 = raw.plot_sensors(show_names=True)
 
 
 # 4. Extract the stimulus
-events, event_id = mne.events_from_annotations(raw) # to create an events dictionnary
+# Create an events dicionnary
+events, event_id = mne.events_from_annotations(raw)
 print("Events list (stimulus) :")
 print(event_id)
 
@@ -69,8 +70,8 @@ Original_Signal_Figure_2 = raw.plot(title = "Orginal Signal")
 
 
 # 6. Filter the data
-# Define the high and low frequencies for the highpass filter
-HFreq = 25
+# Define the high and low frequencies
+HFreq = 30
 LFreq = 1
 raw_HighLowPassed = raw.filter(l_freq = LFreq, h_freq = HFreq)
 # for ERPs, [1-30] Hz band-pass filter
@@ -80,20 +81,43 @@ Signal_HighLowPassed_Figure_3 = raw_HighLowPassed.plot(title = "High- and Low- p
 
 # Define the parameters for the notch filter
 if HFreq < 50:
-    RawData_Notched = raw_HighLowPassed
+    raw_Notched = raw_HighLowPassed
 else:
-    RawData_Notched = raw_HighLowPassed.notch_filter(freqs = [50], picks = "data", method = "spectrum_fit")
+    raw_Notched = raw_HighLowPassed.notch_filter(freqs = [50], picks = "data", method = "spectrum_fit")
 
 # Plot the notched signal
-Signal_Notched_Figure_3 = RawData_Notched.plot(title = "Notched Signal")
+Signal_Notched_Figure_4 = raw_Notched.plot(title = "Notched Signal")
 
+
+# 7. Reset the file time
+if events_times_sec[0] == 0 and len(events_times_sec) > 1: # check if the 1st stimulus is at 0 s. If so, use the 2nd stimulus
+    first_stimulus_time = events_times_sec[1]
+    print(f"First stimulus is at 0. Using second stimulus at {first_stimulus_time:.3f} s")
+else:
+    first_stimulus_time = events_times_sec[0]
+    print(f"First stimulus at {first_stimulus_time:.3f} s")
+
+# Truncate the signal to start at this point
+raw_cropped = raw_Notched.copy().crop(tmin=first_stimulus_time)
+
+# Reset the annotations by shifting all annotations by - first_stimulus_time
+if raw.annotations is not None:
+    raw_annotation_times = raw.annotations.onset - first_stimulus_time
+    raw_cropped.set_annotations(
+        mne.Annotations(
+            onset=raw_annotation_times, # onset = raw_annotation_times with the new reset times
+            duration=raw.annotations.duration,
+            description=raw.annotations.description
+        )
+    )
+
+# Plot truncated and recalculated data
+Readjusted_Signal_Figure_5 = raw_cropped.plot(title="Readjusted signal (from the 1st stimulus not at 0 s)")
 
 
 ###
 
 
-
-# 7. RECALAGE
 
 # 8. Seperation in epochs
 tmin = -0.2  # 200 ms before the event
