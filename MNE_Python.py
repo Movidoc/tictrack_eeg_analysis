@@ -37,8 +37,14 @@ raw.info
 print(raw.ch_names)
 print(raw.info['description']) # gives a note about the channels when there is one
 
-# Create an event dicionnary
-events, event_id = mne.events_from_annotations(raw)
+
+# 3. Define the montage
+raw.set_montage("standard_1020") # to adapt according to the montage used during the exepriments
+fig1 = raw.plot_sensors(show_names=True)
+
+
+# 4. Extract the stimulus
+events, event_id = mne.events_from_annotations(raw) # to create an events dictionnary
 print("Events list (stimulus) :")
 print(event_id)
 
@@ -58,26 +64,38 @@ for time, eid in zip(events_times_sec, events[:, 2]):
     print(f"{name} à {time:.3f} s")
 
 
-##########
+# 5. Quick plot of the data
+Original_Signal_Figure_2 = raw.plot(title = "Orginal Signal")
 
 
-# 3. Define the montage ???
-raw.set_montage("easycap-M1", on_missing = "ignore")
-fig1 = raw.plot_sensors(show_names=True)
-#raw.set_montage("standard_1020") # to prevent error during the topography step
+# 6. Filter the data
+# Define the high and low frequencies for the highpass filter
+HFreq = 25
+LFreq = 1
+raw_HighLowPassed = raw.filter(l_freq = LFreq, h_freq = HFreq)
+# for ERPs, [1-30] Hz band-pass filter
 
-# 4. Plot the data
-raw.plot(duration=5, n_channels=30)
-raw.compute_psd(fmax=50).plot(picks="data", exclude="bads", amplitude=False)
+# Plot the highpassed signal
+Signal_HighLowPassed_Figure_3 = raw_HighLowPassed.plot(title = "High- and Low- passed Signal")
 
-# 5. Extract the events (from the .vmrk annotations)
-events, event_id = mne.events_from_annotations(raw)
-print("Événements détectés :", event_id)
+# Define the parameters for the notch filter
+if HFreq < 50:
+    RawData_Notched = raw_HighLowPassed
+else:
+    RawData_Notched = raw_HighLowPassed.notch_filter(freqs = [50], picks = "data", method = "spectrum_fit")
 
-# 4. Filter the data
-raw.filter(l_freq=1., h_freq=30.) # for ERPs, [1-30] Hz band-pass filter
+# Plot the notched signal
+Signal_Notched_Figure_3 = RawData_Notched.plot(title = "Notched Signal")
 
-# 6. Seperation in epochs
+
+
+###
+
+
+
+# 7. RECALAGE
+
+# 8. Seperation in epochs
 tmin = -0.2  # 200 ms before the event
 tmax = 0.8   # 800 ms after the event
 epochs = mne.Epochs(raw, events, event_id=event_id,
