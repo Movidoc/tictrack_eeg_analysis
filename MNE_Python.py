@@ -12,13 +12,20 @@
 # raw.compute_psd(fmax=50).plot(picks="data", exclude="bads", amplitude=False)
 # raw.plot(duration=5, n_channels=30)
 
-# Comment test to Git
 
 # Libraries
 import os
 import mne
 import pandas as pd
 import matplotlib.pyplot as plt
+
+# Define a function to save all the Figures that are NOT MNEQtBrowser
+def save_figure(fig, filename, folder="C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\Figures"):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    fig_path = os.path.join(folder, filename)
+    fig.savefig(fig_path)
+    print(f"Figure saved: {fig_path}")
 
 
 # 1. Define the path to the .vhdr file
@@ -41,6 +48,8 @@ print(raw.info['description']) # gives a note about the channels when there is o
 # 3. Define the montage
 raw.set_montage("standard_1020") # to adapt according to the montage used during the exepriments
 Sensors_Montage_Figure_1 = raw.plot_sensors(show_names=True)
+save_figure(Sensors_Montage_Figure_1, "Figure1_SensorsMontage.png")
+# fig.savefig("C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\Figures\\Figure1_SensorsMontage.png")
 
 
 # 4. Extract the stimulus
@@ -115,32 +124,33 @@ if raw.annotations is not None:
 Readjusted_Signal_Figure_5 = raw_cropped.plot(title="Readjusted signal (from the 1st stimulus not at 0 s)")
 
 
+
 ###
 
 
 
 # 8. Seperation in epochs
-tmin = -0.2  # 200 ms before the event
-tmax = 0.8   # 800 ms after the event
-epochs = mne.Epochs(raw, events, event_id=event_id,
-                    tmin=tmin, tmax=tmax, baseline=(None, 0),
-                    preload=True)
-epochs.plot_drop_log()
+# tmin = -0.2  # 200 ms before the event
+# tmax = 0.8   # 800 ms after the event
+# epochs = mne.Epochs(raw, events, event_id=event_id,
+#                     tmin=tmin, tmax=tmax, baseline=(None, 0),
+#                     preload=True)
+# epochs.plot_drop_log()
 
 # 7. Define an automatic reject of the artifacts (optional)
 # epochs.plot_drop_log()
 # epochs.drop_bad()
 
 # 8. Averaging (ERP)
-evoked = epochs.average()
-evoked.plot() # evoked does not accept any "title"
-fig = evoked.plot_image(picks='eeg')
-fig.suptitle("ERP (moyenne des epochs)")
+# evoked = epochs.average()
+# evoked.plot() # evoked does not accept any "title"
+# fig = evoked.plot_image(picks='eeg')
+# fig.suptitle("ERP (moyenne des epochs)")
 
 # 9. Topography
-evoked.plot_topomap(times=[0.1, 0.2, 0.3], ch_type='eeg')
+# evoked.plot_topomap(times=[0.1, 0.2, 0.3], ch_type='eeg')
 
-plt.show()
+# plt.show()
 
 
 
