@@ -124,6 +124,32 @@ if raw.annotations is not None:
 Readjusted_Signal_Figure_5 = raw_cropped.plot(title="Readjusted signal (from the 1st stimulus not at 0 s)")
 
 
+# 8. Crop the signal acording to tasks
+
+# 8.1. Crop the signal : from the start (phase 0) to the end of the phase 1d
+# Define the parameters
+target_stimulus_name = "Stimulus/S  8"  # sent during the transition between the 1d task and the 2a phase
+target_occurrence = 1          # number of the chosen occurrence
+
+# Search of the stimulus occurrence times in raw_cropped.annotations
+matching_onsets = [
+    onset for onset, desc in zip(raw_cropped.annotations.onset, raw_cropped.annotations.description)
+    if desc == target_stimulus_name
+]
+
+# Check if the occurrence exists
+if len(matching_onsets) >= target_occurrence:
+    crop_end_time = matching_onsets[target_occurrence - 1] # get the time of the chosen occurrence
+    raw_final = raw_cropped.copy().crop(tmin=0, tmax=crop_end_time) # new signal cut until the chosen stimulus
+    print(f"✅ Signal cropped from 0.000 s to {crop_end_time:.3f} s (stimulus: {target_stimulus_name}, occurrence {target_occurrence})")
+else:
+    print(f"❌ Only {len(matching_onsets)} occurrence(s) found for the stimulus '{target_stimulus_name}'. Signal not modified.")
+    raw_final = raw_cropped.copy()
+
+# Plot the new signal (cropped until the chosen timestamp)
+Signal_until_end_Phase_1_Figure_6 = raw_final.plot(title="Signal until the end of Phase 1")
+
+
 
 ###
 
