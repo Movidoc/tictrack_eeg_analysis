@@ -63,6 +63,7 @@ print("Events (sample, previous_id, event_id) :")
 print(events)
 
 # Convert the timestamps into seconds
+events = events[events[:, 0] != 0]  # <-- filters the events at 0.000 s
 events_times_sec = events[:, 0] / raw.info['sfreq'] # converts the timestamps into seconds
 for time, eid in zip(events_times_sec, events[:, 2]): # links each time in seconds to its event ID
     print(f"Stimulus {eid} à {time:.3f} s") # formats the number with 3 decimal
@@ -126,28 +127,43 @@ Readjusted_Signal_Figure_5 = raw_cropped.plot(title="Readjusted signal (from the
 
 # 8. Crop the signal acording to tasks
 
-# 8.1. Crop the signal : from the start (phase 0) to the end of the phase 1d
-# Define the parameters
-target_stimulus_name = "Stimulus/S  8"  # sent during the transition between the 1d task and the 2a phase
-target_occurrence = 1          # number of the chosen occurrence
+# 8.1. Crop the signal to get baselines 
 
-# Search of the stimulus occurrence times in raw_cropped.annotations
-matching_onsets = [
+# 8.1.a. Only the P1 phase (press a key)
+# Define the parameters
+begin_P1_stimulus_name = "Stimulus/S  3" # sent at the beginning of the P1 task
+begin_P1_occurrence = 1 # number of the chosen occurrence
+end_P1_stimulus_name = "Stimulus/S  4" # sent at the ending of the P1 task 
+end_P1_occurrence = 1 # number of the chosen occurrence
+
+# Search for the stimulus occurrence times in raw_cropped.annotations
+start_times = [
     onset for onset, desc in zip(raw_cropped.annotations.onset, raw_cropped.annotations.description)
-    if desc == target_stimulus_name
+    if desc == begin_P1_stimulus_name
+]
+end_times = [
+    onset for onset, desc in zip(raw_cropped.annotations.onset, raw_cropped.annotations.description)
+    if desc == end_P1_stimulus_name
 ]
 
-# Check if the occurrence exists
-if len(matching_onsets) >= target_occurrence:
-    crop_end_time = matching_onsets[target_occurrence - 1] # get the time of the chosen occurrence
-    raw_final = raw_cropped.copy().crop(tmin=0, tmax=crop_end_time) # new signal cut until the chosen stimulus
-    print(f"✅ Signal cropped from 0.000 s to {crop_end_time:.3f} s (stimulus: {target_stimulus_name}, occurrence {target_occurrence})")
+# Check if the specified occurrences exist
+if len(start_times) >= begin_P1_occurrence and len(end_times) >= end_P1_occurrence:
+    crop_start_time = start_times[begin_P1_occurrence - 1] # get the time of the beginning of the P1 task
+    crop_end_time = end_times[end_P1_occurrence - 1] # get the time of the end of the P1 task
+    if crop_start_time < crop_end_time: # check if the chosen beginning is indeed before the chosen end
+        raw_final = raw_cropped.copy().crop(tmin=crop_start_time, tmax=crop_end_time) # cut the signal between beginning and end
+        print(f"✅ Signal cropped from {crop_start_time:.3f} s to {crop_end_time:.3f} s "
+              f"(from stimulus: {begin_P1_stimulus_name}, occurrence {begin_P1_occurrence} "
+              f"to stimulus: {end_P1_stimulus_name}, occurrence {end_P1_occurrence})")
+    else:
+        print(f"❌ Start time ({crop_start_time:.3f}) is after end time ({crop_end_time:.3f}). Check the order of stimuli.")
+        raw_final = raw_cropped.copy()
 else:
-    print(f"❌ Only {len(matching_onsets)} occurrence(s) found for the stimulus '{target_stimulus_name}'. Signal not modified.")
+    print(f"❌ Not enough occurrences found: "
+          f"{len(start_times)} for '{begin_P1_stimulus_name}', {len(end_times)} for '{end_P1_stimulus_name}'. Signal not modified.")
     raw_final = raw_cropped.copy()
 
-# Plot the new signal (cropped until the chosen timestamp)
-Signal_until_end_Phase_1_Figure_6 = raw_final.plot(title="Signal until the end of Phase 1")
+# 8.1.b. Only the P2a phase (eyes closed)
 
 
 
