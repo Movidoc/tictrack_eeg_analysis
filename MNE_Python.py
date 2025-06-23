@@ -151,17 +151,17 @@ if len(start_times) >= begin_P1_occurrence and len(end_times) >= end_P1_occurren
     crop_start_time = start_times[begin_P1_occurrence - 1] # get the time of the beginning of the P1 task
     crop_end_time = end_times[end_P1_occurrence - 1] # get the time of the end of the P1 task
     if crop_start_time < crop_end_time: # check if the chosen beginning is indeed before the chosen end
-        raw_final = raw_cropped.copy().crop(tmin=crop_start_time, tmax=crop_end_time) # cut the signal between beginning and end
+        raw_P1 = raw_cropped.copy().crop(tmin=crop_start_time, tmax=crop_end_time) # cut the signal between beginning and end
         print(f"✅ Signal cropped from {crop_start_time:.3f} s to {crop_end_time:.3f} s "
               f"(from stimulus: {begin_P1_stimulus_name}, occurrence {begin_P1_occurrence} "
               f"to stimulus: {end_P1_stimulus_name}, occurrence {end_P1_occurrence})")
     else:
         print(f"❌ Start time ({crop_start_time:.3f}) is after end time ({crop_end_time:.3f}). Check the order of stimuli.")
-        raw_final = raw_cropped.copy()
+        raw_P1 = raw_cropped.copy()
 else:
     print(f"❌ Not enough occurrences found: "
           f"{len(start_times)} for '{begin_P1_stimulus_name}', {len(end_times)} for '{end_P1_stimulus_name}'. Signal not modified.")
-    raw_final = raw_cropped.copy()
+    raw_P1 = raw_cropped.copy()
 
 # 8.1.b. Only the P2a phase (eyes closed)
 
