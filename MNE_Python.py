@@ -63,14 +63,14 @@ print("Events (sample, previous_id, event_id) :")
 print(events)
 
 # Convert the timestamps into seconds
-events = events[events[:, 0] != 0]  # <-- filters the events at 0.000 s
-events_times_sec = events[:, 0] / raw.info['sfreq'] # converts the timestamps into seconds
-for time, eid in zip(events_times_sec, events[:, 2]): # links each time in seconds to its event ID
+events_no_zero = events[events[:, 0] != 0]  # <-- filters the events at 0.000 s
+events_times_sec = events_no_zero[:, 0] / raw.info['sfreq'] # converts the timestamps into seconds
+for time, eid in zip(events_times_sec, events_no_zero[:, 2]): # links each time in seconds to its event ID
     print(f"Stimulus {eid} à {time:.3f} s") # formats the number with 3 decimal
 
 # Alternative to display the stimulus name (and not its ID) with its timestamp in seconds
 id_to_name = {v: k for k, v in event_id.items()}
-for time, eid in zip(events_times_sec, events[:, 2]):
+for time, eid in zip(events_times_sec, events_no_zero[:, 2]):
     name = id_to_name.get(eid, f"ID {eid}")
     print(f"{name} à {time:.3f} s")
 
@@ -130,6 +130,7 @@ Readjusted_Signal_Figure_5 = raw_cropped.plot(title="Readjusted signal (from the
 # 8.1. Crop the signal to get baselines 
 
 # 8.1.a. Only the P1 phase (press a key)
+
 # Define the parameters
 begin_P1_stimulus_name = "Stimulus/S  3" # sent at the beginning of the P1 task
 begin_P1_occurrence = 1 # number of the chosen occurrence
@@ -162,6 +163,69 @@ else:
     print(f"❌ Not enough occurrences found: "
           f"{len(start_times)} for '{begin_P1_stimulus_name}', {len(end_times)} for '{end_P1_stimulus_name}'. Signal not modified.")
     raw_P1 = raw_cropped.copy()
+
+# Plot the new signal (cropped until the chosen timestamp)
+Signal_P1_Phase_Figure_6 = raw_P1.plot(title="Signal of Phase 1")
+
+
+
+###
+
+# Get the signal value for each stimulus from raw_cropped that is in the P1 window
+# Define the period (P1 phase) which you want to get the stimulus from
+P1_start = crop_start_time # 21.880
+P1_end = crop_end_time # 31.554
+
+# Get all the original annotations (absolutetemps absolus) dans raw_cropped
+all_annots = raw_cropped.annotations
+# Filter the annotations to only keep the one in the intervalle : P1_start -> P1_end
+mask = (all_annots.onset >= P1_start) & (all_annots.onset <= P1_end)
+
+filtered_annots = mne.Annotations(
+    onset=all_annots.onset[mask] - P1_start,  # relative time of the P1 window
+    duration=all_annots.duration[mask],
+    description=all_annots.description[mask]
+)
+
+# Get the data in the P1 intervalle P1 (in secondes)
+raw_P1_data = raw_cropped.copy().crop(tmin=crop_start_time, tmax=crop_end_time)
+
+# Apply these readjusted annotations to raw_P1
+raw_P1_data.set_annotations(filtered_annots)
+
+# Recreate the events based on the corrected annotations in raw_P1
+events_P1, event_id_P1 = mne.events_from_annotations(raw_P1_data)
+
+# print("Annotations after filtering :", list(event_id_P1.keys()))
+# print(f"Number of events in the P1 window : {len(events_P1)}")
+
+# Convert the time into secondes
+event_times_sec_P1 = events_P1[:, 0] / raw_P1_data.info['sfreq']
+print("Events times within P1 window (seconds):", event_times_sec_P1)
+print(f"Duration of raw_P1_data : {raw_P1_data.times[-1]:.3f} s")
+
+
+
+###
+
+# Converts into a DataFrame (lines = events, column = EEG channels)
+df_values_P1 = pd.DataFrame(values_per_event, columns=raw_cropped.ch_names)
+
+# Calculation of the average for each channel
+mean_per_channel = df_values_P1.mean()
+
+# Display the result
+print("\n📊 Mean of the signal values of each each stimulus from the P1 phase (per channel) :")
+print(mean_per_channel)
+
+# Save into .csv (optionnal)
+# output_csv_path = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\Results\\baseline_events_P1_per_channel.csv"
+# os.makedirs(os.path.dirname(output_csv_path), exist_ok=True)
+# mean_per_channel.to_csv(output_csv_path)
+# print(f"\n✅ P1 events baseline registered in : {output_csv_path}")
+
+
+
 
 # 8.1.b. Only the P2a phase (eyes closed)
 
