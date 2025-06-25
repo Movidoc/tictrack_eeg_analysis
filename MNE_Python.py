@@ -218,21 +218,85 @@ for ch_idx, ch_name in enumerate(raw_cropped.ch_names):
     plt.tight_layout()
     plt.show()
 
+# 8.1.b. Get the "eyes closed" baseline from the P2a phase
+
+# Define the parameters
+begin_P2a_stimulus = "Stimulus/S  5" # sent at the beginning of the P2a task
+end_P2a_stimulus = "Stimulus/S  6" # sent at the ending of the P2a task
+
+# Search the stimuli times in the annotations
+onset_start = None
+onset_end = None
+
+for onset, desc in zip(raw_cropped.annotations.onset, raw_cropped.annotations.description):
+    if desc == begin_P2a_stimulus and onset_start is None:
+        onset_start = onset
+    elif desc == end_P2a_stimulus and onset_start is not None:
+        onset_end = onset
+        break # stopping the loop as soon as the pair of stimuli is found
+
+# Check the segment found
+if onset_start is not None and onset_end is not None:
+    print(f"Segment detected : from {onset_start:.2f} s to {onset_end:.2f} s")
+
+    # Get the signal segment
+    P2a_segment = raw_cropped.copy().crop(tmin=onset_start, tmax=onset_end)
+    data, times = P2a_segment.get_data(return_times=True) # data shape: (n_channels, n_times)
+
+    # Calculate the mean absolute value (over the time axis)
+    mean_abs_values = np.mean(np.abs(data), axis=1) # shape: (n_channels,)
+    
+    # Display the mean absolute value for each channel
+    for ch_name, mean_val in zip(raw_cropped.ch_names, mean_abs_values):
+        # print(f"{ch_name} : mean absolute value = {mean_val:.3f} µV")
+        print(f"{ch_name} : mean absolute value = {mean_val:.8f} µV")
+
+else:
+    print("❌ Stimuli not found in the annotations.")
+
+### 8.1.c. Get the "eyes open" baseline from the P2b phase
+
+# Define the parameters
+begin_P2b_stimulus = "Stimulus/S  7" # sent at the beginning of the P2a task
+end_P2b_stimulus = "Stimulus/S  8" # sent at the ending of the P2a task
+
+# Search the stimuli times in the annotations
+onset_start = None
+onset_end = None
+
+for onset, desc in zip(raw_cropped.annotations.onset, raw_cropped.annotations.description):
+    if desc == begin_P2b_stimulus and onset_start is None:
+        onset_start = onset
+    elif desc == end_P2b_stimulus and onset_start is not None:
+        onset_end = onset
+        break # stopping the loop as soon as the pair of stimuli is found
+
+# Check the segment found
+if onset_start is not None and onset_end is not None:
+    print(f"Segment detected : from {onset_start:.2f} s to {onset_end:.2f} s")
+
+    # Get the signal segment
+    P2b_segment = raw_cropped.copy().crop(tmin=onset_start, tmax=onset_end)
+    data, times = P2b_segment.get_data(return_times=True) # data shape: (n_channels, n_times)
+
+    # Calculate the mean absolute value (over the time axis)
+    mean_abs_values = np.mean(np.abs(data), axis=1) # shape: (n_channels,)
+    
+    # Display the mean absolute value for each channel
+    for ch_name, mean_val in zip(raw_cropped.ch_names, mean_abs_values):
+        # print(f"{ch_name} : mean absolute value = {mean_val:.3f} µV")
+        print(f"{ch_name} : mean absolute value = {mean_val:.8f} µV")
+
+else:
+    print("❌ Stimuli not found in the annotations.")
+
 
 
 ###
 
 
 
-# 8.1.b. Only the P2a phase (eyes closed)
-
-
-
-###
-
-
-
-# 8. Seperation in epochs
+# 9. Seperation in epochs
 # tmin = -0.2  # 200 ms before the event
 # tmax = 0.8   # 800 ms after the event
 # epochs = mne.Epochs(raw, events, event_id=event_id,
@@ -240,17 +304,17 @@ for ch_idx, ch_name in enumerate(raw_cropped.ch_names):
 #                     preload=True)
 # epochs.plot_drop_log()
 
-# 7. Define an automatic reject of the artifacts (optional)
+# 10. Define an automatic reject of the artifacts (optional)
 # epochs.plot_drop_log()
 # epochs.drop_bad()
 
-# 8. Averaging (ERP)
+# 11. Averaging (ERP)
 # evoked = epochs.average()
 # evoked.plot() # evoked does not accept any "title"
 # fig = evoked.plot_image(picks='eeg')
 # fig.suptitle("ERP (moyenne des epochs)")
 
-# 9. Topography
+# 12. Topography
 # evoked.plot_topomap(times=[0.1, 0.2, 0.3], ch_type='eeg')
 
 # plt.show()
