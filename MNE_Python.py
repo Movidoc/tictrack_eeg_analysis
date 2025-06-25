@@ -129,101 +129,98 @@ Readjusted_Signal_Figure_5 = raw_cropped.plot(title="Readjusted signal (from the
 
 # 8.1. Crop the signal to get baselines 
 
-# 8.1.a. Only the P1 phase (press a key)
+# 8.1.a. Get the "press a key" baseline from the P1 phase
 
 # Define the parameters
-begin_P1_stimulus_name = "Stimulus/S  3" # sent at the beginning of the P1 task
-begin_P1_occurrence = 1 # number of the chosen occurrence
-end_P1_stimulus_name = "Stimulus/S  4" # sent at the ending of the P1 task 
-end_P1_occurrence = 1 # number of the chosen occurrence
+begin_P1_stimulus = "Stimulus/S  3" # sent at the beginning of the P1 task
+end_P1_stimulus = "Stimulus/S  4" # sent at the ending of the P1 task 
 
-# Search for the stimulus occurrence times in raw_cropped.annotations
-start_times = [
-    onset for onset, desc in zip(raw_cropped.annotations.onset, raw_cropped.annotations.description)
-    if desc == begin_P1_stimulus_name
-]
-end_times = [
-    onset for onset, desc in zip(raw_cropped.annotations.onset, raw_cropped.annotations.description)
-    if desc == end_P1_stimulus_name
-]
+# Create a list with annotations and their times
+list_annotations = list(zip(raw_cropped.annotations.onset, raw_cropped.annotations.description))
 
-# Check if the specified occurrences exist
-if len(start_times) >= begin_P1_occurrence and len(end_times) >= end_P1_occurrence:
-    crop_start_time = start_times[begin_P1_occurrence - 1] # get the time of the beginning of the P1 task
-    crop_end_time = end_times[end_P1_occurrence - 1] # get the time of the end of the P1 task
-    if crop_start_time < crop_end_time: # check if the chosen beginning is indeed before the chosen end
-        raw_P1 = raw_cropped.copy().crop(tmin=crop_start_time, tmax=crop_end_time) # cut the signal between beginning and end
-        print(f"✅ Signal cropped from {crop_start_time:.3f} s to {crop_end_time:.3f} s "
-              f"(from stimulus: {begin_P1_stimulus_name}, occurrence {begin_P1_occurrence} "
-              f"to stimulus: {end_P1_stimulus_name}, occurrence {end_P1_occurrence})")
-    else:
-        print(f"❌ Start time ({crop_start_time:.3f}) is after end time ({crop_end_time:.3f}). Check the order of stimuli.")
-        raw_P1 = raw_cropped.copy()
-else:
-    print(f"❌ Not enough occurrences found: "
-          f"{len(start_times)} for '{begin_P1_stimulus_name}', {len(end_times)} for '{end_P1_stimulus_name}'. Signal not modified.")
-    raw_P1 = raw_cropped.copy()
+# Find all the segments in the P1 phase
+P1_segments = []
+i = 0
+while i < len(list_annotations):
+    onset, desc = list_annotations[i]
+    if desc == begin_P1_stimulus:
+        # Chercher le prochain événement de fin
+        for j in range(i + 1, len(list_annotations)):
+            next_onset, next_desc = list_annotations[j]
+            if next_desc == end_P1_stimulus:
+                P1_segments.append((onset, next_onset))
+                i = j  # reprendre après le stop
+                break
+    i += 1
 
-# Plot the new signal (cropped until the chosen timestamp)
-Signal_P1_Phase_Figure_6 = raw_P1.plot(title="Signal of Phase 1")
+# Get all the stimuli present in the segments
+stimuli_in_P1 = []
+for start, end in P1_segments:
+    for onset, desc in list_annotations:
+        if start <= onset <= end:
+            # On ignore les marqueurs de début et de fin eux-mêmes
+            if desc not in (begin_P1_stimulus, end_P1_stimulus):
+                stimuli_in_P1.append((onset, desc))
+
+# Display & check the stimuli found
+print(f"{len(stimuli_in_P1)} stimuli trouvés entre '{begin_P1_stimulus}' et '{end_P1_stimulus}' :")
+for onset, desc in stimuli_in_P1:
+    print(f"{desc} à {onset:.3f} s")
+
+# > To get the mean of the signal values -2 seconds before & +2 seconds after each stimulus
+# Define the window around each stimulus
+tmin = -2.0 # 2 secondes before
+tmax = 2.0 # 2 secondes after
+
+# Get the sampling frequency
+sfreq = raw_cropped.info['sfreq']
+
+# Initiate a list to stock the extracted values (expected shape per segment : n_channels x n_times)
+signal_segments = []
+
+for onset, desc in stimuli_in_P1:
+    start = onset + tmin
+    end = onset + tmax
+    # Check if the window is not outside the signal bounds
+    if start < 0 or end > raw_cropped.times[-1]:
+        print(f"⚠️ Stimulus at {onset:.2f}s ignored (window [{start:.2f}, {end:.2f}] out of limits)")
+        continue
+    # Get the segment
+    segment = raw_cropped.copy().crop(tmin=start, tmax=end).get_data() # shape: (n_channels, n_times)
+    signal_segments.append(segment)
+
+# Convert into an array numpy : shape = (n_events, n_channels, n_times)
+P1_segments_array = np.array(signal_segments)
+
+# Calculer la moyenne sur tous les événements : shape = (n_channels, n_times)
+mean_segment = np.mean(P1_segments_array, axis=0)
+
+# Afficher la forme du résultat
+print(f"\n✅ {len(signal_segments)} valide segments used.")
+print(f"Shape of the mean segment : {mean_segment.shape} (n_channels, n_times)")
+
+# > Display the mean segment
+# Create the temporal axe for the mean segment
+n_times = mean_segment.shape[1]
+times = np.linspace(tmin, tmax, n_times)
+
+# Trace each channel in a seperated figure
+for ch_idx, ch_name in enumerate(raw_cropped.ch_names):
+    signal = mean_segment[ch_idx, :]
+    
+    plt.figure(figsize=(8, 4))
+    plt.plot(times, signal, label=f'Channel : {ch_name}')
+    plt.title(f"Mean segment – Channel {ch_name}")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Amplitude (µV)")
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
 
 
 
 ###
-
-# Get the signal value for each stimulus from raw_cropped that is in the P1 window
-# Define the period (P1 phase) which you want to get the stimulus from
-P1_start = crop_start_time # 21.880
-P1_end = crop_end_time # 31.554
-
-# Get all the original annotations (absolutetemps absolus) dans raw_cropped
-all_annots = raw_cropped.annotations
-# Filter the annotations to only keep the one in the intervalle : P1_start -> P1_end
-mask = (all_annots.onset >= P1_start) & (all_annots.onset <= P1_end)
-
-filtered_annots = mne.Annotations(
-    onset=all_annots.onset[mask] - P1_start,  # relative time of the P1 window
-    duration=all_annots.duration[mask],
-    description=all_annots.description[mask]
-)
-
-# Get the data in the P1 intervalle P1 (in secondes)
-raw_P1_data = raw_cropped.copy().crop(tmin=crop_start_time, tmax=crop_end_time)
-
-# Apply these readjusted annotations to raw_P1
-raw_P1_data.set_annotations(filtered_annots)
-
-# Recreate the events based on the corrected annotations in raw_P1
-events_P1, event_id_P1 = mne.events_from_annotations(raw_P1_data)
-
-# print("Annotations after filtering :", list(event_id_P1.keys()))
-# print(f"Number of events in the P1 window : {len(events_P1)}")
-
-# Convert the time into secondes
-event_times_sec_P1 = events_P1[:, 0] / raw_P1_data.info['sfreq']
-print("Events times within P1 window (seconds):", event_times_sec_P1)
-print(f"Duration of raw_P1_data : {raw_P1_data.times[-1]:.3f} s")
-
-
-
-###
-
-# Converts into a DataFrame (lines = events, column = EEG channels)
-df_values_P1 = pd.DataFrame(values_per_event, columns=raw_cropped.ch_names)
-
-# Calculation of the average for each channel
-mean_per_channel = df_values_P1.mean()
-
-# Display the result
-print("\n📊 Mean of the signal values of each each stimulus from the P1 phase (per channel) :")
-print(mean_per_channel)
-
-# Save into .csv (optionnal)
-# output_csv_path = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\Results\\baseline_events_P1_per_channel.csv"
-# os.makedirs(os.path.dirname(output_csv_path), exist_ok=True)
-# mean_per_channel.to_csv(output_csv_path)
-# print(f"\n✅ P1 events baseline registered in : {output_csv_path}")
-
 
 
 
