@@ -3,6 +3,7 @@
 import os
 import mne
 from mne import EpochsArray, create_info
+# from mne import EvokedArray
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -194,8 +195,8 @@ for onset, desc in stimuli_in_P1:
 
 # > Get the the signal -1 second before & +1 second after each stimulus
 # Define the window around each stimulus
-tmin = -2.0 # 2 secondes before
-tmax = 2.0 # 2 secondes after
+tmin = -1.0 # 1 seconde before
+tmax = 1.0 # 1 seconde after
 
 # Get the sampling frequency
 sfreq = raw_cropped.info['sfreq']
@@ -228,15 +229,23 @@ info = create_info(
 # Create the EpochsArray object from P1_segments_array
 epochs_P1 = EpochsArray(P1_segments_array, info) # expected shape : (n_epochs, n_channels, n_times)
 
-# > Save the epochs into a file
+# > Save the epochs from P1 in a file
 # Save into a .fif file
 save_P1_path = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\.fif_files\\P1_epochs.fif"
 epochs_P1.save(save_P1_path, overwrite=True)
 print(f"✅ Segments sauvegardés dans : {save_P1_path}")
 
-# > Display the mean segment
-# Calculer la moyenne sur tous les événements : shape = (n_channels, n_times)
+# > Get the mean of the epochs from P1
+# Calculate the mean of the all the epochs : shape = (n_channels, n_times)
 mean_segment = np.mean(P1_segments_array, axis=0)
+
+# Create an Evoked object based on the mean
+evoked_P1 = EvokedArray(mean_segment, info, tmin=tmin)
+
+# > Save the evoked mean of the epochs from P1
+P1_evoked_save_path = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\.fif_files\\P1_average-epochs.fif"
+evoked_P1.save(P1_evoked_save_path)
+print(f"✅ Moyenne sauvegardée dans : {P1_evoked_save_path}")
 
 # > OPTIONNAL : Display the result shape
 print(f"\n✅ {len(P1_signal_segments)} valide segments used.")
@@ -261,77 +270,158 @@ for ch_idx, ch_name in enumerate(raw_cropped.ch_names):
     plt.show()
 
 
-# 2. Phase 2 (P2) - Get the "eyes closed" baseline from the P2a phase
+# 2. Phase 2 (P2) - Get the "eyes closed" baseline from the P2 phase
 
 # Define the parameters
-begin_P2a_stimulus = "Stimulus/S  5" # sent at the beginning of the P2a task
-end_P2a_stimulus = "Stimulus/S  6" # sent at the ending of the P2a task
+begin_P2_stimulus = "Stimulus/S  5" # sent at the beginning of the P2a task
+end_P2_stimulus = "Stimulus/S  6" # sent at the ending of the P2a task
 
 # Search the stimuli times in the annotations
-onset_start = None
-onset_end = None
+P2_onset_start = None
+P2_onset_end = None
 
 for onset, desc in zip(raw_cropped.annotations.onset, raw_cropped.annotations.description):
-    if desc == begin_P2a_stimulus and onset_start is None:
-        onset_start = onset
-    elif desc == end_P2a_stimulus and onset_start is not None:
-        onset_end = onset
+    if desc == begin_P2_stimulus and P2_onset_start is None:
+        P2_onset_start = onset
+    elif desc == end_P2_stimulus and P2_onset_start is not None:
+        P2_onset_end = onset
         break # stopping the loop as soon as the pair of stimuli is found
 
 # Check the segment found
-if onset_start is not None and onset_end is not None:
-    print(f"Segment detected : from {onset_start:.2f} s to {onset_end:.2f} s")
+if P2_onset_start is not None and P2_onset_end is not None:
+    print(f"Segment detected : from {P2_onset_start:.2f} s to {P2_onset_end:.2f} s")
 
-    # Get the signal segment
-    P2a_segment = raw_cropped.copy().crop(tmin=onset_start, tmax=onset_end)
-    data, times = P2a_segment.get_data(return_times=True) # data shape: (n_channels, n_times)
+    window_length = 2.0 # window length in seconds
+    step_size = 1.0 # step size for sliding window in seconds
 
-    # Calculate the mean absolute value (over the time axis)
-    mean_abs_values = np.mean(np.abs(data), axis=1) # shape: (n_channels,)
+    epochs_list = []
+    times_list = []
+
+    current_start = P2_onset_start
+    while (current_start + window_length) <= P2_onset_end:
+        current_end = current_start + window_length
+
+        # Crop the raw signal for the current window
+        window_segment = raw_cropped.copy().crop(tmin=current_start, tmax=current_end)
+        data, times = window_segment.get_data(return_times=True)
+
+        epochs_list.append(data) # shape (n_channels, n_times)
+        times_list.append(times)
+
+        print(f"Epoch from {current_start:.2f}s to {current_end:.2f}s extracted")
+
+        # Move the window by step_size
+        current_start += step_size
     
-    # Display the mean absolute value for each channel
-    for ch_name, mean_val in zip(raw_cropped.ch_names, mean_abs_values):
-        # print(f"{ch_name} : mean absolute value = {mean_val:.3f} µV")
-        print(f"{ch_name} : mean absolute value = {mean_val:.8f} µV")
+    # Convert the list of epochs into a numpy array with the shape (n_epochs, n_channels, n_times)
+    epochs_array = np.array(epochs_list)
+
+    # Create an info object for the epochs
+    sfreq = raw_cropped.info['sfreq']
+    info = mne.create_info(ch_names=raw_cropped.ch_names, sfreq=sfreq, ch_types='eeg')
+
+    # Create the EpochsArray object
+    epochs_P2 = mne.EpochsArray(epochs_array, info)
+
+    print(f"\n✅ {len(epochs_list)} sliding epochs extracted between {P2_onset_start:.2f} and {P2_onset_end:.2f} seconds")
 
 else:
     print("❌ Stimuli not found in the annotations.")
 
-### 8.1.c. Get the "eyes open" baseline from the P2b phase
+# > Save the epochs from P2 in a file
+save_path = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\.fif_files\\P2_sliding_epochs.fif"
+epochs_P2.save(save_path, overwrite=True)
+print(f"✅ Sliding epochs saved in: {save_path}")
+
+# > Get the mean of the epochs from P2
+# Calculate the mean of the epochs
+evoked_P2 = epochs_P2.average()
+print(evoked_P2)
+
+# Plot the mean
+evoked_P2.plot(title="Average of sliding epochs (P2)")
+
+# > Save the Evoked mean of the epochs from P2
+P2_evoked_save_path = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\.fif_files\\P2_average-epochs.fif"
+evoked_P2.save(P2_evoked_save_path)
+print(f"✅ Average evoked saved in: {P2_evoked_save_path}")
+
+
+# 3. Phase 3 (P3) - Get the "eyes open" baseline from the P3 phase
 
 # Define the parameters
-begin_P2b_stimulus = "Stimulus/S  7" # sent at the beginning of the P2a task
-end_P2b_stimulus = "Stimulus/S  8" # sent at the ending of the P2a task
+begin_P3_stimulus = "Stimulus/S  5" # sent at the beginning of the P2a task
+end_P3_stimulus = "Stimulus/S  6" # sent at the ending of the P2a task
 
 # Search the stimuli times in the annotations
-onset_start = None
-onset_end = None
+P3_onset_start = None
+P3_onset_end = None
 
 for onset, desc in zip(raw_cropped.annotations.onset, raw_cropped.annotations.description):
-    if desc == begin_P2b_stimulus and onset_start is None:
-        onset_start = onset
-    elif desc == end_P2b_stimulus and onset_start is not None:
-        onset_end = onset
+    if desc == begin_P3_stimulus and P3_onset_start is None:
+        P3_onset_start = onset
+    elif desc == end_P3_stimulus and P3_onset_start is not None:
+        P3_onset_end = onset
         break # stopping the loop as soon as the pair of stimuli is found
 
 # Check the segment found
-if onset_start is not None and onset_end is not None:
-    print(f"Segment detected : from {onset_start:.2f} s to {onset_end:.2f} s")
+if P3_onset_start is not None and P3_onset_end is not None:
+    print(f"Segment detected : from {P3_onset_start:.2f} s to {P3_onset_end:.2f} s")
 
-    # Get the signal segment
-    P2b_segment = raw_cropped.copy().crop(tmin=onset_start, tmax=onset_end)
-    data, times = P2b_segment.get_data(return_times=True) # data shape: (n_channels, n_times)
+    window_length = 2.0 # window length in seconds
+    step_size = 1.0 # step size for sliding window in seconds
 
-    # Calculate the mean absolute value (over the time axis)
-    mean_abs_values = np.mean(np.abs(data), axis=1) # shape: (n_channels,)
+    epochs_list = []
+    times_list = []
+
+    current_start = P3_onset_start
+    while (current_start + window_length) <= P3_onset_end:
+        current_end = current_start + window_length
+
+        # Crop the raw signal for the current window
+        window_segment = raw_cropped.copy().crop(tmin=current_start, tmax=current_end)
+        data, times = window_segment.get_data(return_times=True)
+
+        epochs_list.append(data) # shape (n_channels, n_times)
+        times_list.append(times)
+
+        print(f"Epoch from {current_start:.2f}s to {current_end:.2f}s extracted")
+
+        # Move the window by step_size
+        current_start += step_size
     
-    # Display the mean absolute value for each channel
-    for ch_name, mean_val in zip(raw_cropped.ch_names, mean_abs_values):
-        # print(f"{ch_name} : mean absolute value = {mean_val:.3f} µV")
-        print(f"{ch_name} : mean absolute value = {mean_val:.8f} µV")
+    # Convert the list of epochs into a numpy array with the shape (n_epochs, n_channels, n_times)
+    epochs_array = np.array(epochs_list)
+
+    # Create an info object for the epochs
+    sfreq = raw_cropped.info['sfreq']
+    info = mne.create_info(ch_names=raw_cropped.ch_names, sfreq=sfreq, ch_types='eeg')
+
+    # Create the EpochsArray object
+    epochs_P3 = mne.EpochsArray(epochs_array, info)
+
+    print(f"\n✅ {len(epochs_list)} sliding epochs extracted between {P3_onset_start:.2f} and {P3_onset_end:.2f} seconds")
 
 else:
     print("❌ Stimuli not found in the annotations.")
+
+# > Save the pochs from P3 in a file
+save_path = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\.fif_files\\P3_sliding_epochs.fif"
+epochs_P3.save(save_path, overwrite=True)
+print(f"✅ Sliding epochs saved in: {save_path}")
+
+# > Get the mean of the epochs from P3
+# Calculate the mean of the epochs
+evoked_P3 = epochs_P2.average()
+print(evoked_P3)
+
+# Plot the mean
+evoked_P3.plot(title="Average of sliding epochs (P3)")
+
+# > Save the Evoked mean of the epochs from P3
+P3_evoked_save_path = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\.fif_files\\P3_average-epochs.fif"
+evoked_P3.save(P3_evoked_save_path)
+print(f"✅ Average evoked saved in: {P3_evoked_save_path}")
 
 
 
