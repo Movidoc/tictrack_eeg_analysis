@@ -339,7 +339,8 @@ evoked_P2 = epochs_P2.average()
 print(evoked_P2)
 
 # Plot the mean
-evoked_P2.plot(title="Average of sliding epochs (P2)")
+Evoked_P2_Figure_6 = evoked_P2.plot() # does no take 'title' argument here
+Evoked_P2_Figure_6.suptitle("Average of sliding epochs from P2", fontsize=14)
 
 # > Save the Evoked mean of the epochs from P2
 P2_evoked_save_path = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\.fif_files\\P2_average-epochs.fif"
@@ -416,12 +417,16 @@ evoked_P3 = epochs_P2.average()
 print(evoked_P3)
 
 # Plot the mean
-evoked_P3.plot(title="Average of sliding epochs (P3)")
+Evoked_P3_Figure_7 = evoked_P2.plot() # does no take 'title' argument here
+Evoked_P3_Figure_7.suptitle("Average of sliding epochs from P3", fontsize=14)
 
 # > Save the Evoked mean of the epochs from P3
 P3_evoked_save_path = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\.fif_files\\P3_average-epochs.fif"
 evoked_P3.save(P3_evoked_save_path)
 print(f"✅ Average evoked saved in: {P3_evoked_save_path}")
+
+
+# 4. Phase 4 (P4) - Get the spontaneous TICs
 
 
 
