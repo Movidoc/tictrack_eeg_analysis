@@ -370,6 +370,11 @@ for FilePath in vhdr_files:
         evoked_P2.save(P2_evoked_save_path)
         print(f"✅ Average evoked saved in: {P2_evoked_save_path}")
 
+        # Display the PSD of P2
+        evoked_P2.set_montage("standard_1020")
+        P2_PSD_Figure_7 = evoked_P2.plot_psd(fmin=0, fmax=50, show=False)
+        save_figure(P2_PSD_Figure_7, f"{subject_name}_Figure_7_P2_PSD.png") # PSD = Power Spectrum Density
+
 
         # 3. Phase 3 (P3) - Get the "eyes open" baseline from the P3 phase
 
@@ -440,13 +445,18 @@ for FilePath in vhdr_files:
         print(evoked_P3)
 
         # Plot the mean
-        Evoked_P3_Figure_7 = evoked_P3.plot() # does no take 'title' argument here
-        Evoked_P3_Figure_7.suptitle("Average of sliding epochs from P3", fontsize=14)
+        Evoked_P3_Figure_8 = evoked_P3.plot() # does no take 'title' argument here
+        Evoked_P3_Figure_8.suptitle("Average of sliding epochs from P3", fontsize=14)
 
         # > Save the Evoked mean of the epochs from P3
         P3_evoked_save_path = f"C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\.fif_files\\{subject_name}_P3_average-epochs.fif"
         evoked_P3.save(P3_evoked_save_path)
         print(f"✅ Average evoked saved in: {P3_evoked_save_path}")
+
+        # Display the PSD of P3
+        evoked_P3.set_montage("standard_1020")
+        P3_PSD_Figure_9 = evoked_P3.plot_psd(fmin=0, fmax=50, show=False)
+        save_figure(P3_PSD_Figure_9, f"{subject_name}_Figure_9_P3_PSD.png") # PSD = Power Spectrum Density
 
         plt.show()
 
