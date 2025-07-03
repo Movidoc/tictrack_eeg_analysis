@@ -458,6 +458,17 @@ for FilePath in vhdr_files:
         P3_PSD_Figure_9 = evoked_P3.plot_psd(fmin=0, fmax=50, show=False)
         save_figure(P3_PSD_Figure_9, f"{subject_name}_Figure_9_P3_PSD.png") # PSD = Power Spectrum Density
 
+
+        # * Calculate the difference between evoked_P2 and evoked_P3
+        (evoked_P2 - evoked_P3).plot()
+        # evoked_diff_P2_P3 = mne.combine_evoked([evoked_P2, evoked_P3.copy().apply_baseline(None).apply_function(lambda x: -x)], weights='equal')
+        evoked_diff_P2_P3 = mne.combine_evoked([evoked_P2, evoked_P3.copy().apply_baseline(None)], weights=[1, -1])
+
+        # Trace and save the PSD of the différence P2 - P3
+        evoked_diff_P2_P3.set_montage("standard_1020")
+        Difference_P2_P3_PSD_Figure_10 = evoked_diff_P2_P3.plot_psd(fmin=0, fmax=50, show=False)
+        save_figure(Difference_P2_P3_PSD_Figure_10, f"{subject_name}_Figure_10_PSD_P2_minus_P3.png")
+
         plt.show()
 
     except FileNotFoundError:
