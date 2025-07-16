@@ -98,8 +98,8 @@ for FilePath in vhdr_files:
         # 2. Filter the data with a band-pass
 
         # Define the high and low frequencies
-        HFreq = 30
-        LFreq = 1
+        HFreq = 100
+        LFreq = 0.5
         raw_HighLowPassed = raw.filter(l_freq = LFreq, h_freq = HFreq)
         # for ERPs, [1-30] Hz band-pass filter
 
@@ -296,8 +296,8 @@ for FilePath in vhdr_files:
         # 2. Phase 2 (P2) - Get the "eyes closed" baseline from the P2 phase
 
         # Define the parameters
-        begin_P2_stimulus = "Stimulus/S  5" # sent at the beginning of the P2a task
-        end_P2_stimulus = "Stimulus/S  6" # sent at the ending of the P2a task
+        begin_P2_stimulus = "Stimulus/S  5" # sent at the beginning of the P2 task
+        end_P2_stimulus = "Stimulus/S  6" # sent at the ending of the P2 task
 
         # Search the stimuli times in the annotations
         P2_onset_start = None
@@ -379,8 +379,8 @@ for FilePath in vhdr_files:
         # 3. Phase 3 (P3) - Get the "eyes open" baseline from the P3 phase
 
         # Define the parameters
-        begin_P3_stimulus = "Stimulus/S  5" # sent at the beginning of the P2a task
-        end_P3_stimulus = "Stimulus/S  6" # sent at the ending of the P2a task
+        begin_P3_stimulus = "Stimulus/S  7" # sent at the beginning of the P3 task
+        end_P3_stimulus = "Stimulus/S  8" # sent at the ending of the P3 task
 
         # Search the stimuli times in the annotations
         P3_onset_start = None
