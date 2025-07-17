@@ -7,6 +7,7 @@ from mne import EvokedArray
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+# from collections import defaultdict
 
 # > To save the figures that are not MNEQtBrowser
 # Define a function to save all the Figures that are NOT MNEQtBrowser
@@ -91,7 +92,7 @@ for FilePath in vhdr_files:
         raw.set_montage("standard_1020") # to adapt according to the montage used during the exepriments
 
         Sensors_Montage_Figure_1 = raw.plot_sensors(show_names=True)
-        save_figure(Sensors_Montage_Figure_1, f"{subject_name}_Figure1_SensorsMontage.png")
+        save_figure(Sensors_Montage_Figure_1, "Figure1_SensorsMontage.png")
         # fig.savefig("C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\Figures\\Figure1_SensorsMontage.png")
 
 
@@ -142,7 +143,7 @@ for FilePath in vhdr_files:
         # Optionnal : visualisation after REST
         Signal_REST_Figure_4 = raw_REST.plot(title="Signal après référence REST")
         # save_figure(Signal_REST_Figure_4, f"{subject_name}_Figure4_Signal_REST.png")
-        Signal_REST_PSD_Figure_4_bis = raw_REST.plot_psd(fmin=0, fmax=50, show=False)
+        Signal_REST_PSD_Figure_4_bis = raw_REST.plot_psd(fmin=0, fmax=100, show=False)
         save_figure(Signal_REST_PSD_Figure_4_bis, f"{subject_name}_Figure_4_Signal_REST_PSD.png") # PSD = Power Spectrum Density
 
 
@@ -270,7 +271,13 @@ for FilePath in vhdr_files:
         evoked_P1.save(P1_evoked_save_path)
         print(f"✅ Moyenne sauvegardée dans : {P1_evoked_save_path}")
 
+        evoked_P1.set_montage("standard_1020")
+        P1_PSD = evoked_P1.plot_psd(fmin=0, fmax=100, show=False)
+        save_figure(P1_PSD, "Indira_P1_PSD.png") # PSD = Power Spectrum Density
+        # save_figure(P1_PSD, "Karletty_P1_PSD.png") # PSD = Power Spectrum Density
+
         # > OPTIONNAL : Display the result shape
+        save_directory = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\Figures"
         print(f"\n✅ {len(P1_signal_segments)} valide segments used.")
         print(f"Shape of the mean segment : {mean_segment.shape} (n_channels, n_times)")
 
@@ -291,6 +298,10 @@ for FilePath in vhdr_files:
             plt.legend()
             plt.tight_layout()
             plt.show()
+
+            filename = f"{subject_name}_P1_mean_segment_{ch_name}.png"
+            save_path = os.path.join(save_directory, filename)
+            plt.savefig(save_path)
 
 
         # 2. Phase 2 (P2) - Get the "eyes closed" baseline from the P2 phase
@@ -365,6 +376,11 @@ for FilePath in vhdr_files:
         Evoked_P2_Figure_6 = evoked_P2.plot() # does no take 'title' argument here
         Evoked_P2_Figure_6.suptitle("Average of sliding epochs from P2", fontsize=14)
 
+        save_directory = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\Figures"
+        filename = f"{subject_name}_P2_epochs_mean.png"
+        save_path = os.path.join(save_directory, filename)
+        plt.savefig(save_path)
+
         # > Save the Evoked mean of the epochs from P2
         P2_evoked_save_path = f"C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\.fif_files\\{subject_name}_P2_average-epochs.fif"
         evoked_P2.save(P2_evoked_save_path)
@@ -372,7 +388,7 @@ for FilePath in vhdr_files:
 
         # Display the PSD of P2
         evoked_P2.set_montage("standard_1020")
-        P2_PSD_Figure_7 = evoked_P2.plot_psd(fmin=0, fmax=50, show=False)
+        P2_PSD_Figure_7 = evoked_P2.plot_psd(fmin=0, fmax=100, show=False)
         save_figure(P2_PSD_Figure_7, f"{subject_name}_Figure_7_P2_PSD.png") # PSD = Power Spectrum Density
 
 
@@ -447,6 +463,11 @@ for FilePath in vhdr_files:
         # Plot the mean
         Evoked_P3_Figure_8 = evoked_P3.plot() # does no take 'title' argument here
         Evoked_P3_Figure_8.suptitle("Average of sliding epochs from P3", fontsize=14)
+        
+        save_directory = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\Figures"
+        filename = f"{subject_name}_P3_epochs_mean.png"
+        save_path = os.path.join(save_directory, filename)
+        plt.savefig(save_path)
 
         # > Save the Evoked mean of the epochs from P3
         P3_evoked_save_path = f"C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\.fif_files\\{subject_name}_P3_average-epochs.fif"
@@ -455,7 +476,7 @@ for FilePath in vhdr_files:
 
         # Display the PSD of P3
         evoked_P3.set_montage("standard_1020")
-        P3_PSD_Figure_9 = evoked_P3.plot_psd(fmin=0, fmax=50, show=False)
+        P3_PSD_Figure_9 = evoked_P3.plot_psd(fmin=0, fmax=100, show=False)
         save_figure(P3_PSD_Figure_9, f"{subject_name}_Figure_9_P3_PSD.png") # PSD = Power Spectrum Density
 
 
@@ -466,7 +487,7 @@ for FilePath in vhdr_files:
 
         # Trace and save the PSD of the différence P2 - P3
         evoked_diff_P2_P3.set_montage("standard_1020")
-        Difference_P2_P3_PSD_Figure_10 = evoked_diff_P2_P3.plot_psd(fmin=0, fmax=50, show=False)
+        Difference_P2_P3_PSD_Figure_10 = evoked_diff_P2_P3.plot_psd(fmin=0, fmax=100, show=False)
         save_figure(Difference_P2_P3_PSD_Figure_10, f"{subject_name}_Figure_10_PSD_P2_minus_P3.png")
 
         plt.show()
@@ -484,7 +505,6 @@ for FilePath in vhdr_files:
 
 
 ###
-
 
 
 # 9. Seperation in epochs
