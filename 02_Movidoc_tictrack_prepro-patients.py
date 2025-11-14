@@ -1,4 +1,3 @@
-
 # Libraries
 import os
 import mne
