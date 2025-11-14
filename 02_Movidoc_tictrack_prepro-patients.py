@@ -84,7 +84,7 @@ for FilePath in vhdr_files:
 
         Sensors_Montage_Figure_1 = raw.plot_sensors(show_names=True, show=False)
         # save_figure(Sensors_Montage_Figure_1, "Figure1_SensorsMontage.png")
-        Sensors_Montage_Figure_1.fig.savefig("Figure1_SensorsMontage.png")
+        # Sensors_Montage_Figure_1.fig.savefig("Figure1_SensorsMontage.png")
 
 
         # ===================================
@@ -169,11 +169,15 @@ for FilePath in vhdr_files:
         # Reset the annotations by shifting all annotations by - first_stimulus_time
         if raw.annotations is not None:
             raw_annotation_times = raw.annotations.onset - first_stimulus_time
+            mask_valid = raw_annotation_times >= 0
             raw_cropped.set_annotations(
                 mne.Annotations(
-                    onset=raw_annotation_times, # onset = raw_annotation_times with the new reset times
-                    duration=raw.annotations.duration,
-                    description=raw.annotations.description
+                    # onset=raw_annotation_times # onset = raw_annotation_times with the new reset times
+                    onset=raw_annotation_times[mask_valid],
+                    # duration=raw.annotations.duration
+                    duration=raw.annotations.duration[mask_valid],
+                    # description=raw.annotations.description
+                    description=[d for d, valid in zip(raw.annotations.description, mask_valid) if valid]
                 )
             )
 
