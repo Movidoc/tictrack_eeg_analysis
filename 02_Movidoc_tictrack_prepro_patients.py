@@ -1,6 +1,11 @@
 # Libraries
 import os
 import mne
+
+# import sys
+# sys.path.append("C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis")
+from Movidoc_tictrack_prepro_patients_functions import *
+
 from qtpy import QtWidgets
 
 app = QtWidgets.QApplication.instance()
@@ -190,6 +195,52 @@ for FilePath in vhdr_files:
         # Plot truncated and recalculated data
         Readjusted_Signal_Figure_5 = raw_cropped.plot(title="Readjusted signal (from the 1st stimulus not at 0 s)", show=True)
 
+
+
+        # ============================================================
+        # C. Epoching
+        # ============================================================
+
+
+        # =======================================
+        # 1. Phases dictionnary (with TTL limits)
+        # =======================================
+
+        phases_dict = {
+            "spontaneous_tics": {"start": "Stimulus/S", "end": "Stimulus/S"},
+            "imitated_tics": {"start": "Stimulus/S", "end": "Stimulus/S"},
+            "retention_tics": {"start": "Stimulus/S", "end": "Stimulus/S"}
+        }
+
+        # Go over each phase
+        for phase_name, phase_TTL in phases_dict.items():
+            try:
+                # Get the beginning & end timestamps based on the annotations
+                annotations = raw_cropped.annotations
+                start_times = [ann['onset'] for ann, desc in zip(annotations, annotations.description) if desc == phase_TTL['start']]
+                end_times = [ann['onset'] for ann, desc in zip(annotations, annotations.description) if desc == phase_TTL['end']]
+        
+                if len(start_times) == 0 or len(end_times) == 0:
+                    print(f"Phase {phase_name} not found for {subject_name}, missing TTL")
+                    continue
+        
+                start_time = start_times[0]
+                end_time = end_times[0]
+
+                # Extract the phase with crop()
+                phase_raw = raw_cropped.copy().crop(tmin=start_time, tmax=end_time)
+
+                # Save the file for this phase
+                folder_phase = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\EEG_Phases"
+                if not os.path.exists(folder_phase):
+                    os.makedirs(folder_phase)
+
+                phase_file_path = os.path.join(folder_phase, f"{subject_name}_{phase_name}_raw.fif")
+                phase_raw.save(phase_file_path, overwrite=True)
+                print(f"Saved phase : {phase_file_path}")
+            except Exception as e:
+                print(f"Error while cutting the phase {phase_name} for {subject_name} : {e}")
+                continue
 
     except Exception as e:
         print(f"Erreur pour {FilePath} : {e}")

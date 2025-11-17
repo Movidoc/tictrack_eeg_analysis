@@ -1,0 +1,127 @@
+# Libraries
+import os
+import mne
+from qtpy import QtWidgets
+
+
+
+# ============================================================
+# Define functions
+# ============================================================
+
+
+# =================================================
+# To save all the figures that are not MNEQtBrowser
+# =================================================
+
+def save_figure(fig, filename, folder="C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\Figures-Patients"):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    fig_path = os.path.join(folder, filename)
+    fig.savefig(fig_path)
+    print(f"Figure saved: {fig_path}")
+
+
+# ================
+# To load the data
+# ================
+
+def load_data(FilePath):
+    filename = os.path.basename(FilePath)
+    subject_name = filename.replace("MOVIDOCTicTrack", "").replace(".vhdr", "")
+    print(f"\n--- Traitement du fichier : {subject_name} ---\n")
+
+    raw = mne.io.read_raw_brainvision(FilePath, preload=True)
+    raw.plot(show=True)
+    raw.plot_psd(show=True)
+
+    raw.info
+    print(raw.ch_names)
+    print(raw.info['description'])
+    return raw, subject_name
+
+
+# ======================
+# To extract the stimuli
+# ======================
+
+def extract_stimuli(raw):
+    events, event_id = mne.events_from_annotations(raw)
+    print("Events list :")
+    print(event_id)
+    print(events)
+
+    events_no_zero = events[events[:, 0] != 0]
+    events_times_sec = events_no_zero[:, 0] / raw.info['sfreq']
+
+    id_to_name = {v: k for k, v in event_id.items()}
+    for time, eid in zip(events_times_sec, events_no_zero[:, 2]):
+        name = id_to_name.get(eid, f"ID {eid}")
+        print(f"{name} à {time:.3f} s")
+
+    return events_times_sec, event_id
+
+
+# =================================================================
+# To define the montage, filter the data with a band-pass & a Notch
+# =================================================================
+
+def preprocess_data(raw, subject_name):
+    raw.set_montage("standard_1020")
+    raw.plot_sensors(show_names=True, show=True)
+
+    raw = raw.filter(l_freq=0.5, h_freq=100)
+    raw.plot(title="High/Low Pass Filter", show=True)
+
+    raw = raw.notch_filter(freqs=[50], picks="data", method="spectrum_fit")
+    raw.plot(title="Notch Filter", show=True)
+
+    return raw
+
+
+# ========================
+# To re-reference the data
+# ========================
+
+def apply_rest_reference(raw, subject_name):
+    print("Applying REST reference...")
+    
+    Sphere = mne.make_sphere_model('auto', 'auto', raw.info)
+    Source = mne.setup_volume_source_space(sphere=Sphere, exclude=30.0, pos=5.0, verbose=False)
+    Forward = mne.make_forward_solution(raw.info, trans=None, src=Source, bem=Sphere, verbose=False)
+
+    raw_rest = raw.copy().set_eeg_reference('REST', forward=Forward)
+
+    raw_rest.plot(title="Signal REST", show=True)
+    raw_rest.plot_psd(fmin=0, fmax=100, show=True)
+
+    return raw_rest
+
+
+# ==================
+# To do the recalage
+# ==================
+
+def recalibrate_from_first_event(raw, events_times_sec):
+    if len(events_times_sec) == 0:
+        print("Aucun événement détecté — recalage impossible.")
+        return raw
+
+    first_stimulus_time = events_times_sec[1] if events_times_sec[0] == 0 and len(events_times_sec) > 1 else events_times_sec[0]
+    print(f"First stimulus at {first_stimulus_time:.3f}s")
+
+    raw_cropped = raw.copy().crop(tmin=first_stimulus_time)
+
+    if raw.annotations is not None:
+        new_onsets = raw.annotations.onset - first_stimulus_time
+        valid_mask = new_onsets >= 0
+        raw_cropped.set_annotations(mne.Annotations(
+            onset=new_onsets[valid_mask],
+            duration=raw.annotations.duration[valid_mask],
+            description=[d for d, v in zip(raw.annotations.description, valid_mask) if v]
+        ))
+
+    raw_cropped.plot(title="Signal cropped", show=True)
+    return raw_cropped
+
+
