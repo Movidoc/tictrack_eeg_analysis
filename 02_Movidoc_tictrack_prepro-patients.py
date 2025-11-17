@@ -1,6 +1,11 @@
 # Libraries
 import os
 import mne
+from qtpy import QtWidgets
+
+app = QtWidgets.QApplication.instance()
+if app is None:
+    app = QtWidgets.QApplication([])
 
 # > To save the figures that are not MNEQtBrowser
 # Define a function to save all the Figures that are NOT MNEQtBrowser
@@ -28,7 +33,7 @@ vhdr_files = [
     "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack_BB28-bis.vhdr", #BB28
     "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000013.vhdr", #BC29
     "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000030.vhdr", #MM30
-    "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000031.vhdr", #SC31
+    "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000031.vhdr" #SC31
 ]
 
 for FilePath in vhdr_files:
@@ -38,6 +43,8 @@ for FilePath in vhdr_files:
         print(f"\n--- Treatment of the file : {subject_name} ---\n")
 
         raw = mne.io.read_raw_brainvision(FilePath, preload=True)
+        raw.plot(show=True)
+        raw.plot_psd(show=True)
         raw.info
         print(raw.ch_names)
         print(raw.info['description']) # gives a note about the channels when there is one
@@ -81,7 +88,7 @@ for FilePath in vhdr_files:
 
         raw.set_montage("standard_1020") # to adapt according to the montage used during the exepriments
 
-        Sensors_Montage_Figure_1 = raw.plot_sensors(show_names=True, show=False)
+        Sensors_Montage_Figure_1 = raw.plot_sensors(show_names=True, show=True)
         # save_figure(Sensors_Montage_Figure_1, "Figure1_SensorsMontage.png")
         # Sensors_Montage_Figure_1.fig.savefig("Figure1_SensorsMontage.png")
 
@@ -96,7 +103,7 @@ for FilePath in vhdr_files:
         raw_HighLowPassed = raw.filter(l_freq = LFreq, h_freq = HFreq)
 
         # Plot the highpassed signal
-        Signal_HighLowPassed_Figure_2 = raw_HighLowPassed.plot(title = "High- and Low- passed Signal", show=False)
+        Signal_HighLowPassed_Figure_2 = raw_HighLowPassed.plot(title = "High- and Low- passed Signal", show=True)
         # save_figure(Signal_HighLowPassed_Figure_2, f"Figure2_{subject_name}_Signal-HighLowPassed.png")
         # Signal_HighLowPassed_Figure_2.fig.savefig(f"Figure2_{subject_name}_Signal-HighLowPassed.png")
 
@@ -112,7 +119,7 @@ for FilePath in vhdr_files:
             raw_Notched = raw_HighLowPassed.notch_filter(freqs = [50], picks = "data", method = "spectrum_fit")
 
         # Plot the notched signal
-        Signal_Notched_Figure_3 = raw_Notched.plot(title = "Notched Signal", show=False)
+        Signal_Notched_Figure_3 = raw_Notched.plot(title = "Notched Signal", show=True)
         # save_figure(Signal_Notched_Figure_3, f"Figure3_{subject_name}_Signal-Notched.png")
         # Signal_Notched_Figure_3.fig.savefig(f"Figure3_{subject_name}_Signal-Notched.png")
 
@@ -142,10 +149,10 @@ for FilePath in vhdr_files:
         raw_REST = raw_Notched.copy().set_eeg_reference('REST', forward=Forward)
 
         # Optionnal : visualisation after REST
-        Signal_REST_Figure_4 = raw_REST.plot(title="Signal après référence REST", show=False)
+        Signal_REST_Figure_4 = raw_REST.plot(title="Signal après référence REST", show=True)
         # save_figure(Signal_REST_Figure_4, f"Figure4_{subject_name}_Signal_REST.png")
         # Signal_REST_Figure_4.fig.savefig(f"Figure4_{subject_name}_Signal_REST.png")
-        Signal_REST_PSD_Figure_4_bis = raw_REST.plot_psd(fmin=0, fmax=100, show=False) # PSD = Power Spectrum Density
+        Signal_REST_PSD_Figure_4_bis = raw_REST.plot_psd(fmin=0, fmax=100, show=True) # PSD = Power Spectrum Density
         # save_figure(Signal_REST_PSD_Figure_4_bis, f"Figure4bis_{subject_name}_Signal_REST_PSD.png")
         # Signal_REST_PSD_Figure_4_bis.fig.savefig(f"Figure4bis_{subject_name}_Signal_REST_PSD.png")
 
@@ -181,9 +188,11 @@ for FilePath in vhdr_files:
             )
 
         # Plot truncated and recalculated data
-        Readjusted_Signal_Figure_5 = raw_cropped.plot(title="Readjusted signal (from the 1st stimulus not at 0 s)")
+        Readjusted_Signal_Figure_5 = raw_cropped.plot(title="Readjusted signal (from the 1st stimulus not at 0 s)", show=True)
 
 
     except Exception as e:
         print(f"Erreur pour {FilePath} : {e}")
         continue
+
+app.exec_()
