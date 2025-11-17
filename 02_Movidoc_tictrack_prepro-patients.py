@@ -188,4 +188,3 @@ for FilePath in vhdr_files:
     except Exception as e:
         print(f"Erreur pour {FilePath} : {e}")
         continue
-
