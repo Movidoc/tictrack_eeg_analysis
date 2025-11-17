@@ -1,6 +1,7 @@
 # Libraries
 import os
 import mne
+
 from qtpy import QtWidgets
 
 

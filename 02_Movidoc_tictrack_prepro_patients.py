@@ -2,8 +2,8 @@
 import os
 import mne
 
-# import sys
-# sys.path.append("C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis")
+import sys
+sys.path.append("C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis")
 from Movidoc_tictrack_prepro_patients_functions import *
 
 from qtpy import QtWidgets
