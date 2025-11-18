@@ -12,15 +12,6 @@ app = QtWidgets.QApplication.instance()
 if app is None:
     app = QtWidgets.QApplication([])
 
-# > To save the figures that are not MNEQtBrowser
-# Define a function to save all the Figures that are NOT MNEQtBrowser
-def save_figure(fig, filename, folder="C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\Figures-Patients"):
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-    fig_path = os.path.join(folder, filename)
-    fig.savefig(fig_path)
-    print(f"Figure saved: {fig_path}")
-
 
 
 # ============================================================
@@ -143,6 +134,52 @@ def recalibrate_from_first_event(raw, events_times_sec):
     return raw_cropped
 
 
+# ====================
+# To create the epochs
+# ====================
+
+def extract_phases(raw_cropped, subject_name, save_folder="C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\EEG_Phases"):
+    
+    # Define the phases dictionnary
+    phases_dict = {
+        "spontaneous_tics": {"start": "Stimulus/S  9", "end": "Stimulus/S 10"},
+        "imitated_tics": {"start": "Stimulus/S 11", "end": "Stimulus/S 12"},
+        "retention_tics": {"start": "Stimulus/S 13", "end": "Stimulus/S 14"}
+    }
+
+    if not os.path.exists(save_folder):
+        os.makedirs(save_folder)
+
+    # Loop for the phases
+    for phase_name, phase_TTL in phases_dict.items():
+        try:
+            annotations = raw_cropped.annotations
+            # Get the beginning & end timestamps
+            start_times = [ann['onset'] for ann, desc in zip(annotations, annotations.description) if desc == phase_TTL['start']]
+            end_times = [ann['onset'] for ann, desc in zip(annotations, annotations.description) if desc == phase_TTL['end']]
+
+            if len(start_times) == 0 or len(end_times) == 0:
+                print(f"Phase {phase_name} not found for {subject_name}, missing TTL")
+                continue
+
+            start_time = start_times[0]
+            end_time = min(end_times[0], raw_cropped.times[-1])
+
+            print(f"{phase_name}: {start_time:.2f}s → {end_time:.2f}s")
+
+            # Cut the phase
+            phase_raw = raw_cropped.copy().crop(tmin=start_time, tmax=end_time)
+
+            # Save the file for the phase
+            phase_file_path = os.path.join(save_folder, f"{subject_name}_{phase_name}_raw.fif")
+            phase_raw.save(phase_file_path, overwrite=True)
+            print(f"Saved phase : {phase_file_path}")
+
+        except Exception as e:
+            print(f"Error while cutting the phase {phase_name} for {subject_name} : {e}")
+            continue
+
+
 
 # ============================================================
 # A. Data
@@ -165,24 +202,27 @@ vhdr_files = [
 #########################################################################
 for FilePath in vhdr_files:
     try:
-        # 1️⃣ Charger les données
+        # 1️⃣ Load the data
         raw, subject_name = load_data(FilePath)
 
-        # 2️⃣ Extraire les stimuli
+        # 2️⃣ Extract the stimuli
         events_times_sec, event_id = extract_stimuli(raw)
 
-        # 3️⃣ Prétraitement (montage + filtres)
+        # 3️⃣ Set the montage & Filter
         raw_preprocessed = preprocess_data(raw, subject_name)
 
-        # 4️⃣ Re-référencement REST
+        # 4️⃣ REST re-reference
         raw_rest = apply_rest_reference(raw_preprocessed, subject_name)
 
-        # 5️⃣ Recalage à partir du premier événement non nul
+        # 5️⃣ Recalage from the 1st event (not null)
         raw_cropped = recalibrate_from_first_event(raw_rest, events_times_sec) # raw_cropped = Readjusted_Signal_Figure_5
         Readjusted_Signal_Figure_5 = raw_cropped.plot(
             title="Readjusted signal (from the 1st stimulus not at 0 s)",
             show=True
         )
+
+        # 6️⃣ Cut & save the phases
+        extract_phases(raw_cropped, subject_name)
 
     except Exception as e:
         print(f"Erreur pour {FilePath} : {e}")
@@ -304,7 +344,7 @@ for FilePath in vhdr_files:
 #         raw_REST = raw_Notched.copy().set_eeg_reference('REST', forward=Forward)
 
 #         # Optionnal : visualisation after REST
-#         Signal_REST_Figure_4 = raw_REST.plot(title="Signal après référence REST", show=True)
+#         Signal_REST_Figure_4 = raw_REST.plot(title="Signal after REST reference", show=True)
 #         # save_figure(Signal_REST_Figure_4, f"Figure4_{subject_name}_Signal_REST.png")
 #         # Signal_REST_Figure_4.fig.savefig(f"Figure4_{subject_name}_Signal_REST.png")
 #         Signal_REST_PSD_Figure_4_bis = raw_REST.plot_psd(fmin=0, fmax=100, show=True) # PSD = Power Spectrum Density
@@ -328,19 +368,25 @@ for FilePath in vhdr_files:
 #         raw_cropped = raw_REST.copy().crop(tmin=first_stimulus_time)
 
 #         # Reset the annotations by shifting all annotations by - first_stimulus_time
-#         if raw.annotations is not None:
-#             raw_annotation_times = raw.annotations.onset - first_stimulus_time
-#             mask_valid = raw_annotation_times >= 0
+#         if raw_REST.annotations is not None:
+#             # raw_annotation_times = raw.annotations.onset - first_stimulus_time
+#             onset_times = raw_REST.annotations.onset - first_stimulus_time
+#             mask_valid = onset_times >= 0
 #             raw_cropped.set_annotations(
 #                 mne.Annotations(
 #                     # onset=raw_annotation_times # onset = raw_annotation_times with the new reset times
-#                     onset=raw_annotation_times[mask_valid],
+#                     onset=onset_times[mask_valid],
 #                     # duration=raw.annotations.duration
-#                     duration=raw.annotations.duration[mask_valid],
+#                     duration=raw_REST.annotations.duration[mask_valid],
 #                     # description=raw.annotations.description
-#                     description=[d for d, valid in zip(raw.annotations.description, mask_valid) if valid]
+#                     description=[d for d, valid in zip(raw_REST.annotations.description, mask_valid) if valid]
 #                 )
 #             )
+#             print("\n=== Annotations after the recalage ===")
+#             print(raw_cropped.annotations)
+
+#             print("\n=== All the annotations labels ===")
+#             print(set(raw_cropped.annotations.description))
 
 #         # Plot truncated and recalculated data
 #         Readjusted_Signal_Figure_5 = raw_cropped.plot(title="Readjusted signal (from the 1st stimulus not at 0 s)", show=True)
@@ -356,13 +402,16 @@ for FilePath in vhdr_files:
 #         # 1. Phases dictionnary (with TTL limits)
 #         # =======================================
 
-#         phases_dict = {
-#             "spontaneous_tics": {"start": "Stimulus/S", "end": "Stimulus/S"},
-#             "imitated_tics": {"start": "Stimulus/S", "end": "Stimulus/S"},
-#             "retention_tics": {"start": "Stimulus/S", "end": "Stimulus/S"}
-#         }
+        # phases_dict = {
+        # "spontaneous_tics": {"start": "Stimulus/S  9", "end": "Stimulus/S 10"},
+        # "imitated_tics": {"start": "Stimulus/S 11", "end": "Stimulus/S 12"},
+        # "retention_tics": {"start": "Stimulus/S 13", "end": "Stimulus/S 14"}
+        # }
 
-#         # Go over each phase
+
+        # # =====================
+        # # 2. Go over each phase
+        # # =====================
 #         for phase_name, phase_TTL in phases_dict.items():
 #             try:
 #                 # Get the beginning & end timestamps based on the annotations
@@ -377,7 +426,10 @@ for FilePath in vhdr_files:
 #                 start_time = start_times[0]
 #                 end_time = end_times[0]
 
+#                 print(f"{phase_name}: {start_time:.2f}s → {end_time:.2f}s")
+
 #                 # Extract the phase with crop()
+#                 end_time = min(end_times[0], raw_cropped.times[-1])
 #                 phase_raw = raw_cropped.copy().crop(tmin=start_time, tmax=end_time)
 
 #                 # Save the file for this phase
