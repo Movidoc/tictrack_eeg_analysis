@@ -8,20 +8,31 @@ import pandas as pd
 import numpy as np
 
 
-def extract_tics_from_excel(excel_file, min_absence_frames=30):
+def extract_tics_from_excel(excel_file, phase_start_s, phase_end_s, min_absence_frames=30):
 
     """
+    ----------
+    Purpose
+    ----------
+    Extract tic intervals from a specified time window (phase).
+
+    ----------
     Parameters
     ----------
     excel_file : str
         Path to the Excel annotation file.
+    phase_start_s : float
+        Start time of the phase to analyze (seconds).
+    phase_end_s : float
+        End time of the phase to analyze (seconds).
     min_absence_frames : int
         Minimum number of consecutive "Absence = 1" frames before AND after a tic.
+
     ----------
     Returns
-    -------
+    ----------
     tics : list of tuples
-        [(start_time_s, end_time_s), ...]
+        [(start_time_s, end_time_s), ...] only inside the selected phase.
     """
 
     # load the Excel
@@ -33,6 +44,9 @@ def extract_tics_from_excel(excel_file, min_absence_frames=30):
         raise ValueError(f"Missing required column: {time_col}")
     if "Absence" not in df.columns:
         raise ValueError("Missing required column 'Absence'.")
+    
+    # limit the analysis to the selected phase only
+    # df = df[(df[time_col] >= phase_start_s) & (df[time_col] <= phase_end_s)].reset_index(drop=True)
 
     times = df[time_col].values
     absence = df["Absence"].values
@@ -47,7 +61,8 @@ def extract_tics_from_excel(excel_file, min_absence_frames=30):
     # tic frames : Absence = 0 & movement activity = 1+
     is_tic_frame = (absence == 0) & (movement_sum > 0)
 
-    tics = []
+    # tics = []
+    tics_full = []
     n = len(df)
     i = 0
 
@@ -80,16 +95,24 @@ def extract_tics_from_excel(excel_file, min_absence_frames=30):
                 continue # and restart detection from there
 
             # save the tic interval as a (start, end) pair
-            tics.append((start_time, end_time))
+            # tics.append((start_time, end_time))
+            tics_full.append((start_time, end_time))
 
             # continue scanning after the end of the detected tic
             i = j
 
         else:
             i += 1 # if no tic in this frame, just move to next frame
+    
+    # filter tics inside phase
+    tics_in_phase = []
+    for start, end in tics_full:
+        # Keep tic if it intersects the phase
+        if end >= phase_start_s and start <= phase_end_s:
+            tics_in_phase.append((start, end))
 
     # return all detected tic intervals
-    return tics
+    return tics_in_phase
 
 
 
@@ -97,10 +120,13 @@ def extract_tics_from_excel(excel_file, min_absence_frames=30):
 if __name__ == "__main__":
     # Filename of your real Excel annotations file
     test_file = "SC31_annotations_binary-table_cutted.xlsx"
+
+    phase_start = 345.972
+    phase_end = 970.167
     
     try:
-        tics = extract_tics_from_excel(test_file)
-        print("\nDetected tic intervals:")
+        tics = extract_tics_from_excel(excel_file=test_file, phase_start_s=phase_start, phase_end_s=phase_end, min_absence_frames=30)
+        print("\nTics detected inside selected phase:")
         for start, end in tics:
             print(f" - Tic from {start:.3f}s to {end:.3f}s")
     except Exception as e:

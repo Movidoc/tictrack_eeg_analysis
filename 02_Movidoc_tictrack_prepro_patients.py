@@ -165,7 +165,7 @@ def recalibrate_from_first_event(raw, events_times_sec):
         first_stimulus_time = events_times_sec[1] # use the 2nd event
         print(f"First stimulus is at 0. Using second stimulus at {first_stimulus_time:.3f} s")
     else :
-        events_times_sec[0] # use the 1st event normally
+        first_stimulus_time = events_times_sec[0] # use the 1st event normally
         print(f"First stimulus at {first_stimulus_time:.3f}s")
 
     # crop the signal from this timestamp
@@ -244,7 +244,7 @@ def extract_phases(raw_cropped, subject_name, save_folder="C:\\Users\\indira.lav
 
 #########################################################################
 
-# List of the.vhdr files to load
+# # List of the.vhdr files to load
 vhdr_files = [
     "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000010.vhdr", #DS26
     "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack_BB28-bis.vhdr", #BB28
@@ -252,6 +252,8 @@ vhdr_files = [
     "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000030.vhdr", #MM30
     "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000031.vhdr" #SC31
 ]
+
+# vhdr_files = ["C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000010.vhdr"] #DS26
 
 #########################################################################
 for FilePath in vhdr_files:
@@ -270,6 +272,8 @@ for FilePath in vhdr_files:
 
         # 5️⃣ Recalage from the 1st event (not null)
         raw_cropped = recalibrate_from_first_event(raw_rest, events_times_sec) # raw_cropped = Readjusted_Signal_Figure_5
+        print("\n--- Annotations after the recalage ---")
+        events_times_sec_cropped, event_id_cropped = extract_stimuli(raw_cropped)
         Readjusted_Signal_Figure_5 = raw_cropped.plot(
             title="Readjusted signal (from the 1st stimulus not at 0 s)",
             show=True
