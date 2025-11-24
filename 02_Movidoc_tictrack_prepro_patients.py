@@ -240,11 +240,11 @@ def extract_phases(raw_cropped, subject_name, save_folder="C:\\Users\\indira.lav
             print(f"Error while cutting the phase {phase_name} for {subject_name} : {e}")
             continue
 
-
-
 #########################################################################
 
-# # List of the.vhdr files to load
+
+
+# List of the .vhdr files to load
 vhdr_files = [
     "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000010.vhdr", #DS26
     "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack_BB28-bis.vhdr", #BB28
@@ -256,6 +256,9 @@ vhdr_files = [
 # vhdr_files = ["C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000010.vhdr"] #DS26
 
 #########################################################################
+
+
+
 for FilePath in vhdr_files:
     try:
         # 1️⃣ Load the data

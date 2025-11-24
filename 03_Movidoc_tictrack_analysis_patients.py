@@ -5,9 +5,25 @@
 # ===================================================================
 
 
+
+# ============================================================
+# Libraries
+# ============================================================
+
 import pandas as pd
 import numpy as np
 
+
+
+# ============================================================
+# Define functions
+# ============================================================
+
+
+# =================================================================================================
+# Function : extract_tics_from_excel
+# Purpose : extract tic beginning & end from a specified time window (phase) in a single Excel file
+# =================================================================================================
 
 def extract_tics_from_excel(excel_file, phase_start_s, phase_end_s, min_absence_frames=30):
 
@@ -135,17 +151,76 @@ def extract_tics_from_excel(excel_file, phase_start_s, phase_end_s, min_absence_
     return tics_in_phase
 
 
+# ==================================================================================================
+# Function : extract_tics_from_multiple_excels
+# Purpose : extract tic beginning & end from a specified time window (phase) in multiple Excel files
+# ==================================================================================================
 
-# small test if run directly (recommended!)
+def extract_tics_from_multiple_excels(excel_files, phase_start_s, phase_end_s, min_absence_frames=30):
+
+    """
+    ----------
+    Purpose
+    ----------
+    Run the extract_tics_from_excel function on a list of Excel files, to extract tic intervals from a specified time window (phase) in multiple Excel files
+
+    ----------
+    Parameters
+    ----------
+    excel_file : str
+        Path to the Excel annotation file.
+    phase_start_s : float
+        Start time of the phase to analyze (seconds).
+    phase_end_s : float
+        End time of the phase to analyze (seconds).
+    min_absence_frames : int
+        Minimum number of consecutive "Absence = 1" frames before AND after a tic.
+
+    ----------
+    Returns
+    ----------
+    results :
+        dict : {filename : list_of_tics}
+    """
+
+    results = {}
+
+    for file in excel_files:
+        try:
+            tics = extract_tics_from_excel(excel_file=file, phase_start_s=phase_start_s, phase_end_s=phase_end_s, min_absence_frames=min_absence_frames)
+            results[file] = tics
+        except Exception as e:
+            results[file] = f"ERROR: {e}"
+
+    return results
+
+#########################################################################
+
+
+
+# Excel file to load
+xlsx_file = ["C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\BB28_annotations_binary-table_cutted.xlsx"]
+
+# Excel files to load
+xlsx_files = [
+    "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\BB28_annotations_binary-table_cutted.xlsx", #BB28
+    "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\BC29_annotations_binary-table_cutted_xlsx_Lizbeth.xlsx", #BC29
+    "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\SC31_annotations_binary-table_cutted.xlsx" #SC31
+]
+
+#########################################################################
+
+
+
+# Test on 1 Excel file only
+
 if __name__ == "__main__":
-    # Filename of your real Excel annotations file
-    test_file = "SC31_annotations_binary-table_cutted.xlsx"
 
     phase_start = 345.972
     phase_end = 970.167
     
     try:
-        tics = extract_tics_from_excel(excel_file=test_file, phase_start_s=phase_start, phase_end_s=phase_end, min_absence_frames=30)
+        tics = extract_tics_from_excel(excel_file=xlsx_file, phase_start_s=phase_start, phase_end_s=phase_end, min_absence_frames=30)
         print("\nTics detected inside selected phase:")
         if not tics:
             print(" No tics detected in this phase.")
@@ -154,3 +229,21 @@ if __name__ == "__main__":
                 print(f" - Tic from {start:.3f}s to {end:.3f}s")
     except Exception as e:
         print(f"Error: {e}")
+
+#########################################################################
+
+
+
+# Test on multiple Excel files
+
+# phase_start = 345.972
+# phase_end = 970.167
+
+# results = extract_tics_from_multiple_excels(xlsx_files, phase_start, phase_end, min_absence_frames=30)
+
+# for file, tics in results.items():
+#     print(f"\nTics for {file}:")
+#     for start, end in tics:
+#         print(f" - Tic from {start:.3f}s to {end:.3f}s")
+
+#########################################################################
