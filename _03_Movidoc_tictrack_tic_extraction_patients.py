@@ -1,5 +1,5 @@
 # ===================================================================
-# File : 03_Movidoc_tictrack_analysis_patients.py
+# File : _03_Movidoc_tictrack_tic_extraction_patients.py
 # Purpose : Extract tics start & end times from the Excel annotations
 # Author  : Indira
 # ===================================================================

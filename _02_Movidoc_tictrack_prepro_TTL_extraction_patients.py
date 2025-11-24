@@ -1,5 +1,5 @@
 # =======================================================================
-# File : 02_Movidoc_tictrack_prepro_patients.py
+# File : _02_Movidoc_tictrack_prepro_TTL_extraction_patients.py
 # Purpose : Preprocess the data from the EEG signals from the .vhdr files
 # Author  : Indira
 # =======================================================================
@@ -240,6 +240,69 @@ def extract_phases(raw_cropped, subject_name, save_folder="C:\\Users\\indira.lav
             print(f"Error while cutting the phase {phase_name} for {subject_name} : {e}")
             continue
 
+
+# ===================================================================================
+# Function : collect_ttl_with_phases
+# Purpose : collect all TTLs after recalage & assign them to the experimental phases.
+# ===================================================================================
+
+def collect_ttl_with_phases(raw_cropped, subject_name):
+
+    ttl_list = []
+
+    # 1. Extract events and their IDs
+    events, event_id = mne.events_from_annotations(raw_cropped)
+    id_to_name = {v: k for k, v in event_id.items()}
+
+    # convert sample index → time in seconds
+    event_times_sec = events[:, 0] / raw_cropped.info['sfreq']
+
+    # 2. Define the phases TTL mapping
+    phases_dict = {
+        "press_key": {"start": "Stimulus/S  3", "end": "Stimulus/S  4"},
+        "eyes_closed": {"start": "Stimulus/S  5", "end": "Stimulus/S  6"},
+        "eyes_open": {"start": "Stimulus/S  7", "end": "Stimulus/S  8"},
+        "spontaneous_tics": {"start": "Stimulus/S  9", "end": "Stimulus/S 10"},
+        "imitated_tics": {"start": "Stimulus/S 11", "end": "Stimulus/S 12"},
+        "retention_tics": {"start": "Stimulus/S 13", "end": "Stimulus/S 14"}
+    }
+
+    # 3. Build time intervals for each phase
+    phase_intervals = {}
+    annotations = raw_cropped.annotations
+
+    for phase_name, t in phases_dict.items():
+        start = [ann['onset'] for ann, desc in zip(annotations, annotations.description) if desc == t["start"]]
+        end   = [ann['onset'] for ann, desc in zip(annotations, annotations.description) if desc == t["end"]]
+
+        if len(start) > 0 and len(end) > 0:
+            phase_intervals[phase_name] = (start[0], end[0])
+        else:
+            phase_intervals[phase_name] = None  # Missing TTL → phase ignored
+
+    # 4. Associate each TTL with its phase (or None)
+    for time, eid in zip(event_times_sec, events[:, 2]):
+        ttl_name = id_to_name[eid]
+        ttl_phase = None
+
+        for phase_name, interval in phase_intervals.items():
+            if interval is None:
+                continue
+            start_t, end_t = interval
+            if start_t <= time <= end_t:
+                ttl_phase = phase_name
+                break
+
+        ttl_list.append({
+            "ttl_name": ttl_name,
+            "time": float(time),
+            "phase": ttl_phase
+        })
+
+    print(f"Collected {len(ttl_list)} TTLs for {subject_name}.")
+    return ttl_list
+
+
 #########################################################################
 
 
@@ -276,7 +339,8 @@ for FilePath in vhdr_files:
         # 5️⃣ Recalage from the 1st event (not null)
         raw_cropped = recalibrate_from_first_event(raw_rest, events_times_sec) # raw_cropped = Readjusted_Signal_Figure_5
         print("\n--- Annotations after the recalage ---")
-        events_times_sec_cropped, event_id_cropped = extract_stimuli(raw_cropped)
+        # events_times_sec_cropped, event_id_cropped = extract_stimuli(raw_cropped)
+        ttl_info = collect_ttl_with_phases(raw_cropped, subject_name)
         Readjusted_Signal_Figure_5 = raw_cropped.plot(
             title="Readjusted signal (from the 1st stimulus not at 0 s)",
             show=True
