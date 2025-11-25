@@ -149,24 +149,32 @@ def apply_rest_reference(raw, subject_name):
     return raw_rest
 
 
-# =======================================================================================
+# =========================================================================================================
 # Function : recalibrate_from_first_event
-# Purpose : to do the recalage by cropping the signal from the 1st meaningful TTL (event)
-# =======================================================================================
+# Purpose : to do the recalage by cropping the signal from the Stimulus/S  2 = instructions press_key phase
+# =========================================================================================================
 
-def recalibrate_from_first_event(raw, events_times_sec):
+def recalibrate_from_first_event(raw, target_stim="Stimulus/S  2"):
+
+    # Verify if the annotations exist
+    if raw.annotations is None or len(raw.annotations) == 0:
+        print("No annotations found — cannot realign to target stimulus.")
+        return raw
+    
+    # search the 1st occurrence of the target stimulus
+    target_onsets = [
+        onset for onset, desc in zip(raw.annotations.onset, raw.annotations.description)
+        if desc == target_stim
+    ]
+
     # check if the list of event times is empty, if no events found → cannot crop
-    if len(events_times_sec) == 0:
-        print("No event detected — impossible to do the recalage.")
-        return raw # in that case, return the unmodified raw data
-        
-    # some BrainVision files place the 1st annotation at t=0 → for those, verify that they have a 2nd one, and if so, use it (instead of the 1st)
-    if events_times_sec[0] == 0 and len(events_times_sec) > 1 : # if the 1st annotation at t=0 & a 2nd annotation exists,
-        first_stimulus_time = events_times_sec[1] # use the 2nd event
-        print(f"First stimulus is at 0. Using second stimulus at {first_stimulus_time:.3f} s")
-    else :
-        first_stimulus_time = events_times_sec[0] # use the 1st event normally
-        print(f"First stimulus at {first_stimulus_time:.3f}s")
+    if len(target_onsets) == 0:
+        print(f"Target stimulus '{target_stim}' not found — cannot realign.")
+        return raw
+    
+    # recalage timestamp = Stimulus/S  2
+    first_stimulus_time = target_onsets[0]
+    print(f"Cropping EEG at stimulus '{target_stim}' = {first_stimulus_time:.3f} s")
 
     # crop the signal from this timestamp
     raw_cropped = raw.copy().crop(tmin=first_stimulus_time)

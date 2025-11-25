@@ -98,7 +98,7 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     events_times, _ = extract_stimuli(raw) # extract the TTL/events from the signal
     raw_pre = preprocess_data(raw, subject_name, montage_name=p["montage"]) # filter the signal & apply the montage
     raw_rest = apply_rest_reference(raw_pre, subject_name) # apply the REST reference
-    raw_cropped = recalibrate_from_first_event(raw_rest, events_times) # readjust the signal from the 1st significative TTL
+    raw_cropped = recalibrate_from_first_event(raw_rest, target_stim="Stimulus/S  2") # readjust the signal from the 1st significative TTL
 
     # 1.b. Extract TTL information
     ttl_info = collect_ttl_with_phases(raw_cropped, subject_name) # get the TTL list & their phases
@@ -115,6 +115,7 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
 
     # dictionnary that will contain the exact timestamps of beginning & end of each phase
     phases_dict = {}
+
     # for each phase defined via TTL
     for phase_name, ttl_names in phases_ttl.items():
         # get the TTL timestamp of the beginning of this phase
@@ -135,6 +136,9 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
         
         # save the tuple (start, end) for each phase
         phases_dict[phase_name] = (start_time, end_time)
+        print("\n===== DEBUG: Phases TTL for this patient =====")
+        for phase, (s, e) in phases_dict.items():
+            print(f"{phase:20s}  start={s:.3f}  end={e:.3f}")
 
     # 2. Extract tics from Excel
     tics = extract_tics_from_excel(excel_file=excel_path, fps=fps, min_absence_frames=min_absence_frames) # extract the tics from Excel
@@ -207,13 +211,13 @@ for vhdr_path, patient in results.items():
     print(f" Patient : {patient['subject']}")
     print("="*60)
 
-    print("\nTTLs :")
-    pprint(patient["ttl"])
+    # print("\nTTLs :")
+    # pprint(patient["ttl"])
 
     print("\nTics :")
     for tic in patient["tics"]:
         print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")
-        
+
 print("Patients analysés :", list(results.keys()))
 
 #########################################################################
