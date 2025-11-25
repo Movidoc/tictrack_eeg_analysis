@@ -200,16 +200,20 @@ for p in patients:
 
 print("Pipeline finished for all the patients.")
 
-print("\n--- Complete result (formated) ---")
-pprint(results)
 
+# print the result by patient
+for vhdr_path, patient in results.items():
+    print("\n" + "="*60)
+    print(f" Patient : {patient['subject']}")
+    print("="*60)
 
-# OPTIONAL - Print the result by patient #
-for vhdr_path, data in results.items():
-    print(f"\n=== {data['subject']} ===")
-    print("TTLs collected :")
-    pprint(data['ttl'])
-    print("Tics extracted :")
-    pprint(data['tics'])
+    print("\nTTLs :")
+    pprint(patient["ttl"])
+
+    print("\nTics :")
+    for tic in patient["tics"]:
+        print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")
+        
+print("Patients analysés :", list(results.keys()))
 
 #########################################################################
