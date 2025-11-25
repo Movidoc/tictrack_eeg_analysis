@@ -16,16 +16,16 @@ import numpy as np
 
 
 # ============================================================
-# Define functions
+# Define the function
 # ============================================================
 
 
-# =================================================================================================
+# ==============================================================
 # Function : extract_tics_from_excel
-# Purpose : extract tic beginning & end from a specified time window (phase) in a single Excel file
-# =================================================================================================
+# Purpose : extract tic beginning & end from a single Excel file
+# ==============================================================
 
-def extract_tics_from_excel(excel_file, phase_start_s, phase_end_s, fps, min_absence_frames=30):
+def extract_tics_from_excel(excel_file, fps, min_absence_frames=30):
 
     """
     ----------
@@ -38,10 +38,10 @@ def extract_tics_from_excel(excel_file, phase_start_s, phase_end_s, fps, min_abs
     ----------
     excel_file : str
         Path to the Excel annotation file.
-    phase_start_s : float
-        Start time of the phase to analyze (seconds).
-    phase_end_s : float
-        End time of the phase to analyze (seconds).
+    # phase_start_s : float
+        # Start time of the phase to analyze (seconds).
+    # phase_end_s : float
+        # End time of the phase to analyze (seconds).
     fps : float
         Frequency of the chosen time column
     min_absence_frames : int
@@ -99,7 +99,7 @@ def extract_tics_from_excel(excel_file, phase_start_s, phase_end_s, fps, min_abs
     # iterate through all frames until the end
     while i < n:
         
-        # to check the indices that are a problem
+        # to check the indices that seems to be a problem
         # if i > 10140:
         #     print(i)
         
@@ -134,7 +134,7 @@ def extract_tics_from_excel(excel_file, phase_start_s, phase_end_s, fps, min_abs
                     k += 1
                 after_len = k - j
 
-                # to check the indices that are a problem
+                # to check the indices that seems to be a problem
                 # if i > 10140:
                 #     print(f"J value : {j}\nK value : {k}")
                 
@@ -152,44 +152,48 @@ def extract_tics_from_excel(excel_file, phase_start_s, phase_end_s, fps, min_abs
         else :
             i += 1
     
-    # filter tics inside phase
-    tics_in_phase = []
-    for start, end in tics:
-        # keep the tic if it intersects the phase
-        if end >= phase_start_s and start <= phase_end_s:
-            tics_in_phase.append((start, end))
+    # # filter tics inside phase
+    # tics_in_phase = []
+    # for start, end in tics:
+    #     # keep the tic if it intersects the phase
+    #     if end >= phase_start_s and start <= phase_end_s:
+    #         tics_in_phase.append((start, end))
 
-    # return all detected tic intervals
-    return tics_in_phase
+    # # return all detected tic intervals
+    # return tics_in_phase
+
+    return tics
 
 #########################################################################
 
 
 
-# Test on 1 Excel file only
+# if __name__ == "__main__":
+    
+#     # Test on 1 Excel file only
 
-# Definition of the phase limits ALWAYS in seconds (even if in milliseconds in the Excel file)
-# phase_start_BB28 = 302600 / 1000.0
-# phase_end_BB28 = 929960 / 1000.0
-phase_start_BC29 = 358.215
-phase_end_BC29 = 1088.67
-# phase_start_SC31 = 345.972
-# phase_end_SC31 = 970.167
+#     # Definition of the phase limits ALWAYS in seconds (even if in milliseconds in the Excel file)
+#     # phase_start_BB28 = 302600 / 1000.0
+#     # phase_end_BB28 = 929960 / 1000.0
+#     phase_start_BC29 = 358.215
+#     phase_end_BC29 = 1088.67
+#     # phase_start_SC31 = 345.972
+#     # phase_end_SC31 = 970.167
 
-# Load the data
-xlsx_file = "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\BC29_annotations_binary-table_cutted_xlsx_Lizbeth.xlsx"
-fps = 30 # 30, or 25 (for BB28 only)
-min_absence_frames = 30 # 30 ou 25 (for BB28 only)
+#     # Load the data
+#     xlsx_file = "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\BC29_annotations_binary-table_cutted_xlsx_Lizbeth.xlsx"
+#     fps = 30 # 30, or 25 (for BB28 only)
+#     min_absence_frames = 30 # 30 ou 25 (for BB28 only)
 
-try:
-    tics = extract_tics_from_excel(excel_file=xlsx_file, phase_start_s=phase_start_BC29, phase_end_s=phase_end_BC29, fps=fps, min_absence_frames=min_absence_frames)
-    print("\nTics detected inside selected phase:")
-    if not tics:
-        print(" No tics detected in this phase.")
-    else:
-        for start, end in tics:
-            print(f" - Tic from {start:.3f}s to {end:.3f}s")
-except Exception as e:
-    print(f"Error: {e}")
+#     try:
+#         tics = extract_tics_from_excel(excel_file=xlsx_file, phase_start_s=phase_start_BC29, phase_end_s=phase_end_BC29, fps=fps, min_absence_frames=min_absence_frames)
+#         print("\nTics detected inside selected phase:")
+#         if not tics:
+#             print(" No tics detected in this phase.")
+#         else:
+#             for start, end in tics:
+#                 print(f" - Tic from {start:.3f}s to {end:.3f}s")
+#     except Exception as e:
+#         print(f"Error: {e}")
 
 #########################################################################

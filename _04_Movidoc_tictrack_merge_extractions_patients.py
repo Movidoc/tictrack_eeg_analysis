@@ -21,87 +21,195 @@ from _02_Movidoc_tictrack_prepro_TTL_extraction_patients import (
 
 from _03_Movidoc_tictrack_tic_extraction_patients import extract_tics_from_excel
 
+from pprint import pprint
+
+import mne
+
 
 
 # ============================================================
-# Define the function
+# Disable all MNE interactive plots globally
 # ============================================================
 
-def run_full_pipeline_for_patient(vhdr_path, excel_path, phase_start, phase_end, fps, min_absence_frames):
+# Save the original plot functions
+original_plot = mne.io.BaseRaw.plot
+original_plot_psd = mne.io.BaseRaw.plot_psd
+
+# Define new functions that force show=False
+def plot_no_show(self, *args, **kwargs):
+    kwargs['show'] = False
+    return original_plot(self, *args, **kwargs)
+
+def plot_psd_no_show(self, *args, **kwargs):
+    kwargs['show'] = False
+    return original_plot_psd(self, *args, **kwargs)
+
+# Monkey-patch the MNE Raw plotting functions
+mne.io.BaseRaw.plot = plot_no_show
+mne.io.BaseRaw.plot_psd = plot_psd_no_show
+
+
+
+# ============================================================
+# Define functions
+# ============================================================
+
+
+# ==============================================================
+# Function : assign_phase_to_tics
+# Purpose : assign the corresponding phase to the extracted tics
+# ==============================================================
+
+def assign_phase_to_tics(tics, phases_dict):
+
+    # list that will contain the tics with the associated phase
+    tics_with_phase = []
+
+    # for each extracted tic (start_time, end_time)
+    for start, end in tics:
+        tic_phase = None # initialization of the phase at None
+
+        # for each phase (with its timestamps)
+        for phase_name, (p_start, p_end) in phases_dict.items():
+            # if a tic is in & out a phase → it belongs to this phase
+            if end >= p_start and start <= p_end:
+                tic_phase = phase_name
+                break
+
+        # add the tic with its associated phase to the list
+        tics_with_phase.append({
+            "start": float(start),
+            "end": float(end),
+            "phase": tic_phase
+        })
+
+    return tics_with_phase
+
+
+# ===============================================================================
+# Function : run_full_pipeline_for_patient
+# Purpose : run the full pipeline by running the functions from the 02 & 03 files
+# ===============================================================================
+
+def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames):
     
-    # 1. Process EEG file (.vhdr)
-    raw, subject_name = load_data(vhdr_path)
-    events_times, _ = extract_stimuli(raw)
-    raw_pre = preprocess_data(raw, subject_name)
-    raw_rest = apply_rest_reference(raw_pre, subject_name)
-    raw_cropped = recalibrate_from_first_event(raw_rest, events_times)
+    # 1.a. Process EEG file (.vhdr)
+    raw, subject_name = load_data(vhdr_path) # charge the EEG file & get the name of the subject
+    events_times, _ = extract_stimuli(raw) # extract the TTL/events from the signal
+    raw_pre = preprocess_data(raw, subject_name, montage_name=p["montage"]) # filter the signal & apply the montage
+    raw_rest = apply_rest_reference(raw_pre, subject_name) # apply the REST reference
+    raw_cropped = recalibrate_from_first_event(raw_rest, events_times) # readjust the signal from the 1st significative TTL
 
-    # 1b. Extract TTL information
-    ttl_info = collect_ttl_with_phases(raw_cropped, subject_name)
+    # 1.b. Extract TTL information
+    ttl_info = collect_ttl_with_phases(raw_cropped, subject_name) # get the TTL list & their phases
+
+    # define the phases via TTLs
+    phases_ttl = {
+        # "press_key": {"start": "Stimulus/S  3", "end": "Stimulus/S  4"},
+        # "eyes_closed": {"start": "Stimulus/S  5", "end": "Stimulus/S  6"},
+        # "eyes_open": {"start": "Stimulus/S  7", "end": "Stimulus/S  8"},
+        "spontaneous_tics": {"start": "Stimulus/S  9", "end": "Stimulus/S 10"},
+        "imitated_tics": {"start": "Stimulus/S 11", "end": "Stimulus/S 12"},
+        "retention_tics": {"start": "Stimulus/S 13", "end": "Stimulus/S 14"}
+    }
+
+    # dictionnary that will contain the exact timestamps of beginning & end of each phase
+    phases_dict = {}
+    # for each phase defined via TTL
+    for phase_name, ttl_names in phases_ttl.items():
+        # get the TTL timestamp of the beginning of this phase
+        start_time = next((ttl["time"] for ttl in ttl_info if ttl["ttl_name"] == ttl_names["start"]), None)
+        # get the TTL timestamp of the end of this phase
+        end_time   = next((ttl["time"] for ttl in ttl_info if ttl["ttl_name"] == ttl_names["end"]), None)
+
+        # if the TTL of the beginning is missing
+        if start_time is None:
+            raise ValueError(f"Start TTL missing for phase '{phase_name}' in subject {subject_name}")
+        # if the TTL of the end is missing
+        if end_time is None:
+            if phase_name == "retention_tics":
+                # get the last timestamp of the signal
+                end_time = raw_cropped.times[-1]
+            else:
+                raise ValueError(f"End TTL missing for phase '{phase_name}' in subject {subject_name}")
+        
+        # save the tuple (start, end) for each phase
+        phases_dict[phase_name] = (start_time, end_time)
 
     # 2. Extract tics from Excel
-    tics = extract_tics_from_excel(
-        excel_file=excel_path,
-        phase_start_s=phase_start,
-        phase_end_s=phase_end,
-        fps=fps,
-        min_absence_frames=min_absence_frames
-    )
-
-    tics_info = [{"start": float(s), "end": float(e)} for s, e in tics]
+    tics = extract_tics_from_excel(excel_file=excel_path, fps=fps, min_absence_frames=min_absence_frames) # extract the tics from Excel
+    tics_info = assign_phase_to_tics(tics, phases_dict) # associate each tic to its phase
 
     # 3. Merge into one Python object
     full_output = {
-        "subject": subject_name,
-        "ttl": ttl_info,
-        "tics": tics_info
+        "subject": subject_name, # name of the subject
+        "ttl": ttl_info, # list of the TTL with phases
+        "tics": tics_info # list of the tics with phases
     }
 
+    # return the full object for the patient
     return full_output
 
 #########################################################################
 
 
 
+# dictionnary to stock the results of all the patients
 results = {}
 
 patients = [
     {
+        "montage": "standard_1020", # montage with 32 electrodes (from DS26 to BC29 : always 32 electrodes)
         "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack_BB28-bis.vhdr",
         "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\BB28_annotations_binary-table_cutted.xlsx",
-        "phase_start": 302600 / 1000.0,
-        "phase_end": 929960 / 1000.0,
+        # "phase_start": 302600 / 1000.0, # start spontaneous_tics
+        # "phase_end": 1591880 / 1000.0, # end retention tics (929960 = end spontaneous_tics)
         "fps": 25,
         "min_absence_frames": 25
     },
     {
+        "montage": "standard_1020", # montage with 32 electrodes (from DS26 to BC29 : always 32 electrodes)
         "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000013.vhdr",
         "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\BC29_annotations_binary-table_cutted_xlsx_Lizbeth.xlsx",
-        "phase_start": 358.215,
-        "phase_end": 1088.67,
+        # "phase_start": 358.215, # start spontaneous_tics
+        # "phase_end": 1088.67, # end spontaneous_tics
         "fps": 30,
         "min_absence_frames": 30
     },
     {
+        "montage": "standard_1005", # montage with 64 electrodes (from MM30 : always 64 electrodes)
         "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000031.vhdr",
         "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\SC31_annotations_binary-table_cutted.xlsx",
-        "phase_start": 345.972,
-        "phase_end": 970.167,
+        # "phase_start": 345.972, # start spontaneous_tics
+        # "phase_end": 1668.645, # end retention_tics (970.167 = end spontaneous_tics)
         "fps": 30,
         "min_absence_frames": 30
     }
 ]
 
+# iterate on all the patients to execute the complete pipeline
 for p in patients:
     results[p["vhdr"]] = run_full_pipeline_for_patient(
-        vhdr_path=p["vhdr"],
-        excel_path=p["excel"],
-        phase_start=p["phase_start"],
-        phase_end=p["phase_end"],
-        fps=p["fps"],
-        min_absence_frames=p["min_absence_frames"]
+        vhdr_path=p["vhdr"], # path to the EEG file
+        excel_path=p["excel"], # path to the Excel file
+        # phase_start=p["phase_start"],
+        # phase_end=p["phase_end"],
+        fps=p["fps"], # fps of the Excel file
+        min_absence_frames=p["min_absence_frames"] # minimum of frames of "Absence" to define the beginning & end of the tics
     )
 
 print("Pipeline finished for all the patients.")
+
+print("\n--- Complete result (formated) ---")
+pprint(results)
+
+
+# OPTIONAL - Print the result by patient #
+for vhdr_path, data in results.items():
+    print(f"\n=== {data['subject']} ===")
+    print("TTLs collected :")
+    pprint(data['ttl'])
+    print("Tics extracted :")
+    pprint(data['tics'])
 
 #########################################################################

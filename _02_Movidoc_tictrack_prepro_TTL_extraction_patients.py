@@ -104,9 +104,9 @@ def extract_stimuli(raw):
 # Purpose : to define the montage, apply a band-pass & a Notch filter
 # ===================================================================
 
-def preprocess_data(raw, subject_name):
-    # apply the standard 10–20 electrode positions => to adapt if another montage used during the experiment
-    raw.set_montage("standard_1020")
+def preprocess_data(raw, subject_name, montage_name):
+    # apply the montage defined by the user
+    raw.set_montage(montage_name)
     # visualize the electrode placement
     raw.plot_sensors(show_names=True, show=True)
 
@@ -322,36 +322,37 @@ vhdr_files = [
 
 
 
-for FilePath in vhdr_files:
-    try:
-        # 1️⃣ Load the data
-        raw, subject_name = load_data(FilePath)
+if __name__ == "__main__":
+    for FilePath in vhdr_files:
+        try:
+            # 1️⃣ Load the data
+            raw, subject_name = load_data(FilePath)
 
-        # 2️⃣ Extract the stimuli
-        events_times_sec, event_id = extract_stimuli(raw)
+            # 2️⃣ Extract the stimuli
+            events_times_sec, event_id = extract_stimuli(raw)
 
-        # 3️⃣ Set the montage & Filter
-        raw_preprocessed = preprocess_data(raw, subject_name)
+            # 3️⃣ Set the montage & Filter
+            raw_preprocessed = preprocess_data(raw, subject_name)
 
-        # 4️⃣ REST re-reference
-        raw_rest = apply_rest_reference(raw_preprocessed, subject_name)
+            # 4️⃣ REST re-reference
+            raw_rest = apply_rest_reference(raw_preprocessed, subject_name)
 
-        # 5️⃣ Recalage from the 1st event (not null)
-        raw_cropped = recalibrate_from_first_event(raw_rest, events_times_sec) # raw_cropped = Readjusted_Signal_Figure_5
-        print("\n--- Annotations after the recalage ---")
-        # events_times_sec_cropped, event_id_cropped = extract_stimuli(raw_cropped)
-        ttl_info = collect_ttl_with_phases(raw_cropped, subject_name)
-        Readjusted_Signal_Figure_5 = raw_cropped.plot(
-            title="Readjusted signal (from the 1st stimulus not at 0 s)",
-            show=True
-        )
+            # 5️⃣ Recalage from the 1st event (not null)
+            raw_cropped = recalibrate_from_first_event(raw_rest, events_times_sec) # raw_cropped = Readjusted_Signal_Figure_5
+            print("\n--- Annotations after the recalage ---")
+            # events_times_sec_cropped, event_id_cropped = extract_stimuli(raw_cropped)
+            ttl_info = collect_ttl_with_phases(raw_cropped, subject_name)
+            Readjusted_Signal_Figure_5 = raw_cropped.plot(
+                title="Readjusted signal (from the 1st stimulus not at 0 s)",
+                show=True
+            )
 
-        # 6️⃣ Cut & save the phases
-        extract_phases(raw_cropped, subject_name)
+            # 6️⃣ Cut & save the phases
+            extract_phases(raw_cropped, subject_name)
 
-    except Exception as e:
-        print(f"Erreur pour {FilePath} : {e}")
-        continue
+        except Exception as e:
+            print(f"Erreur pour {FilePath} : {e}")
+            continue
 
 #########################################################################
 
