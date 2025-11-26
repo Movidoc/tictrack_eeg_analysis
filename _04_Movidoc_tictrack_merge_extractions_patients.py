@@ -148,7 +148,6 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
         # save the tuple (start, end) for each phase
         phases_dict[phase_name] = (start_time, end_time)
     
-    # recalage des phases pour que t=0 corresponde à Stimulus/S 2
     for phase_name in phases_dict:
         start, end = phases_dict[phase_name]
         phases_dict[phase_name] = (start - stim2_time, end - stim2_time)
@@ -160,7 +159,9 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
 
     # 2. Extract tics from Excel
     tics = extract_tics_from_excel(excel_file=excel_path, fps=fps, min_absence_frames=min_absence_frames) # extract the tics from Excel
-    tics_info = assign_phase_to_tics(tics, phases_dict) # associate each tic to its phase
+
+    # assign the phases after the recalage
+    tics_info = assign_phase_to_tics(tics , phases_dict) # associate each tic to its phase
 
     # 3. Merge into one Python object
     full_output = {
