@@ -168,6 +168,8 @@ def extract_tics_from_excel(excel_file, fps, min_absence_frames=30):
 
 
 
+# === code with functions ===
+
 # if __name__ == "__main__":
     
 #     # Test on 1 Excel file only

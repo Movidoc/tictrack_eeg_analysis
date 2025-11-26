@@ -156,21 +156,23 @@ def apply_rest_reference(raw, subject_name):
 
 def recalibrate_from_first_event(raw, target_stim="Stimulus/S  2"):
 
+    # annotations = raw.annotations
+
     # Verify if the annotations exist
     if raw.annotations is None or len(raw.annotations) == 0:
         print("No annotations found — cannot realign to target stimulus.")
         return raw
     
     # search the 1st occurrence of the target stimulus
-    target_onsets = [
-        onset for onset, desc in zip(raw.annotations.onset, raw.annotations.description)
-        if desc == target_stim
-    ]
+    target_onsets = [onset for onset, desc in zip(raw.annotations.onset, raw.annotations.description) if desc == target_stim]
 
     # check if the list of event times is empty, if no events found → cannot crop
-    if len(target_onsets) == 0:
+    if not target_onsets:
         print(f"Target stimulus '{target_stim}' not found — cannot realign.")
         return raw
+    # if len(target_onsets) == 0:
+    #     print(f"Target stimulus '{target_stim}' not found — cannot realign.")
+    #     return raw
     
     # recalage timestamp = Stimulus/S  2
     first_stimulus_time = target_onsets[0]
@@ -179,18 +181,26 @@ def recalibrate_from_first_event(raw, target_stim="Stimulus/S  2"):
     # crop the signal from this timestamp
     raw_cropped = raw.copy().crop(tmin=first_stimulus_time)
 
+    # filter the annotations only after the crop
+    mask_valid = raw_cropped.annotations.onset >= first_stimulus_time
+    new_onsets=raw_cropped.annotations.onset[mask_valid] - first_stimulus_time
+    new_durations = raw_cropped.annotations.duration[mask_valid]
+    new_descriptions = [d for d, v in zip (raw_cropped.annotations.description, mask_valid) if v]
+
+    # create new readjusted annotations
+    # cropped_annotations = mne.Annotations(
+    # onset=raw_cropped.annotations.onset[mask_valid] - first_stimulus_time,
+    # duration=raw_cropped.annotations.duration[mask_valid],
+    # description=[d for d, v in zip (raw_cropped.annotations.description, mask_valid) if v]
+    # )
+
+    # create a new readjusted annotations object
+    raw_cropped.set_annotations(mne.Annotations(onset=new_onsets, duration=new_durations, description=new_descriptions))
+
     # re-align the annotations relative to the new t=0
-    if raw.annotations is not None:
-        # shift all the annotation onsets backward by the cropping time
-        new_onsets = raw.annotations.onset - first_stimulus_time
-        # determine which annotations occur AFTER cropping
-        mask_valid = new_onsets >= 0
-        # replace the annotations in the cropped raw object
-        raw_cropped.set_annotations(mne.Annotations(
-            onset=new_onsets[mask_valid], # shifted onsets
-            duration=raw.annotations.duration[mask_valid], # original durations
-            description=[d for d, v in zip(raw.annotations.description, mask_valid) if v] # descriptions
-        ))
+    # raw_cropped.set_annotations(cropped_annotations)
+
+    print("DEBUG after set_annotations:", raw_cropped.annotations.onset[:5])
 
     # visualize the cropped signal
     raw_cropped.plot(title="Signal cropped", show=True)
@@ -315,57 +325,57 @@ def collect_ttl_with_phases(raw_cropped, subject_name):
 
 
 
+# === code with functions ===
+
 # List of the .vhdr files to load
-vhdr_files = [
-    "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000010.vhdr", #DS26
-    "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack_BB28-bis.vhdr", #BB28
-    "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000013.vhdr", #BC29
-    "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000030.vhdr", #MM30
-    "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000031.vhdr" #SC31
-]
+# vhdr_files = [
+#     "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000010.vhdr", #DS26
+#     "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack_BB28-bis.vhdr", #BB28
+#     "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000013.vhdr", #BC29
+#     "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000030.vhdr", #MM30
+#     "C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000031.vhdr" #SC31
+# ]
 
 # vhdr_files = ["C:\\Users\\indira.lavocat\\MOVIDOC\\EEG\\EEG PATIENT FILES\\MOVIDOCTicTrack000010.vhdr"] #DS26
 
-#########################################################################
 
+# if __name__ == "__main__":
+#     for FilePath in vhdr_files:
+#         try:
+#             # 1️⃣ Load the data
+#             raw, subject_name = load_data(FilePath)
 
+#             # 2️⃣ Extract the stimuli
+#             events_times_sec, event_id = extract_stimuli(raw)
 
-if __name__ == "__main__":
-    for FilePath in vhdr_files:
-        try:
-            # 1️⃣ Load the data
-            raw, subject_name = load_data(FilePath)
+#             # 3️⃣ Set the montage & Filter
+#             raw_preprocessed = preprocess_data(raw, subject_name)
 
-            # 2️⃣ Extract the stimuli
-            events_times_sec, event_id = extract_stimuli(raw)
+#             # 4️⃣ REST re-reference
+#             raw_rest = apply_rest_reference(raw_preprocessed, subject_name)
 
-            # 3️⃣ Set the montage & Filter
-            raw_preprocessed = preprocess_data(raw, subject_name)
+#             # 5️⃣ Recalage from the 1st event (not null)
+#             raw_cropped = recalibrate_from_first_event(raw_rest, events_times_sec) # raw_cropped = Readjusted_Signal_Figure_5
+#             print("\n--- Annotations after the recalage ---")
+#             # events_times_sec_cropped, event_id_cropped = extract_stimuli(raw_cropped)
+#             ttl_info = collect_ttl_with_phases(raw_cropped, subject_name)
+#             Readjusted_Signal_Figure_5 = raw_cropped.plot(
+#                 title="Readjusted signal (from the 1st stimulus not at 0 s)",
+#                 show=True
+#             )
 
-            # 4️⃣ REST re-reference
-            raw_rest = apply_rest_reference(raw_preprocessed, subject_name)
+#             # 6️⃣ Cut & save the phases
+#             extract_phases(raw_cropped, subject_name)
 
-            # 5️⃣ Recalage from the 1st event (not null)
-            raw_cropped = recalibrate_from_first_event(raw_rest, events_times_sec) # raw_cropped = Readjusted_Signal_Figure_5
-            print("\n--- Annotations after the recalage ---")
-            # events_times_sec_cropped, event_id_cropped = extract_stimuli(raw_cropped)
-            ttl_info = collect_ttl_with_phases(raw_cropped, subject_name)
-            Readjusted_Signal_Figure_5 = raw_cropped.plot(
-                title="Readjusted signal (from the 1st stimulus not at 0 s)",
-                show=True
-            )
-
-            # 6️⃣ Cut & save the phases
-            extract_phases(raw_cropped, subject_name)
-
-        except Exception as e:
-            print(f"Erreur pour {FilePath} : {e}")
-            continue
+#         except Exception as e:
+#             print(f"Erreur pour {FilePath} : {e}")
+#             continue
 
 #########################################################################
 
 
 
+# === code without functions ===
 # ============================================================
 # A. Data
 # ============================================================
