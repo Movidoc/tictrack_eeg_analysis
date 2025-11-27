@@ -110,9 +110,13 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     # 1.b. Extract TTL information
     ttl_info = collect_ttl_with_phases(raw_cropped, subject_name) # get the TTL list & their phases
 
-    # get the time of Stimulus/S 2 pour recalage
-    stim2_time = next((ttl["time"] for ttl in ttl_info if ttl["ttl_name"] == "Stimulus/S  2"), 0.0)
-    print(f"Stimulus/S 2 time: {stim2_time:.3f} s")
+    # Get the time of Stimulus/S  2
+    stim2_time = next((ttl["time"] for ttl in ttl_info if ttl["ttl_name"] == "Stimulus/S  2"), None)
+    if stim2_time is None:
+        raise ValueError("Stimulus/S  2 introuvable dans ttl_info. Impossible de recaler.")
+    # Realign all the TTLs on the Stimulus/S  2
+    for ttl in ttl_info:
+        ttl["time"] = round(ttl["time"] - stim2_time, 3)
 
     # define the phases via TTLs
     phases_ttl = {
@@ -138,19 +142,19 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
         if start_time is None:
             raise ValueError(f"Start TTL missing for phase '{phase_name}' in subject {subject_name}")
         # if the TTL of the end is missing
-        if end_time is None:
-            if phase_name == "retention_tics":
-                # get the last timestamp of the signal
-                end_time = raw_cropped.times[-1]
-            else:
-                raise ValueError(f"End TTL missing for phase '{phase_name}' in subject {subject_name}")
+        # if end_time is None:
+        #     if phase_name == "retention_tics":
+        #         # get the last timestamp of the signal
+        #         end_time = raw_cropped.times[-1]
+        #     else:
+        #         raise ValueError(f"End TTL missing for phase '{phase_name}' in subject {subject_name}")
         
         # save the tuple (start, end) for each phase
         phases_dict[phase_name] = (start_time, end_time)
     
-    for phase_name in phases_dict:
-        start, end = phases_dict[phase_name]
-        phases_dict[phase_name] = (start - stim2_time, end - stim2_time)
+    # for phase_name in phases_dict:
+    #     start, end = phases_dict[phase_name]
+    #     phases_dict[phase_name] = (start - stim2_time, end - stim2_time)
 
     # print the debug after the loop to check
     print("\n===== DEBUG: Phases readjusted timestamps for this patient =====")
@@ -230,8 +234,8 @@ for vhdr_path, patient in results.items():
     print(f" Patient : {patient['subject']}")
     print("="*60)
 
-    # print("\nTTLs :")
-    # pprint(patient["ttl"])
+    print("\nTTLs :")
+    pprint(patient["ttl"])
 
     print("\nTics :")
     for tic in patient["tics"]:
