@@ -86,6 +86,70 @@ def assign_phase_to_tics(tics, phases_dict):
     return tics_with_phase
 
 
+# ============================================================================
+# Function : extract_eeg_phase_times_from_ttl
+# Purpose : extract the timestamps of the TTLs used to realign the Excel times
+# ============================================================================
+
+def extract_eeg_phase_times_from_ttl(ttl_info):
+
+    target_stims = [
+        "Stimulus/S  3",
+        "Stimulus/S  5",
+        "Stimulus/S  7",
+        "Stimulus/S  9",
+        "Stimulus/S 11",
+        "Stimulus/S 13"
+    ]
+
+    eeg_times = []
+
+    for stim in target_stims:
+        time = next((ttl["time"] for ttl in ttl_info if ttl["ttl_name"] == stim), None)
+        if time is None:
+            raise ValueError(f"Stimulus {stim} not found in ttl_info — impossible to calculate eeg_phase_times.")
+        eeg_times.append(time)
+
+    return eeg_times
+
+
+# ============================================================================
+# Function : realign_excel_to_eeg
+# Purpose : realign the Excel times on the EEG times
+# ============================================================================
+def realign_excel_to_eeg(excel_times, eeg_times):
+    """
+    ----------
+    Purpose
+    ----------
+    Calculate the linear transformation to realign the Excel times on the EEG times.
+
+    ----------
+    Parameters
+    ----------
+    excel_times : list of the Excel phases (beginning) times [S3, S5, S7, S9, S11, S13].
+    eeg_times   : list of the corresponding EEG times.
+
+    ----------
+    Returns
+    ----------
+    List of Excel times realign on the EEG times.
+    """
+
+    import numpy as np
+
+    if len(excel_times) != len(eeg_times):
+        raise ValueError("The lists excel_times & eeg_times need to have the same length.")
+
+    # linear fit : eeg_time = a * excel_time + b
+    a, b = np.polyfit(excel_times, eeg_times, 1)
+
+    # Apply the realignment on all the Excel times
+    corrected_times = [a * t + b for t in excel_times]
+    
+    return corrected_times, a, b
+
+
 # ===============================================================================
 # Function : run_full_pipeline_for_patient
 # Purpose : run the full pipeline by running the functions from the 02 & 03 files
@@ -103,10 +167,6 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     events_times, event_id = extract_stimuli(raw_cropped) # extract the TTL/events from the signal AFTER the recalage
     print("After crop:", raw_cropped.annotations.onset[:5])
 
-    # verification step
-    # stim2_times = [time for time, eid in zip(events_times, event_id) if event_id.get(eid) == "Stimulus/S  2"]
-    # print("Time of the Stimulus/S  2 after recalage:", stim2_times)
-
     # 1.b. Extract TTL information
     ttl_info = collect_ttl_with_phases(raw_cropped, subject_name) # get the TTL list & their phases
 
@@ -117,6 +177,21 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     # Realign all the TTLs on the Stimulus/S  2
     for ttl in ttl_info:
         ttl["time"] = round(ttl["time"] - stim2_time, 3)
+    
+
+
+    # Extract automatically the timestamps of the TTLs used to realign the Excel times to the EEG times
+    eeg_phase_times = extract_eeg_phase_times_from_ttl(ttl_info)
+    print("\n===== EEG phase times (from TTL) =====")
+    print(eeg_phase_times)
+
+    # Realign Excel -> EEG
+    excel_corrected_times, slope, intercept = realign_excel_to_eeg(excel_times=p["excel_phase_times"], eeg_times=eeg_phase_times)
+    print("\n===== Excel times realigned on EEG =====")
+    print(excel_corrected_times)
+    print(f"Linear drift: slope={slope:.6f}, intercept={intercept:.6f}")
+
+
 
     # define the phases via TTLs
     phases_ttl = {
@@ -164,12 +239,17 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     # 2. Extract tics from Excel
     tics = extract_tics_from_excel(excel_file=excel_path, fps=fps, min_absence_frames=min_absence_frames) # extract the tics from Excel
 
+    # realign the tics on EEG using the linear drift parameters ----
+    tics_corrected = [(start * slope + intercept, end * slope + intercept) for start, end in tics]
+
     # assign the phases after the recalage
-    tics_info = assign_phase_to_tics(tics , phases_dict) # associate each tic to its phase
+    tics_info = assign_phase_to_tics(tics_corrected , phases_dict) # associate each tic to its phase
 
     # 3. Merge into one Python object
     full_output = {
         "subject": subject_name, # name of the subject
+        "excel_corrected_times": excel_corrected_times,
+        "linear_drift_params": {"slope": slope, "intercept": intercept},
         "ttl": ttl_info, # list of the TTL with phases
         "tics": tics_info # list of the tics with phases
     }
@@ -189,28 +269,25 @@ patients = [
         "montage": "standard_1020", # montage with 32 electrodes (from DS26 to BC29 : always 32 electrodes)
         "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack_BB28-bis.vhdr",
         "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\BB28_annotations_binary-table_cutted.xlsx",
-        # "phase_start": 302600 / 1000.0, # start spontaneous_tics
-        # "phase_end": 1591880 / 1000.0, # end retention tics (929960 = end spontaneous_tics)
         "fps": 25,
-        "min_absence_frames": 25
+        "min_absence_frames": 25,
+        "excel_phase_times": [9.840, 27.320, 156.880, 302.600, 929.960, 991.760]
     },
     {
         "montage": "standard_1020", # montage with 32 electrodes (from DS26 to BC29 : always 32 electrodes)
         "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000013.vhdr",
         "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\BC29_annotations_binary-table_cutted_xlsx_Lizbeth.xlsx",
-        # "phase_start": 358.215, # start spontaneous_tics
-        # "phase_end": 1088.67, # end spontaneous_tics
         "fps": 30,
-        "min_absence_frames": 30
+        "min_absence_frames": 30,
+        "excel_phase_times": [17.391, 65.670, 201.597, 358.215, 1088.670, 1204.038]
     },
     {
         "montage": "standard_1005", # montage with 64 electrodes (from MM30 : always 64 electrodes)
         "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000031.vhdr",
         "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\SC31_annotations_binary-table_cutted.xlsx",
-        # "phase_start": 345.972, # start spontaneous_tics
-        # "phase_end": 1668.645, # end retention_tics (970.167 = end spontaneous_tics)
         "fps": 30,
-        "min_absence_frames": 30
+        "min_absence_frames": 30,
+        "excel_phase_times": [12.243, 662.040, 191.664, 345.972, 970.200, 1074.546]
     }
 ]
 
