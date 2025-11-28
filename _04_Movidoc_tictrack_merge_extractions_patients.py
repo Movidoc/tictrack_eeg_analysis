@@ -237,13 +237,15 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
         print(f"{phase:20s}  start={s:.3f}  end={e:.3f}")
 
     # 2. Extract tics from Excel
-    tics = extract_tics_from_excel(excel_file=excel_path, fps=fps, min_absence_frames=min_absence_frames) # extract the tics from Excel
+    tics_original = extract_tics_from_excel(excel_file=excel_path, fps=fps, min_absence_frames=min_absence_frames) # extract the tics from Excel
 
-    # realign the tics on EEG using the linear drift parameters ----
-    tics_corrected = [(start * slope + intercept, end * slope + intercept) for start, end in tics]
+    tics_original_with_phases = assign_phase_to_tics(tics_original , phases_dict) # associate each tic to its phase
+
+    # create a version realigned on EEG using the linear drift parameters ----
+    tics_corrected = [(start * slope + intercept, end * slope + intercept) for start, end in tics_original]
 
     # assign the phases after the recalage
-    tics_info = assign_phase_to_tics(tics_corrected , phases_dict) # associate each tic to its phase
+    tics_corrected_with_phases = assign_phase_to_tics(tics_corrected , phases_dict) # associate each tic to its phase
 
     # 3. Merge into one Python object
     full_output = {
@@ -251,11 +253,101 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
         "excel_corrected_times": excel_corrected_times,
         "linear_drift_params": {"slope": slope, "intercept": intercept},
         "ttl": ttl_info, # list of the TTL with phases
-        "tics": tics_info # list of the tics with phases
+        # "tics": tics_info # list of the tics with phases
+        "tics_original": tics_original_with_phases,
+        "tics_corrected": tics_corrected_with_phases
     }
+
+    full_output["phases_dict"] = phases_dict
+
+    # 4. Build merged TTL + tics timeline
+    phases_to_keep = ["spontaneous_tics", "imitated_tics", "retention_tics"]
+    merged_ttl_tics = build_merged_ttl_tics(patient=full_output, phases_to_keep=phases_to_keep)
+    full_output["merged_ttl_tics"] = merged_ttl_tics
 
     # return the full object for the patient
     return full_output
+
+
+# ============================================================================
+# Function : build_merged_ttl_tics
+# Purpose  : create single merged timeline of corrected tics & TTL times
+# ============================================================================
+
+def build_merged_ttl_tics(patient, phases_to_keep):
+    """
+    Build a merged list of:
+    - start_i / end_i from patient["tics_corrected"]
+    - time_Sxx or time_Sxx_i from patient["ttl"]
+    # Filtered by phases_to_keep.
+    """
+
+    merged = []
+
+    # ------------------------------------------------------------
+    # 1. Index the tics : start_1, end_1, start_2, end_2, ...
+    # ------------------------------------------------------------
+    tics = patient["tics_corrected"]
+    phases_dict = patient["phases_dict"]
+
+    for i, tic in enumerate(tics, start=1):
+        tic_phase = tic["phase"]
+
+        if tic_phase in phases_to_keep:
+            start_key = f"start_{i}"
+            end_key = f"end_{i}"
+
+            merged.append({start_key: tic["start"]})
+            merged.append({end_key: tic["end"]})
+
+    # ------------------------------------------------------------
+    # 2. Index TTLs: time_S9, time_S25_3, ...
+    # ------------------------------------------------------------
+    ttl_list = patient["ttl"]
+
+    # Build list of intervals to keep
+    intervals = [phases_dict[p] for p in phases_to_keep]
+
+    # count occurrences per stimulus name
+    stim_counts = {}
+
+    for ttl in ttl_list:
+        # ttl_phase = ttl["phase"] # e.g. 'imitated_tics'
+        ttl_time = ttl["time"]
+        ttl_name = ttl["ttl_name"] # e.g. 'Stimulus/S  9'
+
+        # keep TTL only if its timestamp falls inside one of the intervals
+        inside = any(start <= ttl_time <= end for start, end in intervals)
+        if not inside:
+            continue
+
+        # Extract the number after 'S'
+        try:
+            stim_num = int(ttl_name.split("S")[1])
+        except:
+            continue  # malformed TTL label
+
+        # count occurrences
+        stim_counts.setdefault(stim_num, 0)
+        stim_counts[stim_num] += 1
+        occ = stim_counts[stim_num]
+
+        # # build key
+        # if stim_counts[stim_num] == 1:
+        #     key = f"time_S{stim_num}" # first & unique so far
+        # else:
+        #     key = f"time_S{stim_num}_{occ}" # repeated stimulus
+        key = f"time_S{stim_num}" if occ == 1 else f"time_S{stim_num}_{occ}"
+
+        merged.append({key: ttl_time})
+
+    # ------------------------------------------------------------
+    # 3. Sort all items by time (value inside the dict)
+    # ------------------------------------------------------------
+
+    merged_sorted = sorted(merged, key=lambda d: list(d.values())[0])
+
+    return merged_sorted
 
 #########################################################################
 
@@ -314,9 +406,20 @@ for vhdr_path, patient in results.items():
     print("\nTTLs :")
     pprint(patient["ttl"])
 
-    print("\nTics :")
-    for tic in patient["tics"]:
+    # print("\nTics :")
+    # for tic in patient["tics"]:
+    #     print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")
+    print("\n--- Tics BEFORE EEG realignment (Excel original) ---")
+    for tic in patient["tics_original"]:
         print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")
+    print("\n--- Tics AFTER EEG realignment (Excel corrected) ---")
+    for tic in patient["tics_corrected"]:
+        print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")
+    
+    print("\n--- Merged TTL + Tics timeline ---")
+    for item in patient["merged_ttl_tics"]:
+        print(item)
+
 
 print("Patients analysés :", list(results.keys()))
 
