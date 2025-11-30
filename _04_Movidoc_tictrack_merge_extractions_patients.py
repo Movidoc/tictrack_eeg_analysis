@@ -282,6 +282,21 @@ def build_merged_ttl_tics(patient, phases_to_keep):
     # Filtered by phases_to_keep.
     """
 
+    filter_dict = {
+        'D': 21, 
+        'F': 22,
+        'S': 23,
+        'T': 24,
+        'right': 25,
+        'start_spont': 9,
+        'end_spont': 10,
+        'start_imit': 11,
+        'end_imit': 12,
+        'start_ret': 13,
+        'end_ret': 14
+        }
+    print(f"\n\n\nThis is the dictionnary : {filter_dict}\n\n\n")
+    
     merged = []
 
     # ------------------------------------------------------------
@@ -303,11 +318,11 @@ def build_merged_ttl_tics(patient, phases_to_keep):
     # ------------------------------------------------------------
     # 2. Index TTLs: time_S9, time_S25_3, ...
     # ------------------------------------------------------------
+
     ttl_list = patient["ttl"]
 
     # Build list of intervals to keep
     intervals = [phases_dict[p] for p in phases_to_keep]
-
     # count occurrences per stimulus name
     stim_counts = {}
 
@@ -318,33 +333,21 @@ def build_merged_ttl_tics(patient, phases_to_keep):
 
         # keep TTL only if its timestamp falls inside one of the intervals
         inside = any(start <= ttl_time <= end for start, end in intervals)
-        if not inside:
-            continue
+        if inside :
+            # Extract the number after 'S'
+            try:
+                for filter_key, filter_value in filter_dict.items():
+                    if filter_value == int(ttl_name.split("S")[2]) :
+                        stim_num = filter_key
+            except:
+                continue
 
-        # Extract the number after 'S'
-        try:
-            stim_num = int(ttl_name.split("S")[1])
-        except:
-            continue  # malformed TTL label
-
-        # count occurrences
-        stim_counts.setdefault(stim_num, 0)
-        stim_counts[stim_num] += 1
-        occ = stim_counts[stim_num]
-
-        # # build key
-        # if stim_counts[stim_num] == 1:
-        #     key = f"time_S{stim_num}" # first & unique so far
-        # else:
-        #     key = f"time_S{stim_num}_{occ}" # repeated stimulus
-        key = f"time_S{stim_num}" if occ == 1 else f"time_S{stim_num}_{occ}"
-
-        merged.append({key: ttl_time})
+            key = stim_num
+            merged.append({key: ttl_time})
 
     # ------------------------------------------------------------
     # 3. Sort all items by time (value inside the dict)
     # ------------------------------------------------------------
-
     merged_sorted = sorted(merged, key=lambda d: list(d.values())[0])
 
     return merged_sorted
@@ -364,7 +367,11 @@ patients = [
         "fps": 25,
         "min_absence_frames": 25,
         "excel_phase_times": [9.840, 27.320, 156.880, 302.600, 929.960, 991.760]
-    },
+    }
+    
+]
+'''
+
     {
         "montage": "standard_1020", # montage with 32 electrodes (from DS26 to BC29 : always 32 electrodes)
         "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000013.vhdr",
@@ -381,8 +388,7 @@ patients = [
         "min_absence_frames": 30,
         "excel_phase_times": [12.243, 662.040, 191.664, 345.972, 970.200, 1074.546]
     }
-]
-
+'''
 # iterate on all the patients to execute the complete pipeline
 for p in patients:
     results[p["vhdr"]] = run_full_pipeline_for_patient(
@@ -403,15 +409,15 @@ for vhdr_path, patient in results.items():
     print(f" Patient : {patient['subject']}")
     print("="*60)
 
-    print("\nTTLs :")
-    pprint(patient["ttl"])
+    #print("\nTTLs :")
+    #pprint(patient["ttl"])
 
     # print("\nTics :")
     # for tic in patient["tics"]:
     #     print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")
-    print("\n--- Tics BEFORE EEG realignment (Excel original) ---")
+    '''print("\n--- Tics BEFORE EEG realignment (Excel original) ---")
     for tic in patient["tics_original"]:
-        print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")
+        print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")'''
     print("\n--- Tics AFTER EEG realignment (Excel corrected) ---")
     for tic in patient["tics_corrected"]:
         print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")

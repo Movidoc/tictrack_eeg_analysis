@@ -61,9 +61,9 @@ def load_data(FilePath):
     # load the BrainVision data in memory
     raw = mne.io.read_raw_brainvision(FilePath, preload=True)
     # display the raw signal
-    raw.plot(show=True)
+    # # raw.plot(show=True)
     # display the PSD (Power Spectral Density) of the signal
-    raw.plot_psd(show=True)
+    # # raw.plot_psd(show=True)
 
     # print the useful info
     raw.info
@@ -94,7 +94,7 @@ def extract_stimuli(raw):
     # print a readable list of the events with timestamps
     for time, eid in zip(events_times_sec, events_no_zero[:, 2]):
         name = id_to_name.get(eid, f"ID {eid}")
-        print(f"{name} à {time:.3f} s")
+        #print(f"{name} à {time:.3f} s")
 
     return events_times_sec, event_id
 
@@ -108,17 +108,17 @@ def preprocess_data(raw, subject_name, montage_name):
     # apply the montage defined by the user
     raw.set_montage(montage_name)
     # visualize the electrode placement
-    raw.plot_sensors(show_names=True, show=True)
+    # # raw.plot_sensors(show_names=True, show=True)
 
     # apply band-pass filter between 0.5 and 100 Hz
     raw = raw.filter(l_freq=0.5, h_freq=100)
     # visualize the band-passed signal
-    raw.plot(title="High/Low Pass Filter", show=True)
+    # raw.plot(title="High/Low Pass Filter", show=True)
 
     # apply Notch filter at 50 Hz to remove the powerline noise
     raw = raw.notch_filter(freqs=[50], picks="data", method="spectrum_fit")
     # visualize the notched signal
-    raw.plot(title="Notch Filter", show=True)
+    # raw.plot(title="Notch Filter", show=True)
 
     return raw
 
@@ -392,8 +392,8 @@ def collect_ttl_with_phases(raw_cropped, subject_name):
 #         print(f"\n--- Treatment of the file : {subject_name} ---\n")
 
 #         raw = mne.io.read_raw_brainvision(FilePath, preload=True)
-#         raw.plot(show=True)
-#         raw.plot_psd(show=True)
+#         # raw.plot(show=True)
+#         # raw.plot_psd(show=True)
 #         raw.info
 #         print(raw.ch_names)
 #         print(raw.info['description']) # gives a note about the channels when there is one
@@ -437,7 +437,7 @@ def collect_ttl_with_phases(raw_cropped, subject_name):
 
 #         raw.set_montage("standard_1020") # to adapt according to the montage used during the exepriments
 
-#         Sensors_Montage_Figure_1 = raw.plot_sensors(show_names=True, show=True)
+#         Sensors_Montage_Figure_1 = # raw.plot_sensors(show_names=True, show=True)
 #         # save_figure(Sensors_Montage_Figure_1, "Figure1_SensorsMontage.png")
 #         # Sensors_Montage_Figure_1.fig.savefig("Figure1_SensorsMontage.png")
 
