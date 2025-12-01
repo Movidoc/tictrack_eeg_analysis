@@ -312,11 +312,11 @@ def build_merged_ttl_tics(patient, phases_to_keep):
             start_key = f"start_{i}"
             end_key = f"end_{i}"
 
-            merged.append({start_key: tic["start"]})
-            merged.append({end_key: tic["end"]})
+            merged.append({start_key: round(tic["start"], 3)})
+            merged.append({end_key: round(tic["end"], 3)})
 
     # ------------------------------------------------------------
-    # 2. Index TTLs: time_S9, time_S25_3, ...
+    # 2. Index TTLs: S9, S25_3, ...
     # ------------------------------------------------------------
 
     ttl_list = patient["ttl"]
@@ -333,17 +333,24 @@ def build_merged_ttl_tics(patient, phases_to_keep):
 
         # keep TTL only if its timestamp falls inside one of the intervals
         inside = any(start <= ttl_time <= end for start, end in intervals)
-        if inside :
-            # Extract the number after 'S'
-            try:
-                for filter_key, filter_value in filter_dict.items():
-                    if filter_value == int(ttl_name.split("S")[2]) :
-                        stim_num = filter_key
-            except:
-                continue
 
-            key = stim_num
-            merged.append({key: ttl_time})
+        if not inside:
+            continue
+
+        # Extract the number after 'S'
+        try:
+            # for filter_key, filter_value in filter_dict.items():
+            #     if filter_value == int(ttl_name.split("S")[2]) :
+            #         stim_num = filter_key
+            num = int(ttl_name.split("/S")[1].strip())
+        except:
+            continue
+
+        # key = stim_num
+        key = {v: k for k, v in filter_dict.items()}.get(num, None)
+        if key is None:
+            continue
+        merged.append({key: round(ttl_time, 3)})
 
     # ------------------------------------------------------------
     # 3. Sort all items by time (value inside the dict)
@@ -367,11 +374,7 @@ patients = [
         "fps": 25,
         "min_absence_frames": 25,
         "excel_phase_times": [9.840, 27.320, 156.880, 302.600, 929.960, 991.760]
-    }
-    
-]
-'''
-
+    },
     {
         "montage": "standard_1020", # montage with 32 electrodes (from DS26 to BC29 : always 32 electrodes)
         "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000013.vhdr",
@@ -388,7 +391,8 @@ patients = [
         "min_absence_frames": 30,
         "excel_phase_times": [12.243, 662.040, 191.664, 345.972, 970.200, 1074.546]
     }
-'''
+]
+
 # iterate on all the patients to execute the complete pipeline
 for p in patients:
     results[p["vhdr"]] = run_full_pipeline_for_patient(
@@ -409,15 +413,17 @@ for vhdr_path, patient in results.items():
     print(f" Patient : {patient['subject']}")
     print("="*60)
 
-    #print("\nTTLs :")
-    #pprint(patient["ttl"])
+    print("\nTTLs :")
+    pprint(patient["ttl"])
 
     # print("\nTics :")
     # for tic in patient["tics"]:
     #     print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")
-    '''print("\n--- Tics BEFORE EEG realignment (Excel original) ---")
-    for tic in patient["tics_original"]:
-        print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")'''
+
+    # print("\n--- Tics BEFORE EEG realignment (Excel original) ---")
+    # for tic in patient["tics_original"]:
+    #     print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")
+
     print("\n--- Tics AFTER EEG realignment (Excel corrected) ---")
     for tic in patient["tics_corrected"]:
         print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")
