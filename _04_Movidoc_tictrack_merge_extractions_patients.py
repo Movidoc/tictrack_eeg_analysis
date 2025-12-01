@@ -25,6 +25,10 @@ from pprint import pprint
 
 import mne
 
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import re
+
 
 
 # ============================================================
@@ -155,12 +159,12 @@ def realign_excel_to_eeg(excel_times, eeg_times):
 # Purpose : run the full pipeline by running the functions from the 02 & 03 files
 # ===============================================================================
 
-def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames):
+def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames, montage_name):
     
     # 1.a. Process EEG file (.vhdr)
     raw, subject_name = load_data(vhdr_path) # charge the EEG file & get the name of the subject
     # events_times, _ = extract_stimuli(raw) # extract the TTL/events from the signal BEFORE the recalage
-    raw_pre = preprocess_data(raw, subject_name, montage_name=p["montage"]) # filter the signal & apply the montage
+    raw_pre = preprocess_data(raw, subject_name, montage_name=montage_name) # filter the signal & apply the montage
     raw_rest = apply_rest_reference(raw_pre, subject_name) # apply the REST reference
     print("Before crop:", raw_rest.annotations.onset[:5])
     raw_cropped = recalibrate_from_first_event(raw_rest, target_stim="Stimulus/S  2") # readjust the signal from the 1st significative TTL
@@ -359,6 +363,87 @@ def build_merged_ttl_tics(patient, phases_to_keep):
 
     return merged_sorted
 
+
+# ==========================================================================================
+# Function : plot_events_timeline
+# Purpose  : display a graph that represent all the D, F, start_ & end_ from merged_ttl_tics
+# ==========================================================================================
+
+def plot_events_timeline(merged_ttl_tics, patient_name, phase_start_key=None, phase_end_key=None):
+
+    t_start, t_end = None, None
+
+    if phase_start_key is not None:
+        if isinstance(phase_start_key, (int, float)):
+            t_start = phase_start_key
+        else:
+            t_start = next((list(d.values())[0] for d in merged_ttl_tics if list(d.keys())[0] == phase_start_key), None)
+
+    if phase_end_key is not None:
+        if isinstance(phase_end_key, (int, float)):
+            t_end = phase_end_key
+        else:
+            t_end = next((list(d.values())[0] for d in merged_ttl_tics if list(d.keys())[0] == phase_end_key), None)
+    
+    if t_start is not None and t_end is not None and t_end < t_start:
+        raise ValueError(f"End time ({t_end}) is before start time ({t_start})")
+
+    # filter the events to display
+    filtered = []
+    for d in merged_ttl_tics:
+        key = list(d.keys())[0]
+        value = list(d.values())[0]
+
+        # keep only D, F, start_i, end_i
+        if key in ["D", "F"] or re.match(r"start_\d+", key) or re.match(r"end_\d+", key):
+            if (t_start is not None and value < t_start) or (t_end is not None and value > t_end):
+                continue
+            filtered.append(d)
+
+    times = [list(d.values())[0] for d in filtered]
+    labels = [list(d.keys())[0] for d in filtered]
+
+    # for d in filtered:
+    #     key = list(d.keys())[0]
+    #     value = list(d.values())[0]
+    #     times.append(value)
+    #     labels.append(key)
+
+    category_colors = {"D": "green", "F": "red", "start": "yellow", "end": "orange"}
+    colors = []
+    for l in labels:
+        if l.startswith("start_"):
+            colors.append(category_colors["start"])
+        elif l.startswith("end_"):
+            colors.append(category_colors["end"])
+        else:
+            colors.append(category_colors.get(l, "black"))  # default black
+    
+    y_positions = [0] * len(filtered)
+
+    plt.figure(figsize=(14, 6))
+    # plt.rcParams['scatter.marker'] = 'x'
+    plt.scatter(times, y_positions, s=80, c=colors)
+    plt.yticks([])
+    plt.xlabel("Time (s)")
+    plt.ylabel("")
+    plt.title(f"Events timeline — {patient_name}")
+    plt.grid(axis='x', linestyle='--', alpha=0.4)
+
+    legend_patches = [
+        mpatches.Patch(color="yellow", label="Start (start_i)"),
+        mpatches.Patch(color="orange", label="End (end_i)"),
+        mpatches.Patch(color="green",  label="D"),
+        mpatches.Patch(color="red",    label="F")
+    ]
+    plt.legend(handles=legend_patches, loc="upper right")
+
+    if t_start is not None and t_end is not None:
+        plt.xlim(t_start - 0.1, t_end + 0.1) # petite marge
+
+    plt.tight_layout()
+    plt.show()
+
 #########################################################################
 
 
@@ -401,7 +486,8 @@ for p in patients:
         # phase_start=p["phase_start"],
         # phase_end=p["phase_end"],
         fps=p["fps"], # fps of the Excel file
-        min_absence_frames=p["min_absence_frames"] # minimum of frames of "Absence" to define the beginning & end of the tics
+        min_absence_frames=p["min_absence_frames"], # minimum of frames of "Absence" to define the beginning & end of the tics,
+        montage_name=p["montage"]
     )
 
 print("Pipeline finished for all the patients.")
@@ -431,7 +517,13 @@ for vhdr_path, patient in results.items():
     print("\n--- Merged TTL + Tics timeline ---")
     for item in patient["merged_ttl_tics"]:
         print(item)
-
+    
+    plot_events_timeline(
+        merged_ttl_tics = patient["merged_ttl_tics"],
+        patient_name = patient["subject"],
+        phase_start_key=patient["phases_dict"]["spontaneous_tics"][0],
+        phase_end_key=patient["phases_dict"]["spontaneous_tics"][1]
+        )
 
 print("Patients analysés :", list(results.keys()))
 
