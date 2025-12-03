@@ -149,7 +149,7 @@ def extract_tics_from_excel(excel_file, fps, min_absence_frames=30):
                 if after_ok:
                     # add & save the tic interval as a (start, end) pair
                     tics.append((start_time, end_time_candidate))
-                    print(f"Candidate selected line : {i}")
+                    # print(f"Candidate selected line : {i}")
                     i = k
                     break # and restart detection from there
                 else :

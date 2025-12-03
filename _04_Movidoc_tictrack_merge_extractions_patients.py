@@ -28,6 +28,7 @@ from pprint import pprint
 import mne
 
 import matplotlib.pyplot as plt
+plt.ion()
 import matplotlib.patches as mpatches
 import re
 
@@ -171,7 +172,7 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     raw_pre = preprocess_data(raw, subject_name, montage_name=montage_name) # filter the signal & apply the montage
     raw_rest = apply_rest_reference(raw_pre, subject_name) # apply the REST reference
     print("Before crop:", raw_rest.annotations.onset[:5])
-    print("Checkpoint 1 : EEG preprocessing OK")
+    # print("Checkpoint 1 : EEG preprocessing OK")
     raw_cropped = recalibrate_from_first_event(raw_rest, target_stim="Stimulus/S  2") # readjust the signal from the 1st significative TTL
     events_times, event_id = extract_stimuli(raw_cropped) # extract the TTL/events from the signal AFTER the recalage
     print("After crop:", raw_cropped.annotations.onset[:5])
@@ -180,12 +181,12 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     ttl_info = collect_ttl_with_phases(raw_cropped, subject_name) # get the TTL list & their phases
 
     # Get the time of Stimulus/S  2
-    stim2_time = next((ttl["time"] for ttl in ttl_info if ttl["ttl_name"] == "Stimulus/S  2"), None)
-    if stim2_time is None:
+    stim2_time_original = next((ttl["time"] for ttl in ttl_info if ttl["ttl_name"] == "Stimulus/S  2"), None)
+    if stim2_time_original is None:
         raise ValueError("Stimulus/S  2 introuvable dans ttl_info. Impossible de recaler.")
     # Realign all the TTLs on the Stimulus/S  2
     for ttl in ttl_info:
-        ttl["time"] = round(ttl["time"] - stim2_time, 3)
+        ttl["time"] = round(ttl["time"] - stim2_time_original, 3)
     
 
 
@@ -199,7 +200,7 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     print("\n===== Excel times realigned on EEG =====")
     print(excel_corrected_times)
     print(f"Linear drift: slope={slope:.6f}, intercept={intercept:.6f}")
-    print("Checkpoint 2 : TTL extracted and realigned OK")
+    # print("Checkpoint 2 : TTL extracted and realigned OK")
 
 
 
@@ -241,7 +242,7 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     #     start, end = phases_dict[phase_name]
     #     phases_dict[phase_name] = (start - stim2_time, end - stim2_time)
 
-    print("Checkpoint 3 : phases_dict OK")
+    # print("Checkpoint 3 : phases_dict OK")
 
     # print the debug after the loop to check
     print("\n===== DEBUG: Phases readjusted timestamps for this patient =====")
@@ -250,18 +251,18 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
 
     # 2. Extract tics from Excel
     tics_original = extract_tics_from_excel(excel_file=excel_path, fps=fps, min_absence_frames=min_absence_frames) # extract the tics from Excel
-    print("Checkpoint 4 : tics extracted from Excel")
+    # print("Checkpoint 4 : tics extracted from Excel")
 
     tics_original_with_phases = assign_phase_to_tics(tics_original , phases_dict) # associate each tic to its phase
-    print("Checkpoint 5 : tics extracted from Excel & phases assigned")
+    # print("Checkpoint 5 : tics extracted from Excel & phases assigned")
 
     # create a version realigned on EEG using the linear drift parameters ----
     tics_corrected = [(start * slope + intercept, end * slope + intercept) for start, end in tics_original]
-    print("Checkpoint 6 : tics extracted from Excel are corrected")
+    # print("Checkpoint 6 : tics extracted from Excel are corrected")
 
     # assign the phases after the recalage
     tics_corrected_with_phases = assign_phase_to_tics(tics_corrected , phases_dict) # associate each tic to its phase
-    print("Checkpoint 7 : tics extracted from Excel are corrected & phases assigned")
+    # print("Checkpoint 7 : tics extracted from Excel are corrected & phases assigned")
 
     # 3. Merge into one Python object
     full_output = {
@@ -275,13 +276,14 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     }
 
     full_output["phases_dict"] = phases_dict
+    full_output["stim2_time_original"] = stim2_time_original
 
     # 4. Build merged TTL + tics timeline
     phases_to_keep = ["spontaneous_tics", "imitated_tics", "retention_tics"]
     merged_ttl_tics = build_merged_ttl_tics(patient=full_output, phases_to_keep=phases_to_keep)
     full_output["merged_ttl_tics"] = merged_ttl_tics
 
-    print("Checkpoint 8 : ready to return full_output")
+    # print("Checkpoint 8 : ready to return full_output")
 
     # return the full object for the patient
     return full_output
@@ -456,7 +458,169 @@ def plot_events_timeline(merged_ttl_tics, patient_name, phase_start_key=None, ph
         plt.xlim(t_start - 0.1, t_end + 0.1) # petite marge
 
     plt.tight_layout()
-    plt.show()
+    # plt.show() # need to close one graph to obtain the next one, and so on
+    plt.show(block=False)
+    plt.pause(0.1)
+
+
+# ===================================================================================================================
+# Function : analyse_merged_ttl_tics
+# Purpose  : analyse merged_ttl_tics to display all the beginning of urges by displaying all the 'D' and/or 'start_i' 
+# ===================================================================================================================
+
+def analyse_merged_ttl_tics(merged_ttl_tics, phase_start_key='start_spont', phase_end_key='end_spont'):
+
+    # Extract the indices of the start & end of the selected phase
+    t_start = next((list(d.values())[0] for d in merged_ttl_tics if list(d.keys())[0] == phase_start_key), None)
+    t_end   = next((list(d.values())[0] for d in merged_ttl_tics if list(d.keys())[0] == phase_end_key), None)
+
+    # Create a filtered list of the selected phase
+    phase_events = [d for d in merged_ttl_tics if t_start <= list(d.values())[0] <= t_end]
+
+    # create the list that will contain all the times of beginning (start_i or D)
+    results_list = []
+
+    i = 0
+
+    while i < len(phase_events):
+
+        # key = list(phase_events[i].keys())[0]
+        # value = list(phase_events[i].values())[0]
+        event_dict = phase_events[i]
+        key, value = next(iter(event_dict.items()))
+
+        # Case : there is a 'D'
+        if key == 'D':
+
+            # Look before the D the first (from the D) start_i or end_i
+            found_back = None
+            for j in range(i-1, -1, -1):
+                k, v = next(iter(phase_events[j].items()))
+                if k.startswith('start_'):
+                    found_back = ('start_i', v)
+                    break
+                elif k.startswith('end_'):
+                    found_back = ('end_i', v)
+                    break
+
+            # Case 1 : start before D
+            if found_back is not None and found_back[0] == 'start_i':
+                    print(f"start_tic at {found_back[1]} then D pressed at {value}")
+                    results_list.append({"type": "start_then_D", "start_time": found_back[1]})
+
+            # Case 2 : D begins
+            elif found_back is not None and found_back[0] == 'end_i':
+                    
+                # Look forward for first start_i or F
+                found_forward = None
+                for j_forward in range(i+1, len(phase_events)):
+                    k_fwd, v_fwd = next(iter(phase_events[j_forward].items()))
+                    if k_fwd.startswith('start_'):
+                        found_forward = ('start_i', v_fwd)
+                        break
+                    elif k_fwd == 'F':
+                        found_forward = ('F', v_fwd)
+                        break
+
+                if found_forward is not None:
+
+                    # Case 2.a. : D then start
+                    if found_forward[0] == 'start_i':
+                        print(f"D pressed at {value} then visible tic at {found_forward[1]}")
+                        results_list.append({"type": "D_then_start", "D_time": value})
+
+                    # Case 2.b. : D then F, no visible tic
+                    elif found_forward[0] == 'F':
+                        print(f"D pressed at {value} without any visible tic then F pressed at {found_forward[1]}")
+                        results_list.append({"type": "D_then_F","D_time": value})
+
+            # Continue from the line after the D that has been analysed
+            i += 1
+        
+        else:
+            i += 1
+
+    return results_list
+
+
+# ====================================================================================
+# Function : shift_urges_times
+# Purpose  : add the Stimulus/S  2 time to each urge timestamp to match the TTLs times
+# ====================================================================================
+
+def shift_urges_times(urges_list, stim2_time):
+
+    """
+    ----------
+    Purpose
+    ----------
+    Add the EEG time of Stimulus/S  2 to each urge time.
+
+    ----------
+    Parameters
+    ----------
+    urges_list : list of dict
+        Each dict has a 'start_time' or 'D_time'.
+    stim2_time : float
+        Time of Stimulus/S  2 in EEG (seconds).
+
+    ----------
+    Returns
+    -------
+    shifted_times : list of floats
+        EEG times of urges.
+    """
+
+    shifted_times = []
+
+    for u in urges_list:
+        if 'start_time' in u:
+            shifted_times.append(u['start_time'] + stim2_time)
+        elif 'D_time' in u:
+            shifted_times.append(u['D_time'] + stim2_time)
+        else:
+            raise ValueError(f"Unexpected dictionary structure: {u}")
+
+    return shifted_times
+
+
+# =====================================================
+# Function : extract_pre_tic_eeg_segments
+# Purpose  : cut 5-second EEG segments before each urge
+# =====================================================
+
+def extract_pre_tic_eeg_segments(raw, urge_times, pre_seconds=5.0):
+
+    """
+    ----------
+    Purpose
+    ----------
+    Extract EEG segments of `pre_seconds` before each urge.
+
+    ----------
+    Parameters
+    ----------
+    raw : mne.io.Raw
+        Preprocessed EEG signal.
+    urge_times : list of float
+        Times of urges in seconds.
+    pre_seconds : float
+        Duration to extract before each urge.
+
+    ----------
+    Returns
+    ----------
+    segments : list of mne.io.RawArray or Epochs
+        EEG segments for each urge.
+    """
+
+    segments = []
+    for t in urge_times:
+        t_start = max(t - pre_seconds, 0)
+        t_end = t
+        segment = raw_cropped.copy().crop(tmin=t_start, tmax=t_end)
+        segments.append(segment)
+    return segments
 
 #########################################################################
 
@@ -544,13 +708,13 @@ for vhdr_path, patient in results.items():
     # for tic in patient["tics_original"]:
     #     print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")
 
-    print("\n--- Tics AFTER EEG realignment (Excel corrected) ---")
-    for tic in patient["tics_corrected"]:
-        print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")
+    # print("\n--- Tics AFTER EEG realignment (Excel corrected) ---")
+    # for tic in patient["tics_corrected"]:
+    #     print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")
     
-    print("\n--- Merged TTL + Tics timeline ---")
-    for item in patient["merged_ttl_tics"]:
-        print(item)
+    # print("\n--- Merged TTL + Tics timeline ---")
+    # for item in patient["merged_ttl_tics"]:
+    #     print(item)
     
     plot_events_timeline(
         merged_ttl_tics = patient["merged_ttl_tics"],
@@ -561,4 +725,54 @@ for vhdr_path, patient in results.items():
 
 print("Patients analysés :", list(results.keys()))
 
-######################################################################### python _04_Movidoc_tictrack_merge_extractions_patients.py
+#########################################################################
+
+
+
+print("\n===== Analyse des merged_ttl_tics par patient =====\n")
+
+urges_lists = {}
+
+for vhdr_path, patient in results.items():
+
+    subject = patient['subject']
+
+    print("\n" + "="*60)
+    print(f" Patient : {patient['subject']}")
+    print("="*60)
+    
+    analysis_list = analyse_merged_ttl_tics(
+        merged_ttl_tics=patient["merged_ttl_tics"],
+        phase_start_key='start_spont',  # or patient['phases_dict']['spontaneous_tics'][0] if we want the exact timestamp
+        phase_end_key='end_spont'       # or patient['phases_dict']['spontaneous_tics'][1] if we want the exact timestamp
+    )
+
+    # Save the lists
+    urges_lists[f"list_urges_{subject}"] = analysis_list
+    print("Saved as:", f"list_urges_{subject}")
+    print(analysis_list)
+
+#########################################################################
+
+
+
+# Extracting urges signal for all the patients
+
+pre_urge_segments = {}
+
+for vhdr_path, patient in results.items():
+    subject = patient['subject']
+    print(f"\nProcessing pre-tic urge EEG segments for {subject}")
+
+    # 1️⃣ Shift urges times
+    urges_list = urges_lists[f"list_urges_{subject}"]
+    stim2_time_patient = patient["stim2_time_original"]
+    urges_times_eeg = shift_urges_times(urges_list, stim2_time=stim2_time_patient)
+
+    # 2️⃣ Extract EEG segments 5s before each urge
+    segments = extract_pre_tic_eeg_segments(patient['raw_cropped'], urges_times_eeg, pre_seconds=5.0)
+
+    # Save in dict
+    pre_urge_segments[subject] = segments
+
+print("Extraction done. pre_urge_segments contains EEG segments for all patients.")

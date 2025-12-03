@@ -1,0 +1,183 @@
+===== Analyse des merged_ttl_tics par patient =====
+
+
+============================================================
+ Patient : 000010
+============================================================
+start_tic at 401.998 then D pressed at 402.064
+start_tic at 537.527 then D pressed at 539.09
+start_tic at 557.893 then D pressed at 558.756
+start_tic at 688.322 then D pressed at 690.768
+start_tic at 710.088 then D pressed at 711.494
+start_tic at 739.987 then D pressed at 741.58
+start_tic at 847.383 then D pressed at 848.592
+start_tic at 949.013 then D pressed at 950.91
+
+============================================================
+ Patient : _BB28-bis
+============================================================
+start_tic at 302.66 then D pressed at 304.974
+start_tic at 302.66 then D pressed at 314.448
+start_tic at 328.18 then D pressed at 328.212
+D pressed at 331.162 then visible tic at 331.22
+D pressed at 344.952 without any visible tic then F pressed at 346.626
+D pressed at 353.622 without any visible tic then F pressed at 356.17
+start_tic at 362.101 then D pressed at 362.412
+start_tic at 378.101 then D pressed at 378.222
+start_tic at 401.301 then D pressed at 401.918
+start_tic at 405.781 then D pressed at 406.106
+start_tic at 408.861 then D pressed at 409.382
+start_tic at 412.741 then D pressed at 412.862
+start_tic at 412.741 then D pressed at 414.838
+start_tic at 427.702 then D pressed at 427.702
+start_tic at 430.662 then D pressed at 430.752
+start_tic at 487.302 then D pressed at 487.828
+start_tic at 487.302 then D pressed at 492.9
+start_tic at 487.302 then D pressed at 498.188
+D pressed at 550.454 then visible tic at 550.503
+start_tic at 560.583 then D pressed at 561.754
+D pressed at 623.526 then visible tic at 623.544
+D pressed at 663.68 then visible tic at 666.385
+D pressed at 691.26 then visible tic at 691.905
+D pressed at 772.03 then visible tic at 775.186
+start_tic at 775.186 then D pressed at 775.738
+start_tic at 805.346 then D pressed at 808.068
+start_tic at 812.506 then D pressed at 813.464
+start_tic at 833.947 then D pressed at 834.136
+
+============================================================
+ Patient : 000013
+============================================================
+start_tic at 361.848 then D pressed at 366.912
+D pressed at 382.688 then visible tic at 383.169
+start_tic at 383.169 then D pressed at 389.812
+start_tic at 383.169 then D pressed at 396.052
+start_tic at 404.435 then D pressed at 408.672
+D pressed at 419.246 without any visible tic then F pressed at 420.486
+start_tic at 422.434 then D pressed at 424.398
+start_tic at 439.967 then D pressed at 440.636
+D pressed at 460.992 then visible tic at 461.299
+D pressed at 470.926 then visible tic at 471.299
+start_tic at 471.299 then D pressed at 483.134
+start_tic at 471.299 then D pressed at 486.092
+D pressed at 513.712 then visible tic at 513.964
+start_tic at 513.964 then D pressed at 520.894
+D pressed at 554.764 without any visible tic then F pressed at 555.8
+start_tic at 569.963 then D pressed at 570.55
+D pressed at 600.79 then visible tic at 601.062
+D pressed at 612.832 then visible tic at 613.428
+D pressed at 620.544 then visible tic at 620.661
+start_tic at 625.361 then D pressed at 627.702
+D pressed at 634.308 then visible tic at 634.527
+D pressed at 666.104 without any visible tic then F pressed at 667.216
+D pressed at 675.062 then visible tic at 675.393
+D pressed at 692.082 then visible tic at 693.192
+D pressed at 705.464 without any visible tic then F pressed at 706.746
+start_tic at 749.724 then D pressed at 755.518
+D pressed at 768.792 without any visible tic then F pressed at 770.194
+D pressed at 790.46 then visible tic at 790.856
+start_tic at 802.322 then D pressed at 803.12
+start_tic at 802.322 then D pressed at 807.162
+D pressed at 840.422 then visible tic at 840.921
+start_tic at 840.921 then D pressed at 845.546
+D pressed at 860.496 without any visible tic then F pressed at 862.668
+D pressed at 887.23 then visible tic at 887.586
+start_tic at 901.719 then D pressed at 904.064
+start_tic at 901.719 then D pressed at 911.26
+start_tic at 901.719 then D pressed at 916.044
+D pressed at 933.828 then visible tic at 934.184
+D pressed at 948.872 then visible tic at 950.651
+D pressed at 982.022 without any visible tic then F pressed at 983.422
+D pressed at 992.216 without any visible tic then F pressed at 993.826
+D pressed at 1004.216 without any visible tic then F pressed at 1007.024
+D pressed at 1012.512 then visible tic at 1012.782
+D pressed at 1033.054 then visible tic at 1033.415
+start_tic at 1033.415 then D pressed at 1035.564
+D pressed at 1057.54 then visible tic at 1057.947
+start_tic at 1057.947 then D pressed at 1060.056
+D pressed at 1065.158 without any visible tic then F pressed at 1066.394
+D pressed at 1068.94 without any visible tic then F pressed at 1070.748
+start_tic at 1078.98 then D pressed at 1080.656
+
+============================================================
+ Patient : 000030
+============================================================
+start_tic at 329.961 then D pressed at 330.138
+start_tic at 333.961 then D pressed at 335.024
+start_tic at 343.06 then D pressed at 343.24
+start_tic at 347.227 then D pressed at 347.874
+D pressed at 351.226 without any visible tic then F pressed at 352.164
+start_tic at 358.559 then D pressed at 359.26
+D pressed at 369.772 then visible tic at 370.025
+start_tic at 376.125 then D pressed at 377.2
+start_tic at 384.758 then D pressed at 385.098
+D pressed at 388.586 without any visible tic then F pressed at 389.994
+D pressed at 397.0 without any visible tic then F pressed at 398.674
+start_tic at 409.29 then D pressed at 409.544
+start_tic at 411.523 then D pressed at 412.022
+start_tic at 417.723 then D pressed at 418.096
+D pressed at 427.598 then visible tic at 427.956
+start_tic at 442.222 then D pressed at 443.484
+start_tic at 444.988 then D pressed at 447.274
+start_tic at 451.788 then D pressed at 452.246
+start_tic at 464.521 then D pressed at 465.69
+start_tic at 464.521 then D pressed at 470.88
+start_tic at 485.653 then D pressed at 485.976
+start_tic at 490.719 then D pressed at 495.248
+D pressed at 516.496 without any visible tic then F pressed at 518.942
+start_tic at 529.151 then D pressed at 531.896
+start_tic at 534.717 then D pressed at 536.414
+start_tic at 563.982 then D pressed at 564.506
+start_tic at 585.948 then D pressed at 586.766
+D pressed at 595.108 without any visible tic then F pressed at 597.022
+start_tic at 609.18 then D pressed at 609.972
+start_tic at 609.18 then D pressed at 613.498
+start_tic at 642.611 then D pressed at 643.326
+start_tic at 654.444 then D pressed at 656.192
+start_tic at 668.477 then D pressed at 671.92
+start_tic at 668.477 then D pressed at 674.096
+start_tic at 677.643 then D pressed at 681.3
+start_tic at 693.176 then D pressed at 693.764
+start_tic at 711.275 then D pressed at 714.55
+D pressed at 728.162 then visible tic at 729.04
+start_tic at 740.64 then D pressed at 741.872
+start_tic at 757.506 then D pressed at 758.176
+start_tic at 771.705 then D pressed at 776.72
+D pressed at 784.858 without any visible tic then F pressed at 786.366
+start_tic at 786.404 then D pressed at 788.11
+D pressed at 808.098 then visible tic at 808.47
+D pressed at 816.704 then visible tic at 817.036
+start_tic at 833.835 then D pressed at 834.312
+D pressed at 854.604 then visible tic at 855.167
+D pressed at 868.522 then visible tic at 868.833
+start_tic at 868.833 then D pressed at 880.006
+start_tic at 903.365 then D pressed at 904.526
+start_tic at 913.064 then D pressed at 913.5
+start_tic at 913.064 then D pressed at 923.082
+
+============================================================
+ Patient : 000031
+============================================================
+start_tic at 352.401 then D pressed at 352.916
+D pressed at 430.164 then visible tic at 430.998
+start_tic at 449.931 then D pressed at 450.558
+start_tic at 470.33 then D pressed at 470.858
+start_tic at 485.996 then D pressed at 495.9
+start_tic at 485.996 then D pressed at 514.7
+start_tic at 485.996 then D pressed at 526.556
+start_tic at 485.996 then D pressed at 540.358
+start_tic at 551.427 then D pressed at 551.928
+start_tic at 551.427 then D pressed at 567.422
+start_tic at 611.858 then D pressed at 612.014
+start_tic at 649.323 then D pressed at 687.7
+start_tic at 649.323 then D pressed at 711.092
+start_tic at 721.653 then D pressed at 733.69
+start_tic at 742.486 then D pressed at 756.31
+start_tic at 763.318 then D pressed at 769.454
+start_tic at 784.717 then D pressed at 791.856
+start_tic at 784.717 then D pressed at 832.77
+start_tic at 856.948 then D pressed at 884.862
+start_tic at 906.713 then D pressed at 916.564
+start_tic at 925.112 then D pressed at 927.902
+start_tic at 925.112 then D pressed at 930.79
+start_tic at 939.945 then D pressed at 941.928
