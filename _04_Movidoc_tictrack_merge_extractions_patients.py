@@ -4,6 +4,8 @@
 # Author  : Indira
 # =======================================================================
 
+print(">>> LE SCRIPT A BIEN ÉTÉ LANCÉ")
+
 
 
 # ============================================================
@@ -248,15 +250,18 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
 
     # 2. Extract tics from Excel
     tics_original = extract_tics_from_excel(excel_file=excel_path, fps=fps, min_absence_frames=min_absence_frames) # extract the tics from Excel
+    print("Checkpoint 4 : tics extracted from Excel")
 
     tics_original_with_phases = assign_phase_to_tics(tics_original , phases_dict) # associate each tic to its phase
+    print("Checkpoint 5 : tics extracted from Excel & phases assigned")
 
     # create a version realigned on EEG using the linear drift parameters ----
     tics_corrected = [(start * slope + intercept, end * slope + intercept) for start, end in tics_original]
+    print("Checkpoint 6 : tics extracted from Excel are corrected")
 
     # assign the phases after the recalage
     tics_corrected_with_phases = assign_phase_to_tics(tics_corrected , phases_dict) # associate each tic to its phase
-    print("Checkpoint 4 : tics extracted & corrected OK")
+    print("Checkpoint 7 : tics extracted from Excel are corrected & phases assigned")
 
     # 3. Merge into one Python object
     full_output = {
@@ -276,7 +281,7 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     merged_ttl_tics = build_merged_ttl_tics(patient=full_output, phases_to_keep=phases_to_keep)
     full_output["merged_ttl_tics"] = merged_ttl_tics
 
-    print("Checkpoint 5 : ready to return full_output")
+    print("Checkpoint 8 : ready to return full_output")
 
     # return the full object for the patient
     return full_output
@@ -540,12 +545,12 @@ for vhdr_path, patient in results.items():
     for item in patient["merged_ttl_tics"]:
         print(item)
     
-    plot_events_timeline(
-        merged_ttl_tics = patient["merged_ttl_tics"],
-        patient_name = patient["subject"],
-        phase_start_key=patient["phases_dict"]["spontaneous_tics"][0],
-        phase_end_key=patient["phases_dict"]["spontaneous_tics"][1]
-        )
+    # plot_events_timeline(
+    #     merged_ttl_tics = patient["merged_ttl_tics"],
+    #     patient_name = patient["subject"],
+    #     phase_start_key=patient["phases_dict"]["spontaneous_tics"][0],
+    #     phase_end_key=patient["phases_dict"]["spontaneous_tics"][1]
+    #     )
 
 print("Patients analysés :", list(results.keys()))
 
