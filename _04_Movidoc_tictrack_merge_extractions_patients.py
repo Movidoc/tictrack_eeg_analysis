@@ -467,16 +467,14 @@ results = {}
 
 patients = [
     {
-        "montage": "standard_1005", # montage with 64 electrodes (from MM30 : always 64 electrodes)
-        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000030.vhdr", # MM30
-        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\MM30_annotations_binary-table_cutted.xlsx",
+        "montage": "standard_1020", # montage with 32 electrodes (from DS26 to BC29 : always 32 electrodes)
+        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000010.vhdr", #DS26
+        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\DS26_annotations_binary-table_cutted.xlsx",
         "fps": 30,
         "min_absence_frames": 30,
-        "excel_phase_times": [6.633, 68.277, 196.581, 323.994, 931.194, 995.049]
-    }
-]
-
-"""     {
+        "excel_phase_times": [13.728, 50.028, 190.080, 349.272, 980.727, 1277.991]
+    },
+    {
         "montage": "standard_1020", # montage with 32 electrodes (from DS26 to BC29 : always 32 electrodes)
         "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack_BB28-bis.vhdr", #BB28
         "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\BB28_annotations_binary-table_cutted.xlsx",
@@ -492,14 +490,23 @@ patients = [
         "min_absence_frames": 30,
         "excel_phase_times": [17.391, 65.670, 201.597, 358.215, 1088.670, 1204.038]
     },
-        {
+    {
+        "montage": "standard_1005", # montage with 64 electrodes (from MM30 : always 64 electrodes)
+        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000030.vhdr", # MM30
+        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\MM30_annotations_binary-table_cutted.xlsx",
+        "fps": 30,
+        "min_absence_frames": 30,
+        "excel_phase_times": [6.633, 68.277, 196.581, 323.994, 931.194, 995.049]
+    },
+    {
         "montage": "standard_1005", # montage with 64 electrodes (from MM30 : always 64 electrodes)
         "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000031.vhdr", # SC31
         "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\SC31_annotations_binary-table_cutted.xlsx",
         "fps": 30,
         "min_absence_frames": 30,
         "excel_phase_times": [12.243, 62.040, 191.664, 345.972, 970.200, 1074.546]
-    } """
+    }
+]
 
 # iterate on all the patients to execute the complete pipeline
 for p in patients:
@@ -545,12 +552,12 @@ for vhdr_path, patient in results.items():
     for item in patient["merged_ttl_tics"]:
         print(item)
     
-    # plot_events_timeline(
-    #     merged_ttl_tics = patient["merged_ttl_tics"],
-    #     patient_name = patient["subject"],
-    #     phase_start_key=patient["phases_dict"]["spontaneous_tics"][0],
-    #     phase_end_key=patient["phases_dict"]["spontaneous_tics"][1]
-    #     )
+    plot_events_timeline(
+        merged_ttl_tics = patient["merged_ttl_tics"],
+        patient_name = patient["subject"],
+        phase_start_key=patient["phases_dict"]["spontaneous_tics"][0],
+        phase_end_key=patient["phases_dict"]["spontaneous_tics"][1]
+        )
 
 print("Patients analysés :", list(results.keys()))
 

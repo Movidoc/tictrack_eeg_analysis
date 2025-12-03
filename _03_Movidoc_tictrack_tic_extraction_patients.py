@@ -59,7 +59,6 @@ def extract_tics_from_excel(excel_file, fps, min_absence_frames=30):
 
 
     # check the required columns
-
     if fps == 30:
         time_col = "Time (30 fps) s"
     elif fps == 25:
@@ -95,9 +94,12 @@ def extract_tics_from_excel(excel_file, fps, min_absence_frames=30):
 
 
     # -------------------- main detection loop --------------------
+    print(f"Checkpoint : Total frames to process: {n}")
+
 
     # iterate through all frames until the end
     while i < n:
+        # print(f"Checkpoint : Processing frame {i}/{n}")
         
         # to check the indices that seems to be a problem
         # if i > 10140:
@@ -107,6 +109,8 @@ def extract_tics_from_excel(excel_file, fps, min_absence_frames=30):
         # -------------------- TIC CONDITION 1 : 30 frames of "Absence" before --------------------
         before_ok = False
         before_ok = np.all((absence[i-min_absence_frames:i] == 1) & (movement_sum[i-min_absence_frames:i] == 0)) & (i >= min_absence_frames)
+        # print(f"Checkpoint : i={i} before_ok={before_ok} absence[i]={absence[i]} movement_sum[i]={movement_sum[i]}")
+
 
         if before_ok and absence[i] == 0 and movement_sum[i] > 0:
             
@@ -133,6 +137,7 @@ def extract_tics_from_excel(excel_file, fps, min_absence_frames=30):
                 while k < n and (absence[k] == 1) and (movement_sum[k] == 0):
                     k += 1
                 after_len = k - j
+                # print(f"  j={j}, k={k}, after_len={after_len}")
 
                 # to check the indices that seems to be a problem
                 # if i > 10140:
@@ -151,6 +156,7 @@ def extract_tics_from_excel(excel_file, fps, min_absence_frames=30):
                     j = k
         else :
             i += 1
+            # print(f"Skipping frame {i}")
     
     # # filter tics inside phase
     # tics_in_phase = []
@@ -170,35 +176,37 @@ def extract_tics_from_excel(excel_file, fps, min_absence_frames=30):
 
 # === code with functions ===
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     
-    # Test on 1 Excel file only
+#     # Test on 1 Excel file only
 
-    # Definition of the phase limits ALWAYS in seconds (even if in milliseconds in the Excel file)
-    # phase_start_BB28 = 302600 / 1000.0
-    # phase_end_BB28 = 929960 / 1000.0
-    # phase_start_BC29 = 358.215
-    # phase_end_BC29 = 1088.67
-    phase_start_MM30 = 323.994
-    phase_end_MM30 = 995.049
-    # phase_start_SC31 = 345.972
-    # phase_end_SC31 = 970.167
+#     # Definition of the phase limits ALWAYS in seconds (even if in milliseconds in the Excel file)
+#     phase_start_DS26 = 349.270
+#     phase_end_DS26 = 980.730
+#     # phase_start_BB28 = 302600 / 1000.0
+#     # phase_end_BB28 = 929960 / 1000.0
+#     # phase_start_BC29 = 358.215
+#     # phase_end_BC29 = 1088.67
+#     # phase_start_MM30 = 323.994
+#     # phase_end_MM30 = 995.049
+#     # phase_start_SC31 = 345.972
+#     # phase_end_SC31 = 970.167
 
-    # Load the data
-    xlsx_file = "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\MM30_annotations_binary-table_cutted.xlsx"
-    fps = 30 # 30, or 25 (for BB28 only)
-    min_absence_frames = 30 # 30 ou 25 (for BB28 only)
+#     # Load the data
+#     xlsx_file = "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\DS26_annotations_binary-table_cutted.xlsx"
+#     fps = 30 # 30, or 25 (for BB28 only)
+#     min_absence_frames = 30 # 30 ou 25 (for BB28 only)
 
-    try:
-        # tics = extract_tics_from_excel(excel_file=xlsx_file, phase_start_s=phase_start_MM30, phase_end_s=phase_end_MM30, fps=fps, min_absence_frames=min_absence_frames)
-        tics = extract_tics_from_excel(excel_file=xlsx_file, fps=fps, min_absence_frames=min_absence_frames)
-        print("\nTics detected inside selected phase:")
-        if not tics:
-            print(" No tics detected in this phase.")
-        else:
-            for start, end in tics:
-                print(f" - Tic from {start:.3f}s to {end:.3f}s")
-    except Exception as e:
-        print(f"Error: {e}")
+#     try:
+#         # tics = extract_tics_from_excel(excel_file=xlsx_file, phase_start_s=phase_start_MM30, phase_end_s=phase_end_MM30, fps=fps, min_absence_frames=min_absence_frames)
+#         tics = extract_tics_from_excel(excel_file=xlsx_file, fps=fps, min_absence_frames=min_absence_frames)
+#         print("\nTics detected inside selected phase:")
+#         if not tics:
+#             print(" No tics detected in this phase.")
+#         else:
+#             for start, end in tics:
+#                 print(f" - Tic from {start:.3f}s to {end:.3f}s")
+#     except Exception as e:
+#         print(f"Error: {e}")
 
 #########################################################################
