@@ -160,6 +160,8 @@ def realign_excel_to_eeg(excel_times, eeg_times):
 # ===============================================================================
 
 def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames, montage_name):
+
+    print(f"\n===== START Patient {vhdr_path} =====")
     
     # 1.a. Process EEG file (.vhdr)
     raw, subject_name = load_data(vhdr_path) # charge the EEG file & get the name of the subject
@@ -167,6 +169,7 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     raw_pre = preprocess_data(raw, subject_name, montage_name=montage_name) # filter the signal & apply the montage
     raw_rest = apply_rest_reference(raw_pre, subject_name) # apply the REST reference
     print("Before crop:", raw_rest.annotations.onset[:5])
+    print("Checkpoint 1 : EEG preprocessing OK")
     raw_cropped = recalibrate_from_first_event(raw_rest, target_stim="Stimulus/S  2") # readjust the signal from the 1st significative TTL
     events_times, event_id = extract_stimuli(raw_cropped) # extract the TTL/events from the signal AFTER the recalage
     print("After crop:", raw_cropped.annotations.onset[:5])
@@ -194,6 +197,7 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     print("\n===== Excel times realigned on EEG =====")
     print(excel_corrected_times)
     print(f"Linear drift: slope={slope:.6f}, intercept={intercept:.6f}")
+    print("Checkpoint 2 : TTL extracted and realigned OK")
 
 
 
@@ -235,6 +239,8 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     #     start, end = phases_dict[phase_name]
     #     phases_dict[phase_name] = (start - stim2_time, end - stim2_time)
 
+    print("Checkpoint 3 : phases_dict OK")
+
     # print the debug after the loop to check
     print("\n===== DEBUG: Phases readjusted timestamps for this patient =====")
     for phase, (s, e) in phases_dict.items():
@@ -250,6 +256,7 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
 
     # assign the phases after the recalage
     tics_corrected_with_phases = assign_phase_to_tics(tics_corrected , phases_dict) # associate each tic to its phase
+    print("Checkpoint 4 : tics extracted & corrected OK")
 
     # 3. Merge into one Python object
     full_output = {
@@ -268,6 +275,8 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     phases_to_keep = ["spontaneous_tics", "imitated_tics", "retention_tics"]
     merged_ttl_tics = build_merged_ttl_tics(patient=full_output, phases_to_keep=phases_to_keep)
     full_output["merged_ttl_tics"] = merged_ttl_tics
+
+    print("Checkpoint 5 : ready to return full_output")
 
     # return the full object for the patient
     return full_output
@@ -453,8 +462,18 @@ results = {}
 
 patients = [
     {
+        "montage": "standard_1005", # montage with 64 electrodes (from MM30 : always 64 electrodes)
+        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000030.vhdr", # MM30
+        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\MM30_annotations_binary-table_cutted.xlsx",
+        "fps": 30,
+        "min_absence_frames": 30,
+        "excel_phase_times": [6.633, 68.277, 196.581, 323.994, 931.194, 995.049]
+    }
+]
+
+"""     {
         "montage": "standard_1020", # montage with 32 electrodes (from DS26 to BC29 : always 32 electrodes)
-        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack_BB28-bis.vhdr",
+        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack_BB28-bis.vhdr", #BB28
         "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\BB28_annotations_binary-table_cutted.xlsx",
         "fps": 25,
         "min_absence_frames": 25,
@@ -462,33 +481,36 @@ patients = [
     },
     {
         "montage": "standard_1020", # montage with 32 electrodes (from DS26 to BC29 : always 32 electrodes)
-        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000013.vhdr",
+        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000013.vhdr", # BC29
         "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\BC29_annotations_binary-table_cutted_xlsx_Lizbeth.xlsx",
         "fps": 30,
         "min_absence_frames": 30,
         "excel_phase_times": [17.391, 65.670, 201.597, 358.215, 1088.670, 1204.038]
     },
-    {
+        {
         "montage": "standard_1005", # montage with 64 electrodes (from MM30 : always 64 electrodes)
-        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000031.vhdr",
+        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000031.vhdr", # SC31
         "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\SC31_annotations_binary-table_cutted.xlsx",
         "fps": 30,
         "min_absence_frames": 30,
-        "excel_phase_times": [12.243, 662.040, 191.664, 345.972, 970.200, 1074.546]
-    }
-]
+        "excel_phase_times": [12.243, 62.040, 191.664, 345.972, 970.200, 1074.546]
+    } """
 
 # iterate on all the patients to execute the complete pipeline
 for p in patients:
-    results[p["vhdr"]] = run_full_pipeline_for_patient(
-        vhdr_path=p["vhdr"], # path to the EEG file
-        excel_path=p["excel"], # path to the Excel file
-        # phase_start=p["phase_start"],
-        # phase_end=p["phase_end"],
-        fps=p["fps"], # fps of the Excel file
-        min_absence_frames=p["min_absence_frames"], # minimum of frames of "Absence" to define the beginning & end of the tics,
-        montage_name=p["montage"]
-    )
+    try:
+        results[p["vhdr"]] = run_full_pipeline_for_patient(
+            vhdr_path=p["vhdr"], # path to the EEG file
+            excel_path=p["excel"], # path to the Excel file
+            # phase_start=p["phase_start"],
+            # phase_end=p["phase_end"],
+            fps=p["fps"], # fps of the Excel file
+            min_absence_frames=p["min_absence_frames"], # minimum of frames of "Absence" to define the beginning & end of the tics,
+            montage_name=p["montage"]
+        )
+    except Exception as e:
+        print(f"\n❌ ERROR for patient: {p['vhdr']}")
+        print(e)
 
 print("Pipeline finished for all the patients.")
 
@@ -527,4 +549,4 @@ for vhdr_path, patient in results.items():
 
 print("Patients analysés :", list(results.keys()))
 
-#########################################################################
+######################################################################### python _04_Movidoc_tictrack_merge_extractions_patients.py
