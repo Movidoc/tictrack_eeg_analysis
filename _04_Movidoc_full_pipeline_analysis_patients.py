@@ -36,6 +36,8 @@ import numpy as np
 
 import os
 
+import random
+
 
 
 # ============================================================
@@ -161,12 +163,103 @@ def realign_excel_to_eeg(excel_times, eeg_times):
     return corrected_times, a, b
 
 
+# ============================================================================
+# Function : build_merged_ttl_tics
+# Purpose  : create single merged timeline of corrected tics & TTL times
+# ============================================================================
+
+def build_merged_ttl_tics(patient, phases_to_keep):
+    """
+    Build a merged list of:
+    - start_i / end_i from patient["tics_corrected"]
+    - time_Sxx or time_Sxx_i from patient["ttl"]
+    # Filtered by phases_to_keep.
+    """
+
+    filter_dict = {
+        'D': 21, 
+        'F': 22,
+        'S': 23,
+        'T': 24,
+        'right': 25,
+        'start_spont': 9,
+        'end_spont': 10,
+        'start_imit': 11,
+        'end_imit': 12,
+        'start_ret': 13,
+        'end_ret': 14
+        }
+    print(f"\n\n\nThis is the dictionnary : {filter_dict}\n\n\n")
+    
+    merged = []
+
+    # ------------------------------------------------------------
+    # 1. Index the tics : start_1, end_1, start_2, end_2, ...
+    # ------------------------------------------------------------
+    tics = patient["tics_corrected"]
+    phases_dict = patient["phases_dict"]
+
+    for i, tic in enumerate(tics, start=1):
+        tic_phase = tic["phase"]
+
+        if tic_phase in phases_to_keep:
+            start_key = f"start_{i}"
+            end_key = f"end_{i}"
+
+            merged.append({start_key: round(tic["start"], 3)})
+            merged.append({end_key: round(tic["end"], 3)})
+
+    # ------------------------------------------------------------
+    # 2. Index TTLs: S9, S25_3, ...
+    # ------------------------------------------------------------
+
+    ttl_list = patient["ttl"]
+
+    # Build list of intervals to keep
+    intervals = [phases_dict[p] for p in phases_to_keep]
+    # count occurrences per stimulus name
+    stim_counts = {}
+
+    for ttl in ttl_list:
+        # ttl_phase = ttl["phase"] # e.g. 'imitated_tics'
+        ttl_time = ttl["time"]
+        ttl_name = ttl["ttl_name"] # e.g. 'Stimulus/S  9'
+
+        # keep TTL only if its timestamp falls inside one of the intervals
+        inside = any(start <= ttl_time <= end for start, end in intervals)
+
+        if not inside:
+            continue
+
+        # Extract the number after 'S'
+        try:
+            # for filter_key, filter_value in filter_dict.items():
+            #     if filter_value == int(ttl_name.split("S")[2]) :
+            #         stim_num = filter_key
+            num = int(ttl_name.split("/S")[1].strip())
+        except:
+            continue
+
+        # key = stim_num
+        key = {v: k for k, v in filter_dict.items()}.get(num, None)
+        if key is None:
+            continue
+        merged.append({key: round(ttl_time, 3)})
+
+    # ------------------------------------------------------------
+    # 3. Sort all items by time (value inside the dict)
+    # ------------------------------------------------------------
+    merged_sorted = sorted(merged, key=lambda d: list(d.values())[0])
+
+    return merged_sorted
+
+
 # ===============================================================================
 # Function : run_full_pipeline_for_patient
 # Purpose : run the full pipeline by running the functions from the 02 & 03 files
 # ===============================================================================
 
-def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames, montage_name):
+def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames, montage_name, excel_phase_times):
 
     print(f"\n===== START Patient {vhdr_path} =====")
     
@@ -200,7 +293,7 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     print(eeg_phase_times)
 
     # Realign Excel -> EEG
-    excel_corrected_times, slope, intercept = realign_excel_to_eeg(excel_times=p["excel_phase_times"], eeg_times=eeg_phase_times)
+    excel_corrected_times, slope, intercept = realign_excel_to_eeg(excel_times=excel_phase_times, eeg_times=eeg_phase_times)
     print("\n===== Excel times realigned on EEG =====")
     print(excel_corrected_times)
     print(f"Linear drift: slope={slope:.6f}, intercept={intercept:.6f}")
@@ -294,97 +387,6 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
 
     # return the full object for the patient
     return full_output
-
-
-# ============================================================================
-# Function : build_merged_ttl_tics
-# Purpose  : create single merged timeline of corrected tics & TTL times
-# ============================================================================
-
-def build_merged_ttl_tics(patient, phases_to_keep):
-    """
-    Build a merged list of:
-    - start_i / end_i from patient["tics_corrected"]
-    - time_Sxx or time_Sxx_i from patient["ttl"]
-    # Filtered by phases_to_keep.
-    """
-
-    filter_dict = {
-        'D': 21, 
-        'F': 22,
-        'S': 23,
-        'T': 24,
-        'right': 25,
-        'start_spont': 9,
-        'end_spont': 10,
-        'start_imit': 11,
-        'end_imit': 12,
-        'start_ret': 13,
-        'end_ret': 14
-        }
-    print(f"\n\n\nThis is the dictionnary : {filter_dict}\n\n\n")
-    
-    merged = []
-
-    # ------------------------------------------------------------
-    # 1. Index the tics : start_1, end_1, start_2, end_2, ...
-    # ------------------------------------------------------------
-    tics = patient["tics_corrected"]
-    phases_dict = patient["phases_dict"]
-
-    for i, tic in enumerate(tics, start=1):
-        tic_phase = tic["phase"]
-
-        if tic_phase in phases_to_keep:
-            start_key = f"start_{i}"
-            end_key = f"end_{i}"
-
-            merged.append({start_key: round(tic["start"], 3)})
-            merged.append({end_key: round(tic["end"], 3)})
-
-    # ------------------------------------------------------------
-    # 2. Index TTLs: S9, S25_3, ...
-    # ------------------------------------------------------------
-
-    ttl_list = patient["ttl"]
-
-    # Build list of intervals to keep
-    intervals = [phases_dict[p] for p in phases_to_keep]
-    # count occurrences per stimulus name
-    stim_counts = {}
-
-    for ttl in ttl_list:
-        # ttl_phase = ttl["phase"] # e.g. 'imitated_tics'
-        ttl_time = ttl["time"]
-        ttl_name = ttl["ttl_name"] # e.g. 'Stimulus/S  9'
-
-        # keep TTL only if its timestamp falls inside one of the intervals
-        inside = any(start <= ttl_time <= end for start, end in intervals)
-
-        if not inside:
-            continue
-
-        # Extract the number after 'S'
-        try:
-            # for filter_key, filter_value in filter_dict.items():
-            #     if filter_value == int(ttl_name.split("S")[2]) :
-            #         stim_num = filter_key
-            num = int(ttl_name.split("/S")[1].strip())
-        except:
-            continue
-
-        # key = stim_num
-        key = {v: k for k, v in filter_dict.items()}.get(num, None)
-        if key is None:
-            continue
-        merged.append({key: round(ttl_time, 3)})
-
-    # ------------------------------------------------------------
-    # 3. Sort all items by time (value inside the dict)
-    # ------------------------------------------------------------
-    merged_sorted = sorted(merged, key=lambda d: list(d.values())[0])
-
-    return merged_sorted
 
 
 # ==========================================================================================
@@ -660,6 +662,75 @@ def extract_pre_tic_epochs(raw_cropped, urge_times, pre_seconds=1.0, post_second
 
     return epochs
 
+
+# ==============================================================================
+# Function : extract_random_epochs_in_phase
+# Purpose  : extract random EEG epochs of fixed duration within a selected phase
+# ==============================================================================
+
+def extract_random_epochs_in_phase(raw_cropped, start_time, end_time, n_epochs=50, epoch_duration=1.0, event_id=1, seed=None):
+
+    """
+    ----------
+    Purpose
+    ----------
+    Extract `n_epochs` random EEG segments of `epoch_duration` seconds within the interval defined by `ttl_start_name` and `ttl_end_name`.
+
+    ----------
+    Parameters
+    ----------
+    raw_cropped : mne.io.Raw
+        Preprocessed EEG signal.
+    ttl_start_name : str
+        Name of the TTL marking the start of the interval (e.g. "Stimulus/S  5").
+    ttl_end_name : str
+        Name of the TTL marking the end of the interval (e.g. "Stimulus/S  6").
+    ttl_list : list of dict
+        List of TTLs, each dict containing "ttl_name" and "time".
+    n_epochs : int
+        Number of random epochs to extract.
+    epoch_duration : float
+        Duration of each epoch in seconds.
+
+    ----------
+    Returns
+    ----------
+    epochs : mne.Epochs
+        MNE Epochs object containing the extracted random epochs.
+    """
+
+    if seed is not None:
+        random.seed(seed)
+        np.random.seed(seed)
+
+    # calculate the max possible start times to avoid exceeding end_time
+    max_start = end_time - epoch_duration
+    if max_start <= start_time:
+        raise ValueError("Interval too short for the requested epoch duration.")
+
+    # randomly select the start times
+    random_starts = np.random.uniform(low=start_time, high=max_start, size=n_epochs)
+
+    # build an events array
+    events = []
+    for t in random_starts:
+        sample_idx = np.round(t * raw_cropped.info['sfreq']).astype(int)
+        events.append([sample_idx, 0, event_id])
+    events = np.array(events, dtype=int)
+
+    # create the epochs
+    epochs = mne.Epochs(
+        raw_cropped,
+        events,
+        event_id={f"random_{event_id}": event_id},
+        tmin=0,
+        tmax=epoch_duration,
+        baseline=None,
+        preload=True
+    )
+
+    return epochs
+
 #########################################################################
 
 
@@ -716,11 +787,10 @@ for p in patients:
         results[p["vhdr"]] = run_full_pipeline_for_patient(
             vhdr_path=p["vhdr"], # path to the EEG file
             excel_path=p["excel"], # path to the Excel file
-            # phase_start=p["phase_start"],
-            # phase_end=p["phase_end"],
             fps=p["fps"], # fps of the Excel file
             min_absence_frames=p["min_absence_frames"], # minimum of frames of "Absence" to define the beginning & end of the tics,
-            montage_name=p["montage"]
+            montage_name=p["montage"],
+            excel_phase_times=p["excel_phase_times"]
         )
     except Exception as e:
         print(f"\n❌ ERROR for patient: {p['vhdr']}")
@@ -796,14 +866,43 @@ for vhdr_path, patient in results.items():
 
 
 
-# Extracting urges epochs for all patients
+# Extracting eyes_closed & urges epochs for all patients
 
-# create a dictionnary to stock the the epochs for each patient -> 1 entry by patient pre_urge_epochs["000031"]=epochs_MNE
+# create dictionnaries to stock the epochs for each patient -> 1 entry by patient pre_urge_epochs["000031"]=epochs_MNE
 pre_urge_epochs = {}
+random_epochs_in_phase = {}
 
 for vhdr_path, patient in results.items():
     subject = patient['subject']
-    print(f"\nProcessing pre-tic urge EEG epochs for {subject}")
+    print(f"\nProcessing eyes_closed & pre-tic urge EEG epochs for {subject}")
+
+
+    # A. Extract random epochs from the eyes_closed phase
+
+    # 1️⃣ Get the Stimulus/S that fix the limits of the eyes_closed phase
+    ttl_info = patient["ttl"]
+    start_time = next(ttl["time"] for ttl in ttl_info if ttl["ttl_name"] == "Stimulus/S  5")
+    end_time   = next(ttl["time"] for ttl in ttl_info if ttl["ttl_name"] == "Stimulus/S  6")
+
+    # 2️⃣ Extract the random epochs in the selected phase
+    random_epochs = extract_random_epochs_in_phase(
+        raw_cropped=patient["raw_cropped"],
+        start_time=start_time,
+        end_time=end_time,
+        n_epochs=50,
+        epoch_duration=1.0,
+        event_id=999,
+        seed=42
+    )
+
+    random_epochs_in_phase[subject] = random_epochs
+
+    # 3️⃣ Save epochs into a .fif file (one file per patient)
+    os.makedirs("epochs_random_eyes_closed", exist_ok=True)
+    random_epochs.save(f"epochs_random_eyes_closed/random_epochs_{subject}.fif", overwrite=True)
+
+
+    # B. Extract the urge epochs
 
     # 1️⃣ Shift urges times into EEG reference
     urges_list = urges_lists[f"list_urges_{subject}"] # get the list of urges of the patient
@@ -812,13 +911,11 @@ for vhdr_path, patient in results.items():
 
     # 2️⃣ Extract EEG epochs (5s before each urge)
     raw_cropped = patient["raw_cropped"]  # ⚠️ raw_cropped is inside results only if you store it explicitly ! important to stock raw_cropped into full_output
-
     epochs = extract_pre_tic_epochs(raw_cropped, urges_times_eeg, pre_seconds=5.0, post_seconds=0.0)
 
-    # save the epochs per patient
     pre_urge_epochs[subject] = epochs
 
-    # 3️⃣ Save epochs into a FIF file (one file per patient)
+    # 3️⃣ Save epochs into a .fif file (one file per patient)
     os.makedirs("epochs_pre_urge", exist_ok=True)
     save_path = f"epochs_pre_urge/pre_urge_epochs_{subject}.fif"
     epochs.save(save_path, overwrite=True)
