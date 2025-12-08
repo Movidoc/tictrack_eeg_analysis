@@ -51,7 +51,7 @@ import random
 # Save the original plot functions
 original_plot = mne.io.BaseRaw.plot
 original_plot_psd = mne.io.BaseRaw.plot_psd
-
+'''
 # Define new functions that force show=False
 def plot_no_show(self, *args, **kwargs):
     kwargs['show'] = False
@@ -1163,8 +1163,8 @@ for vhdr_path, patient in results.items():
     print(f" Patient : {patient['subject']}")
     print("="*60)
 
-    print("\nTTLs :")
-    pprint(patient["ttl"])
+    # print("\nTTLs :")
+    # pprint(patient["ttl"])
 
     # print("\nTics :")
     # for tic in patient["tics"]:
@@ -1410,24 +1410,30 @@ for subject, info in results_psd.items():
             continue
         roi_signals_random[roi].append(signal)
     # DEBUG: vérifier la forme et les valeurs des signaux
-    print(f"\n--- Random epochs --- Patient: {subject}")
-    for roi, signal in avg_per_roi_random.items():
-        print(f"ROI: {roi}, signal shape: {signal.shape}, first 5 samples: {signal[:5]}")
+    # print(f"\n--- Random epochs --- Patient: {subject}")
+    # for roi, signal in avg_per_roi_random.items():
+    #     print(f"ROI: {roi}, signal shape: {signal.shape}, first 5 samples: {signal[:5]}")
 
     # 2) temporal mean per ROI for THIS patient (pre-urge epochs)
     avg_per_roi_pre = average_epochs_per_roi(epochs_pre, rois_for_patient)
     for roi, signal in avg_per_roi_pre.items():
         if signal is None:
             continue
+        # DEBUG
+        # print(f"\n\n\n Patient {subject}, ROI {roi}, id(signal): {id(signal)} \n")
         roi_signals_pre[roi].append(signal)
     # DEBUG: vérifier la forme et les valeurs des signaux
-    print(f"\n--- Pre-urge epochs --- Patient: {subject}")
-    for roi, signal in avg_per_roi_pre.items():
-        print(f"ROI: {roi}, signal shape: {signal.shape}, first 5 samples: {signal[:5]}")
+    # print(f"\n--- Pre-urge epochs --- Patient: {subject}")
+    # for roi, signal in avg_per_roi_pre.items():
+    #     print(f"ROI: {roi}, signal shape: {signal.shape}, first 5 samples: {signal[:5]}")
 
 # 3) inter-patients mean 1 calcul of the PSD  of the mean signal of the group
 roi_group_psd_random = {}
 roi_group_psd_pre = {}
+
+# DEBUG
+# print(f"\n\n\n ROI signals random (roi_signals_random) : {roi_signals_random} \n\n\n")
+# print(f"\n\n\n ROI signals random (roi_signals_pre) : {roi_signals_pre} \n\n\n")
 
 for roi in roi_signals_random.keys():
     sigs = roi_signals_random[roi]
@@ -1435,9 +1441,9 @@ for roi in roi_signals_random.keys():
         print(f"No signals for ROI {roi} in random_epochs -> skipping")
         continue
     group_avg_signal = np.mean(np.stack(sigs, axis=0), axis=0)
-    print(f"Grouped average signal : {group_avg_signal} for roi : {roi} in Random")
     freqs, psd_vals = compute_psd_from_signal(group_avg_signal, sfreq=group_sfreq, fmin=1, fmax=40)
-    print(f"For ROI : {roi} in Random : \nFreqs : {freqs}\nValue : {psd_vals}")
+    # DEBUG
+    # print(f"For ROI : {roi} in Random : \nFreqs : {freqs}\nValue : {psd_vals}")
     roi_group_psd_random[roi] = (freqs, psd_vals)
 
 for roi in roi_signals_pre.keys():
@@ -1447,6 +1453,7 @@ for roi in roi_signals_pre.keys():
         continue
     group_avg_signal = np.mean(np.stack(sigs, axis=0), axis=0)
     freqs, psd_vals = compute_psd_from_signal(group_avg_signal, sfreq=group_sfreq, fmin=1, fmax=40)
+    # DEBUG
     print(f"For ROI : {roi} in PRE : \nFreqs : {freqs}\nValue : {psd_vals}")
     roi_group_psd_pre[roi] = (freqs, psd_vals)
 
@@ -1465,7 +1472,7 @@ np.save("roi_group_psd_pre.npy", roi_group_psd_pre, allow_pickle=True)
 print("\n✅ Group PSDs computed and saved in", out_dir)
 
 #########################################################################
-
+'''
 
 # Generation of the 5 final graphs (PSDs)
 
@@ -1490,12 +1497,16 @@ os.makedirs(psd_output_dir, exist_ok=True)
 epsilon = 1e-14
 
 for roi in roi_list:
+    # DEBUG
+    # print(f"Checking ROI {roi}...")
     if roi not in files_pre or roi not in files_rand:
         print(f"ROI {roi} not found in the files, skipping.")
         continue
     
-    freqs_pre, psd_pre = files_pre[roi]
     freqs_rand, psd_rand = files_rand[roi]
+    freqs_pre, psd_pre = files_pre[roi]
+    # DEBUG
+    # print(f"\n\n\n For ROI: {roi}, \n psd_pre: {psd_pre} \n")
 
     # normalization step between 1 & 30 Hz
     mask_pre = freqs_pre <= 30
@@ -1503,17 +1514,23 @@ for roi in roi_list:
     min_pre, max_pre = psd_pre[mask_pre].min(), psd_pre[mask_pre].max()
     min_rand, max_rand = psd_rand[mask_rand].min(), psd_rand[mask_rand].max()
 
-    psd_pre_norm = (psd_pre - min_pre) / (max_pre - min_pre)
-    # psd_pre_norm = (psd_pre - psd_pre.min()) / (psd_pre.max() - psd_pre.min())
+    # DEBUG
+    print(f"\n ROI {roi} : PSD min = {psd_pre.min()}, PSD max = {psd_pre.max()}, PSD mean={psd_pre.mean()}")
+
     psd_rand_norm = (psd_rand - min_rand) / (max_rand - min_rand)
     # psd_rand_norm = (psd_rand - psd_rand.min()) / (psd_rand.max() - psd_rand.min())
+    psd_pre_norm = (psd_pre - min_pre) / (max_pre - min_pre)
+    # psd_pre_norm = (psd_pre - psd_pre.min()) / (psd_pre.max() - psd_pre.min())
 
     # Avoid the 0 for log
-    psd_pre_norm = np.clip(psd_pre_norm, epsilon, None)
     psd_rand_norm = np.clip(psd_rand_norm, epsilon, None)
+    psd_pre_norm = np.clip(psd_pre_norm, epsilon, None)
+
+    # DEBUG
+    print(f"\n\n\n For ROI: {roi}, \n psd_pre_norm: {psd_pre_norm} \n")
 
     plt.figure(figsize=(10, 5))
-    plt.plot(freqs_rand, psd_rand_norm, label='Random epochs (norm.)', color='yellow')
+    plt.plot(freqs_rand, psd_rand_norm, label='Random epochs (norm.)', color='orange')
     plt.plot(freqs_pre, psd_pre_norm, label='Pre-urge epochs (norm.)', color='purple')
     
     plt.title(f"PSD Comparison for ROI: {roi}")
@@ -1529,4 +1546,49 @@ for roi in roi_list:
     # Save figure to file
     plt.savefig(os.path.join(psd_output_dir, f"normalized_PSD_1-30Hz_{roi}_2s.png"))
     plt.savefig(os.path.join(psd_output_dir, f"normalized_PSD_1-30Hz_{roi}_2s.eps"), format='eps')
-    plt.close()
+    plt.close("all")
+
+
+
+# Test 1 patient by 1 patient
+
+# roi_1 = "left_sensorimotor"
+# roi_2 = "right_sensorimotor"
+# roi_3 = "midline_premotor"
+# roi_4 = "midline_prefrontal"
+# roi_5 = "midline_posterior"
+
+# roi = roi_5
+
+# freqs_rand, psd_rand = files_rand[roi]
+# freqs_pre, psd_pre = files_pre[roi]
+
+# # normalization step between 1 & 30 Hz
+# mask_pre = freqs_pre <= 30
+# mask_rand = freqs_rand <= 30
+# min_pre, max_pre = psd_pre[mask_pre].min(), psd_pre[mask_pre].max()
+# min_rand, max_rand = psd_rand[mask_rand].min(), psd_rand[mask_rand].max()
+
+# psd_rand_norm = (psd_rand - min_rand) / (max_rand - min_rand)
+# # psd_rand_norm = (psd_rand - psd_rand.min()) / (psd_rand.max() - psd_rand.min())
+# psd_pre_norm = (psd_pre - min_pre) / (max_pre - min_pre)
+# # psd_pre_norm = (psd_pre - psd_pre.min()) / (psd_pre.max() - psd_pre.min())
+
+# # Avoid the 0 for log
+# psd_rand_norm = np.clip(psd_rand_norm, epsilon, None)
+# psd_pre_norm = np.clip(psd_pre_norm, epsilon, None)
+
+# plt.figure(figsize=(10, 5))
+# plt.plot(freqs_rand, psd_rand_norm, label='Random epochs (norm.)', color='orange')
+# plt.plot(freqs_pre, psd_pre_norm, label='Pre-urge epochs (norm.)', color='purple')
+
+# plt.title(f"PSD Comparison for ROI: {roi}")
+# plt.xlabel("Frequency (Hz)")
+# plt.ylabel("Normalized PSD (0-1)")
+# plt.legend()
+# plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+
+# # Save figure to file
+# plt.savefig(os.path.join(psd_output_dir, f"normalized_PSD_1-30Hz_{roi}_2s_ROI-5.png"))
+# plt.savefig(os.path.join(psd_output_dir, f"normalized_PSD_1-30Hz_{roi}_2s_ROI-5.eps"), format='eps')
+# plt.close("all")
