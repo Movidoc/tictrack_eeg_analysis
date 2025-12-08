@@ -4,6 +4,7 @@
 # Author  : Indira
 # =======================================================================
 
+
 print(">>> LE SCRIPT A BIEN ÉTÉ LANCÉ")
 
 
@@ -26,6 +27,9 @@ from _03_Movidoc_tictrack_tic_extraction_patients import extract_tics_from_excel
 from pprint import pprint
 
 import mne
+# from mne.time_frequency import psd_welch
+# from mne.time_frequency.psd import psd_welch
+from mne.time_frequency import psd_array_multitaper
 
 import matplotlib.pyplot as plt
 plt.ion()
@@ -37,14 +41,6 @@ import numpy as np
 import os
 
 import random
-
-
-
-# ============================================================
-# To save the PSDs
-# ============================================================
-psd_img_dir = "psd_images"
-os.makedirs(psd_img_dir, exist_ok=True)
 
 
 
@@ -372,6 +368,7 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     # 3. Merge into one Python object
     full_output = {
         "subject": subject_name, # name of the subject
+        "montage": montage_name,
         "excel_corrected_times": excel_corrected_times,
         "linear_drift_params": {"slope": slope, "intercept": intercept},
         "ttl": ttl_info, # list of the TTL with phases
@@ -478,6 +475,10 @@ def plot_events_timeline(merged_ttl_tics, patient_name, phase_start_key=None, ph
     # plt.show() # need to close one graph to obtain the next one, and so on
     plt.show(block=False)
     plt.pause(0.1)
+    plt.close()
+
+
+#########################################################################
 
 
 # ===================================================================================================================
@@ -568,6 +569,8 @@ def analyse_merged_ttl_tics(merged_ttl_tics, phase_start_key='start_spont', phas
     return results_list
 
 
+#########################################################################
+
 # ====================================================================================
 # Function : shift_urges_times
 # Purpose  : add the Stimulus/S  2 time to each urge timestamp to match the TTLs times
@@ -609,74 +612,12 @@ def shift_urges_times(urges_list, stim2_time):
     return shifted_times
 
 
-# =====================================================
-# Function : extract_pre_tic_eeg_segments
-# Purpose  : cut 5-second EEG segments before each urge
-# =====================================================
-
-def extract_pre_tic_epochs(raw_cropped, urge_times, pre_seconds=1.0, post_seconds=0.0):
-
-    """
-    ----------
-    Purpose
-    ----------
-    Extract EEG segments of `pre_seconds` before each urge.
-
-    ----------
-    Parameters
-    ----------
-    raw : mne.io.Raw
-        Preprocessed EEG signal.
-    urge_times : list of float
-        Times of urges in seconds.
-    pre_seconds : float
-        Duration to extract before each urge.
-
-    ----------
-    Returns
-    ----------
-    segments : list of mne.io.RawArray or Epochs
-        EEG segments for each urge.
-    """
-
-    # segments = []
-    # for t in urge_times:
-    #     t_start = max(t - pre_seconds, 0)
-    #     t_end = t
-    #     segment = raw_cropped.copy().crop(tmin=t_start, tmax=t_end)
-    #     segments.append(segment)
-    # return segments
-
-    events = []
-
-    # convert urge_times → events array
-    for t in urge_times:
-        # sample = int(t * raw_cropped.info["sfreq"])
-        sample_idx = np.round(t * raw_cropped.info['sfreq']).astype(int)
-        events.append([sample_idx, 0, 1])  # event_id=1 for urge
-
-    events = np.array(events, dtype=int)
-
-    # create epochs
-    epochs = mne.Epochs(
-        raw_cropped,
-        events,
-        event_id={"urge": 1},
-        tmin=-pre_seconds,
-        tmax=post_seconds,
-        baseline=None,
-        preload=True
-    )
-
-    return epochs
-
-
 # ==============================================================================
 # Function : extract_random_epochs_in_phase
 # Purpose  : extract random EEG epochs of fixed duration within a selected phase
 # ==============================================================================
 
-def extract_random_epochs_in_phase(raw_cropped, start_time, end_time, n_epochs=50, epoch_duration=1.0, event_id=1, seed=None):
+def extract_random_epochs_in_phase(raw_cropped, start_time, end_time, n_epochs=50, epoch_duration=2.5, event_id=1, seed=None):
 
     """
     ----------
@@ -739,13 +680,74 @@ def extract_random_epochs_in_phase(raw_cropped, start_time, end_time, n_epochs=5
 
     return epochs
 
+# =====================================================
+# Function : extract_pre_tic_eeg_segments
+# Purpose  : cut 1.5-second EEG segments before each urge
+# =====================================================
+
+def extract_pre_tic_epochs(raw_cropped, urge_times, pre_seconds=2.0, post_seconds=0.5):
+
+    """
+    ----------
+    Purpose
+    ----------
+    Extract EEG segments of `pre_seconds` before each urge.
+
+    ----------
+    Parameters
+    ----------
+    raw : mne.io.Raw
+        Preprocessed EEG signal.
+    urge_times : list of float
+        Times of urges in seconds.
+    pre_seconds : float
+        Duration to extract before each urge.
+
+    ----------
+    Returns
+    ----------
+    segments : list of mne.io.RawArray or Epochs
+        EEG segments for each urge.
+    """
+
+    # segments = []
+    # for t in urge_times:
+    #     t_start = max(t - pre_seconds, 0)
+    #     t_end = t
+    #     segment = raw_cropped.copy().crop(tmin=t_start, tmax=t_end)
+    #     segments.append(segment)
+    # return segments
+
+    events = []
+
+    # convert urge_times → events array
+    for t in urge_times:
+        # sample = int(t * raw_cropped.info["sfreq"])
+        sample_idx = np.round(t * raw_cropped.info['sfreq']).astype(int)
+        events.append([sample_idx, 0, 1])  # event_id=1 for urge
+
+    events = np.array(events, dtype=int)
+
+    # create epochs
+    epochs = mne.Epochs(
+        raw_cropped,
+        events,
+        event_id={"urge": 1},
+        tmin=-pre_seconds,
+        tmax=post_seconds,
+        baseline=None,
+        preload=True
+    )
+
+    return epochs
+
 
 # ===============================================================
 # Function : compute_psd_per_channel_per_epoch
 # Purpose  : compute PSD for each epoch and each selected channel
 # ===============================================================
 
-def compute_psd_per_channel_per_epoch(epochs, channels_to_use, fmin=1, fmax=40):
+def compute_psd_per_channel_per_epoch(epochs, channels_to_use, fmin=1, fmax=40, bandwidth=3.0, normalize=True, method="minmax"):
 
     """
     Returns:
@@ -755,9 +757,30 @@ def compute_psd_per_channel_per_epoch(epochs, channels_to_use, fmin=1, fmax=40):
     # pick only the selected channels
     epochs_sel = epochs.copy().pick(channels_to_use)
 
-    # compute PSD using Welch method (MNE implementation)
-    psds, freqs = mne.time_frequency.psd_welch(epochs_sel, fmin=fmin, fmax=fmax, n_fft=512, average=None) # average=None : keep PSD per epoch and per channel
-    # psds shape → (n_epochs, n_channels, n_freqs)
+    # compute PSD using multitaper method
+    psd = epochs_sel.compute_psd(method='multitaper', fmin=fmin, fmax=fmax, bandwidth=bandwidth, n_jobs=1) # average=False suppressed
+    # psds, freqs = mne.time_frequency.psd_multitaper(epochs_sel, fmin=1, fmax=40, bandwidth=3.0, n_jobs=1, average=None)
+    psds, freqs = psd.get_data(return_freqs=True) # shape → (n_epochs, n_channels, n_freqs)
+
+    # normalization
+    if normalize:
+
+        if method == "minmax":
+            psds_min = psds.min(axis=2, keepdims=True)
+            psds_max = psds.max(axis=2, keepdims=True)
+            psds = (psds - psds_min) / (psds_max - psds_min + 1e-12)
+
+        elif method == "zscore":
+            mean = psds.mean(axis=2, keepdims=True)
+            std  = psds.std(axis=2, keepdims=True)
+            psds = (psds - mean) / (std + 1e-12)
+
+        elif method == "unit_energy":
+            total = psds.sum(axis=2, keepdims=True)
+            psds = psds / (total + 1e-12)
+
+        else:
+            raise ValueError(f"Unknown normalization method '{method}'")
 
     psd_dict = {}
 
@@ -835,7 +858,7 @@ def save_psd_per_channel(psd_dict, subject_name, epoch_type):
 # Purpose  : average PSD across selected channels (ROI), per epoch
 # ================================================================
 
-def compute_mean_psd_ROI_per_epoch(epochs, channels_to_use, fmin=1, fmax=40):
+def compute_mean_psd_ROI_per_epoch(epochs, channels_to_use, fmin=1, fmax=40, bandwidth=3.0, normalize=True, method="minmax"):
     """
     Returns:
         mean_psd_dict[epoch_idx] = (freqs, mean_psd_across_channels)
@@ -843,8 +866,31 @@ def compute_mean_psd_ROI_per_epoch(epochs, channels_to_use, fmin=1, fmax=40):
 
     epochs_sel = epochs.copy().pick(channels_to_use)
 
-    psds, freqs = mne.time_frequency.psd_welch(epochs_sel, fmin=fmin, fmax=fmax, n_fft=512, average=None)
+    # Compute PSD with multitaper method
+    psd = epochs_sel.compute_psd(method='multitaper', fmin=fmin, fmax=fmax, bandwidth=bandwidth, n_jobs=1)
+    psds, freqs = psd.get_data(return_freqs=True)  # shape = (n_epochs, n_channels, n_freqs)
+    # psds, freqs = mne.time_frequency.psd_welch(epochs_sel, fmin=fmin, fmax=fmax, n_fft=512, average=None)
     # psds shape → (n_epochs, n_channels, n_freqs)
+
+    # normalization
+    if normalize:
+
+        if method == "minmax":
+            psds_min = psds.min(axis=2, keepdims=True)
+            psds_max = psds.max(axis=2, keepdims=True)
+            psds = (psds - psds_min) / (psds_max - psds_min + 1e-12)
+
+        elif method == "zscore":
+            mean = psds.mean(axis=2, keepdims=True)
+            std  = psds.std(axis=2, keepdims=True)
+            psds = (psds - mean) / (std + 1e-12)
+
+        elif method == "unit_energy":
+            total = psds.sum(axis=2, keepdims=True)
+            psds = psds / (total + 1e-12)
+
+        else:
+            raise ValueError(f"Unknown normalization method '{method}'")
 
     mean_psd_dict = {}
 
@@ -883,7 +929,7 @@ def plot_mean_psd_ROI(mean_psd_dict, epoch_idx):
 # Purpose  : save PSD per group of selected channel (ROI)
 # ==========================================================
 
-def save_mean_psd_ROI(mean_psd_dict, subject_name, epoch_type):
+def save_mean_psd_ROI(mean_psd_dict, output_folder, subject_name, epoch_type):
 
     """
     -----------
@@ -897,24 +943,153 @@ def save_mean_psd_ROI(mean_psd_dict, subject_name, epoch_type):
         "random_epochs" ou "epochs_pre_tic"
     """
 
-    folder = os.path.join(psd_img_dir, f"{subject_name}_{epoch_type}_ROI")
-    os.makedirs(folder, exist_ok=True)
+    # folder = os.path.join(psd_img_dir, f"{subject_name}_{epoch_type}_ROI")
+    os.makedirs(output_folder, exist_ok=True)
     
-    for roi_name, roi_epochs_dict in mean_psd_dict.items():
-        for ep_idx, (freqs, psd_vals) in roi_epochs_dict.items():
-            plt.figure(figsize=(6,4))
-            plt.plot(freqs, psd_vals)
-            plt.xlabel("Frequency (Hz)")
-            plt.ylabel("PSD")
-            plt.title(f"PSD ROI {roi_name} - Epoch {ep_idx}")
-            plt.tight_layout()
-            
-            # Name of the file
-            filename = f"PSD_{roi_name}_{ep_idx}_{epoch_type}_{subject_name}.png"
-            plt.savefig(os.path.join(folder, filename))
-            plt.close()
+    for roi_name, (freqs, psd_vals) in mean_psd_dict.items():
+        save_path = os.path.join(
+            output_folder,
+            f"{subject}_{epoch_type}_{roi_name}_meanPSD.npy"
+        )
+        np.save(save_path, {"freqs": freqs, "psd": psd_vals})
+        print(f"Saved: {save_path}")
 
-#########################################################################  
+
+#########################################################################
+
+
+# ===============================================================
+# Function : average_epochs_per_roi
+# Purpose  : calculate the mean of the epochs of 1 patient by ROI
+# ===============================================================
+
+def average_epochs_per_roi(epochs, roi_lists):
+
+    """
+    epochs : mne.Epochs
+    roi_lists : dict, ROI_name -> list des canaux
+    """
+
+    avg_per_roi = {}
+
+    for roi_name, ch_names in roi_lists.items():
+
+        # Select the channels of the ROI
+        data = epochs.copy().pick_channels(ch_names).get_data()  # shape = (n_epochs, n_channels, n_times)
+
+        # calculate the mean of all the epochs & all the channels of the ROI
+        mean_signal = data.mean(axis=(0, 1))  # shape = (n_times,)
+        avg_per_roi[roi_name] = mean_signal
+
+    return avg_per_roi
+
+
+# =======================================================
+# Function : compute_psd_from_signal
+# Purpose  : calculate the PSD of the mean epochs per ROI
+# =======================================================
+
+def compute_psd_from_signal(signal, sfreq, fmin=1, fmax=40):
+
+    """
+    signal : ndarray (n_times,)
+    sfreq : fréquence d'échantillonnage
+    """
+
+    # info = mne.create_info(ch_names=["avg"], sfreq=sfreq, ch_types=["eeg"])
+    # raw = mne.io.RawArray(signal[np.newaxis, :], info)
+    # psd = raw.compute_psd(method="multitaper", fmin=fmin, fmax=fmax)
+    # psds, freqs = psd.get_data(return_freqs=True)
+    psds, freqs = psd_array_multitaper(signal, sfreq=sfreq, fmin=fmin, fmax=fmax, adaptive=True, normalization='full', verbose=False)
+
+    # return freqs, psds[0, 0, :]  # fréquence et PSD
+    return freqs, psds
+
+
+# ================================================================================
+# Function : group_average_psd
+# Purpose  : calculate the mean of all the patients for 1 "type" of epochs per ROI
+# ================================================================================
+
+def group_average_psd(patient_epochs_dict, roi_lists, fmin=1, fmax=40):
+
+    """
+    patient_epochs_dict : dict patient_name -> epochs (MNE Epochs)
+    roi_lists : dict ROI_name -> canaux
+    """
+
+    roi_signals_all = {roi: [] for roi in roi_lists.keys()}
+
+    # 1. Mean by patient for each ROI ---
+
+    # Mean by patient
+    for patient_name, epochs in patient_epochs_dict.items():
+        avg_per_roi = average_epochs_per_roi(epochs, roi_lists)
+        for roi, signal in avg_per_roi.items():
+            roi_signals_all[roi].append(signal)
+    
+
+    # 2. Mean of all the patients
+
+    roi_group_psd = {}
+
+    for roi, signals in roi_signals_all.items():
+        # signals = list of mean signals (one by patient)
+        if len(signals) == 0:
+            continue
+
+        # group mean of the temporal signal
+        group_avg_signal = np.mean(signals, axis=0)
+
+        # calculate the PSD
+        sfreq = epochs.info["sfreq"]
+        freqs, psd_vals = compute_psd_from_signal(group_avg_signal, sfreq, fmin=fmin, fmax=fmax)
+
+        roi_group_psd[roi] = (freqs, psd_vals)
+
+    return roi_group_psd
+
+
+# ===============================================================
+# Function : compute_group_psd
+# Purpose  : generate the final PSD per ROI for all the patients
+# ===============================================================
+
+def compute_group_psd(roi_group_avg, sfreq, fmin=1, fmax=40):
+
+    roi_psd = {}
+
+    for roi, signal in roi_group_avg.items():
+        freqs, psd = compute_psd_from_signal(signal, sfreq, fmin, fmax)
+        roi_psd[roi] = (freqs, psd)
+
+    return roi_psd
+
+
+# ===========================================================
+# Function : save_group_psd
+# Purpose  : save the final PSDs per ROI for all the patients
+# ===========================================================
+
+def save_group_psd(roi_psd_dict, out_dir, tag):
+
+    os.makedirs(out_dir, exist_ok=True)
+
+    for roi_name, (freqs, psd_vals) in roi_psd_dict.items():
+        plt.figure(figsize=(6,4))
+        plt.plot(freqs, psd_vals)
+        plt.xlabel("Frequency (Hz)")
+        plt.ylabel("PSD")
+        plt.title(f"Group PSD ROI {roi_name} - {tag}")
+        plt.tight_layout()
+
+        fname = os.path.join(out_dir, f"group_PSD_{roi_name}_{tag}.png")
+
+        plt.savefig(fname)
+        plt.close()
+
+
+##############################################################
 
 
 
@@ -924,40 +1099,40 @@ results = {}
 patients = [
     {
         "montage": "standard_1020", # montage with 32 electrodes (from DS26 to BC29 : always 32 electrodes)
-        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000010.vhdr", #DS26
-        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\DS26_annotations_binary-table_cutted.xlsx",
+        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000010.vhdr", #DS26
+        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EXCEL PATIENT FILES\\DS26_annotations_binary-table_cutted.xlsx",
         "fps": 30,
         "min_absence_frames": 30,
         "excel_phase_times": [13.728, 50.028, 190.080, 349.272, 980.727, 1277.991]
     },
     {
         "montage": "standard_1020", # montage with 32 electrodes (from DS26 to BC29 : always 32 electrodes)
-        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack_BB28-bis.vhdr", #BB28
-        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\BB28_annotations_binary-table_cutted.xlsx",
+        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack_BB28-bis.vhdr", #BB28
+        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EXCEL PATIENT FILES\\BB28_annotations_binary-table_cutted.xlsx",
         "fps": 25,
         "min_absence_frames": 25,
         "excel_phase_times": [9.840, 27.320, 156.880, 302.600, 929.960, 991.760]
     },
     {
         "montage": "standard_1020", # montage with 32 electrodes (from DS26 to BC29 : always 32 electrodes)
-        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000013.vhdr", # BC29
-        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\BC29_annotations_binary-table_cutted_xlsx_Lizbeth.xlsx",
+        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000013.vhdr", # BC29
+        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EXCEL PATIENT FILES\\BC29_annotations_binary-table_cutted_xlsx_Lizbeth.xlsx",
         "fps": 30,
         "min_absence_frames": 30,
         "excel_phase_times": [17.391, 65.670, 201.597, 358.215, 1088.670, 1204.038]
     },
     {
         "montage": "standard_1005", # montage with 64 electrodes (from MM30 : always 64 electrodes)
-        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000030.vhdr", # MM30
-        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\MM30_annotations_binary-table_cutted.xlsx",
+        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000030.vhdr", # MM30
+        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EXCEL PATIENT FILES\\MM30_annotations_binary-table_cutted.xlsx",
         "fps": 30,
         "min_absence_frames": 30,
         "excel_phase_times": [6.633, 68.277, 196.581, 323.994, 931.194, 995.049]
     },
     {
         "montage": "standard_1005", # montage with 64 electrodes (from MM30 : always 64 electrodes)
-        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000031.vhdr", # SC31
-        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\PATIENT FILES\\EXCEL PATIENT FILES\\SC31_annotations_binary-table_cutted.xlsx",
+        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000031.vhdr", # SC31
+        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EXCEL PATIENT FILES\\SC31_annotations_binary-table_cutted.xlsx",
         "fps": 30,
         "min_absence_frames": 30,
         "excel_phase_times": [12.243, 62.040, 191.664, 345.972, 970.200, 1074.546]
@@ -1051,10 +1226,17 @@ for vhdr_path, patient in results.items():
 
 # Extracting eyes_closed & urges epochs for all patients --- AND --- Compute the PSDs of each epoch of all the patients
 
+# To save the PSDs
+psd_img_dir = "psd_images"
+os.makedirs(psd_img_dir, exist_ok=True)
+
 # create dictionnaries to stock the epochs for each patient -> 1 entry by patient pre_urge_epochs["000031"]=epochs_MNE
 pre_urge_epochs = {}
 random_epochs_in_phase = {}
 results_psd = {}
+mean_psd_rois_all_patients = {}
+all_random_epochs = {}
+all_pre_tic_epochs = {}
 
 channels_to_use_32 = ["Cz", "C3", "C4", "Pz", "Fp1", "Fp2"]
 channels_to_use_64 = ["Cz", "FCz", "C3", "FC3", "CP3", "C4", "CP4", "FC4", "Pz", "CPz", "Fp1", "Fp2", "AF3", "AFz", "AF4"]
@@ -1064,19 +1246,30 @@ roi_lists_32 = {
     "left_sensorimotor": ["C3"],
     "right_sensorimotor": ["C4"],
     "midline_posterior": ["Pz"],
-    "prefrontal": ["Fp1", "Fp2"]
+    "midline_prefrontal": ["Fp1", "Fp2"]
 }
 roi_lists_64 = {
     "midline_premotor": ["Cz", "FCz"],
     "left_sensorimotor": ["C3", "FC3", "CP3"],
     "right_sensorimotor": ["C4", "CP4", "FC4"],
     "midline_posterior": ["Pz", "CPz"],
-    "prefrontal": ["Fp1", "Fp2", "AF3", "AFz", "AF4"]
+    "midline_prefrontal": ["Fp1", "Fp2", "AF3", "AFz", "AF4"]
 }
+
 
 for vhdr_path, patient in results.items():
     subject = patient['subject']
     print(f"\nProcessing patient {subject}")
+
+    # Choice of the ROI depending on the patient's montaget
+    if patient["montage"] == "standard_1020":
+        channels_to_use = channels_to_use_32
+        roi_lists = roi_lists_32
+    elif patient["montage"] == "standard_1005":
+        channels_to_use = channels_to_use_64
+        roi_lists = roi_lists_64
+    else:
+        raise ValueError(f"Montage inconnu pour le patient {subject}: {patient['montage']}")
 
 
     # A. Extract random epochs from the eyes_closed phase
@@ -1094,7 +1287,7 @@ for vhdr_path, patient in results.items():
         start_time=start_time,
         end_time=end_time,
         n_epochs=50,
-        epoch_duration=1.0,
+        epoch_duration=2.5,
         event_id=999,
         seed=42
     )
@@ -1111,8 +1304,8 @@ for vhdr_path, patient in results.items():
     stim2_time_patient = patient["stim2_time_original"] # get the original timestamp of Stimulus/S  2
     urges_times_eeg = shift_urges_times(urges_list, stim2_time=stim2_time_patient) # convert the urges times back to the original EEG referencial
 
-    # 2️⃣ Extract EEG epochs (5s before each urge)
-    epochs_pre_tic = extract_pre_tic_epochs(raw_cropped, urges_times_eeg, pre_seconds=1.0, post_seconds=0.0)
+    # 2️⃣ Extract EEG epochs (2s before each urge)
+    epochs_pre_tic = extract_pre_tic_epochs(raw_cropped, urges_times_eeg, pre_seconds=2.0, post_seconds=0.5)
 
     # 3️⃣ Save epochs into a .fif file (one file per patient)
     os.makedirs("epochs_pre_urge", exist_ok=True)
@@ -1120,16 +1313,6 @@ for vhdr_path, patient in results.items():
 
 
     # C. Compute the PSDs on each epoch of the patient
-
-    # Choix des ROI selon le montage du patient
-    if patient["montage"] == "standard_1020":
-        channels_to_use = channels_to_use_32
-        roi_lists = roi_lists_32
-    elif patient["montage"] == "standard_1005":
-        channels_to_use = channels_to_use_64
-        roi_lists = roi_lists_64
-    else:
-        raise ValueError(f"Montage inconnu pour le patient {subject}: {patient['montage']}")
 
     psd_random = compute_psd_per_channel_per_epoch(random_epochs, channels_to_use, fmin=1, fmax=40)
     mean_psd_random = {}
@@ -1141,13 +1324,13 @@ for vhdr_path, patient in results.items():
     for roi_name, roi_channels in roi_lists.items():
         mean_psd_pre_tic[roi_name] = compute_mean_psd_ROI_per_epoch(epochs_pre_tic, roi_channels, fmin=1, fmax=40)
     
-    # Sauvegarde PSDs pour random_epochs
-    save_psd_per_channel(psd_random, subject_name=subject, epoch_type="random_epochs")
-    save_mean_psd_ROI(mean_psd_random, subject_name=subject, epoch_type="random_epochs")
+    # Save the PSDs for random_epochs
+    # save_psd_per_channel(psd_random, subject_name=subject, epoch_type="random_epochs")
+    # save_mean_psd_ROI(mean_psd_random, subject_name=subject, epoch_type="random_epochs")
 
-    # Sauvegarde PSDs pour pre-tic epochs
-    save_psd_per_channel(psd_pre_tic, subject_name=subject, epoch_type="epochs_pre_tic")
-    save_mean_psd_ROI(mean_psd_pre_tic, subject_name=subject, epoch_type="epochs_pre_tic")
+    # Save the PSDs for pre-tic (urges) epochs
+    # save_psd_per_channel(psd_pre_tic, subject_name=subject, epoch_type="epochs_pre_tic")
+    # save_mean_psd_ROI(mean_psd_pre_tic, subject_name=subject, epoch_type="epochs_pre_tic")
 
 
     # OPTIONAL - D. Display the PSDs for all the epochs of the patient
@@ -1177,39 +1360,173 @@ for vhdr_path, patient in results.items():
         "n_epochs_pre_tic": len(epochs_pre_tic),
         "n_epochs_random": len(random_epochs)
     }
+# print("\n=== epochs extraction + PSDs generation complete for all the patients ===")
 
 
-print("\n=== epochs extraction + PSDs generation complete for all the patients ===")
+# prepare the containers per ROI (we'll use the name of the ROIs defined in roi_lists_32 & roi_lists_64)
+roi_names_32 = list(roi_lists_32.keys())
+roi_names_64 = list(roi_lists_64.keys())
+
+# stock the mean signals per ROI for both random_epochs_in_phase & pre_urge_epoch
+roi_signals_random = {roi: [] for roi in roi_lists_32.keys()}  # les noms de ROI sont les mêmes pour 32/64
+roi_signals_pre = {roi: [] for roi in roi_lists_32.keys()}
+
+group_sfreq = None
+
+
+for subject, info in results_psd.items():
+
+    epochs_random = info["random_epochs"]
+    epochs_pre = info["epochs_pre_tics"]
+
+    patient_obj = None
+
+    for pth, p in results.items():
+        if p["subject"] == subject:
+            patient_obj = p
+            break
+    if patient_obj is None:
+        print("Warning: patient object not found for", subject)
+        continue
+
+    if patient_obj["montage"] == "standard_1020":
+        rois_for_patient = roi_lists_32
+    else:
+        rois_for_patient = roi_lists_64
+    
+    print(f"ROIs pour ce patient: {list(rois_for_patient.keys())}")
+    for roi, chans in rois_for_patient.items():
+        print(f"{roi} -> {chans}")
+
+    # save sfreq if empty
+    if group_sfreq is None:
+        group_sfreq = epochs_random.info["sfreq"]
+
+    # 1) temporal mean per ROI for THIS patient (random epochs)
+    avg_per_roi_random = average_epochs_per_roi(epochs_random, rois_for_patient)
+    for roi, signal in avg_per_roi_random.items():
+        # si signal est None ou vide -> skip
+        if signal is None:
+            continue
+        roi_signals_random[roi].append(signal)
+    # DEBUG: vérifier la forme et les valeurs des signaux
+    print(f"\n--- Random epochs --- Patient: {subject}")
+    for roi, signal in avg_per_roi_random.items():
+        print(f"ROI: {roi}, signal shape: {signal.shape}, first 5 samples: {signal[:5]}")
+
+    # 2) temporal mean per ROI for THIS patient (pre-urge epochs)
+    avg_per_roi_pre = average_epochs_per_roi(epochs_pre, rois_for_patient)
+    for roi, signal in avg_per_roi_pre.items():
+        if signal is None:
+            continue
+        roi_signals_pre[roi].append(signal)
+    # DEBUG: vérifier la forme et les valeurs des signaux
+    print(f"\n--- Pre-urge epochs --- Patient: {subject}")
+    for roi, signal in avg_per_roi_pre.items():
+        print(f"ROI: {roi}, signal shape: {signal.shape}, first 5 samples: {signal[:5]}")
+
+# 3) inter-patients mean 1 calcul of the PSD  of the mean signal of the group
+roi_group_psd_random = {}
+roi_group_psd_pre = {}
+
+for roi in roi_signals_random.keys():
+    sigs = roi_signals_random[roi]
+    if len(sigs) == 0:
+        print(f"No signals for ROI {roi} in random_epochs -> skipping")
+        continue
+    group_avg_signal = np.mean(np.stack(sigs, axis=0), axis=0)
+    print(f"Grouped average signal : {group_avg_signal} for roi : {roi} in Random")
+    freqs, psd_vals = compute_psd_from_signal(group_avg_signal, sfreq=group_sfreq, fmin=1, fmax=40)
+    print(f"For ROI : {roi} in Random : \nFreqs : {freqs}\nValue : {psd_vals}")
+    roi_group_psd_random[roi] = (freqs, psd_vals)
+
+for roi in roi_signals_pre.keys():
+    sigs = roi_signals_pre[roi]
+    if len(sigs) == 0:
+        print(f"No signals for ROI {roi} in pre_urge_epochs -> skipping")
+        continue
+    group_avg_signal = np.mean(np.stack(sigs, axis=0), axis=0)
+    freqs, psd_vals = compute_psd_from_signal(group_avg_signal, sfreq=group_sfreq, fmin=1, fmax=40)
+    print(f"For ROI : {roi} in PRE : \nFreqs : {freqs}\nValue : {psd_vals}")
+    roi_group_psd_pre[roi] = (freqs, psd_vals)
+
+# 4) Save the final PSDs
+out_dir = "group_psd"
+save_group_psd(roi_group_psd_random, out_dir, tag="random_epochs_in_phase")
+save_group_psd(roi_group_psd_pre, out_dir, tag="pre_urge_epochs")
+
+np.save("roi_group_psd_random.npy", roi_group_psd_random, allow_pickle=True)
+np.save("roi_group_psd_pre.npy", roi_group_psd_pre, allow_pickle=True)
+
+# 5) Optionnal: save the PSD data into a numpy (.npz) to reuse it later if needed
+# np.savez(os.path.join(out_dir, "group_psd_random.npz"), **{r: np.array(v[1]) for r, v in roi_group_psd_random.items()})
+# np.savez(os.path.join(out_dir, "group_psd_pre.npz"), **{r: np.array(v[1]) for r, v in roi_group_psd_pre.items()})
+
+print("\n✅ Group PSDs computed and saved in", out_dir)
 
 #########################################################################
 
 
+# Generation of the 5 final graphs (PSDs)
 
-# Analyse the extracted epochs with the PSD functions
-# results_psd = {}
-# # Select your channels of interest (ROI)
-# channels_to_use = ["C3", "C4", "Cz"]
-# for subject, data in results.items():
-#     print(f"\nProcessing PSD for subject: {subject}")
-#     raw_cropped = data["raw_cropped"]
-#     merged_ttl = data["merged_ttl_tics"]
-#     # extract Pre-Urge Epochs
-#     urges_list = analyse_merged_ttl_tics(merged_ttl)
-#     urge_times_shifted = shift_urges_times(urges_list, data["stim2_time_original"])
-#     epochs_pre_tic = extract_pre_tic_epochs(raw_cropped, urge_times_shifted, pre_seconds=1.0)
-#     # compute PSD per channel per epoch
-#     psd_dict = compute_psd_per_channel_per_epoch(epochs_pre_tic, channels_to_use, fmin=1, fmax=40)
-#     # Compute mean PSD per epoch
-#     mean_psd_dict = compute_mean_psd_ROI_per_epoch(epochs_pre_tic, channels_to_use, fmin=1, fmax=40)
-#     # OPTIONAL: plot ALL the PSDs for each epoch of the patient
-#     for ep in range(len(epochs_pre_tic)):
-#         print(f"  Plotting PSD for {subject}, epoch {ep}")
-#         plot_psd_per_channel(psd_dict, epoch_idx=ep)
-#         plot_mean_psd_ROI(mean_psd_dict, epoch_idx=ep)
-#     # save the PSD results
-#     results_psd[subject] = {
-#         "psd_per_channel": psd_dict,
-#         "mean_psd_ROI": mean_psd_dict,
-#         "n_epochs": len(epochs_pre_tic)
-#     }
-# print("\nPSD extraction finished for all patients.\n")
+roi_list = [
+    "left_sensorimotor",
+    "right_sensorimotor",
+    "midline_premotor",
+    "midline_prefrontal",
+    "midline_posterior"
+]
+
+group_psd_dir = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis"
+
+path_pre = os.path.join(group_psd_dir, f"roi_group_psd_pre.npy")
+path_rand = os.path.join(group_psd_dir, f"roi_group_psd_random.npy")
+files_pre = np.load(path_pre, allow_pickle=True).item()
+files_rand = np.load(path_rand, allow_pickle=True).item()
+
+psd_output_dir = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\final_5_PSD"
+os.makedirs(psd_output_dir, exist_ok=True)
+
+epsilon = 1e-14
+
+for roi in roi_list:
+    if roi not in files_pre or roi not in files_rand:
+        print(f"ROI {roi} not found in the files, skipping.")
+        continue
+    
+    freqs_pre, psd_pre = files_pre[roi]
+    freqs_rand, psd_rand = files_rand[roi]
+
+    # normalization step between 1 & 30 Hz
+    mask_pre = freqs_pre <= 30
+    mask_rand = freqs_rand <= 30
+    min_pre, max_pre = psd_pre[mask_pre].min(), psd_pre[mask_pre].max()
+    min_rand, max_rand = psd_rand[mask_rand].min(), psd_rand[mask_rand].max()
+
+    psd_pre_norm = (psd_pre - min_pre) / (max_pre - min_pre)
+    # psd_pre_norm = (psd_pre - psd_pre.min()) / (psd_pre.max() - psd_pre.min())
+    psd_rand_norm = (psd_rand - min_rand) / (max_rand - min_rand)
+    # psd_rand_norm = (psd_rand - psd_rand.min()) / (psd_rand.max() - psd_rand.min())
+
+    # Avoid the 0 for log
+    psd_pre_norm = np.clip(psd_pre_norm, epsilon, None)
+    psd_rand_norm = np.clip(psd_rand_norm, epsilon, None)
+
+    plt.figure(figsize=(10, 5))
+    plt.plot(freqs_rand, psd_rand_norm, label='Random epochs (norm.)', color='yellow')
+    plt.plot(freqs_pre, psd_pre_norm, label='Pre-urge epochs (norm.)', color='purple')
+    
+    plt.title(f"PSD Comparison for ROI: {roi}")
+    plt.xlabel("Frequency (Hz)")
+    plt.ylabel("Normalized PSD (0-1)")
+    plt.legend()
+    plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+
+    # plt.xscale('log')
+    # plt.yscale('log')
+    # plt.ylim(0, 1)
+
+    # Save figure to file
+    plt.savefig(os.path.join(psd_output_dir, f"normalized_PSD_1-30Hz_{roi}_2s.png"))
+    plt.savefig(os.path.join(psd_output_dir, f"normalized_PSD_1-30Hz_{roi}_2s.eps"), format='eps')
+    plt.close()
