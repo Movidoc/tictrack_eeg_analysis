@@ -1,3 +1,21 @@
-"*.png" 
-"*.eps" 
-"*.eeg" 
+# --- FICHIERS EEG ---
+*.eeg
+*.vhdr
+*.vmrk
+
+# --- FICHIERS IMAGES ---
+*.png
+*.eps
+
+# --- FICHIERS GÉNÉRÉS PYTHON ---
+*.pyc
+__pycache__/
+
+# --- FICHIERS NUMPY ---
+*.npy
+*.npz
+
+# --- DOSSIERS DE RÉSULTATS (à adapter selon tes besoins) ---
+final_5_PSD/
+group_psd/
+psd_images/
