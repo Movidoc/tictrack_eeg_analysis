@@ -1539,6 +1539,7 @@ for roi in roi_list:
     plt.legend()
     plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 
+    # Code if log scales wanted
     # plt.xscale('log')
     # plt.yscale('log')
     # plt.ylim(0, 1)
