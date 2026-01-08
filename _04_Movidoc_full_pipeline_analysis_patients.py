@@ -946,13 +946,20 @@ def save_mean_psd_ROI(mean_psd_dict, output_folder, subject_name, epoch_type):
     # folder = os.path.join(psd_img_dir, f"{subject_name}_{epoch_type}_ROI")
     os.makedirs(output_folder, exist_ok=True)
     
-    for roi_name, (freqs, psd_vals) in mean_psd_dict.items():
-        save_path = os.path.join(
-            output_folder,
-            f"{subject}_{epoch_type}_{roi_name}_meanPSD.npy"
-        )
-        np.save(save_path, {"freqs": freqs, "psd": psd_vals})
-        print(f"Saved: {save_path}")
+    # for roi_name, (freqs, psd_vals) in mean_psd_dict.items():
+    #     save_path = os.path.join(
+    #         output_folder,
+    #         f"{subject}_{epoch_type}_{roi_name}_meanPSD.npy"
+    #     )
+    for roi_name, psd_per_epoch in mean_psd_dict.items():
+        for epoch_idx, (freqs, psd_vals) in psd_per_epoch.items():
+
+            save_path = os.path.join(
+                output_folder,
+                f"{subject_name}_{epoch_type}_{roi_name}_epoch{epoch_idx}_meanPSD.npy"
+            )
+            np.save(save_path, {"freqs": freqs, "psd": psd_vals})
+            print(f"Saved: {save_path}")
 
 
 #########################################################################
