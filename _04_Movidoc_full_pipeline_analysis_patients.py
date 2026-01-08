@@ -51,7 +51,7 @@ import random
 # Save the original plot functions
 original_plot = mne.io.BaseRaw.plot
 original_plot_psd = mne.io.BaseRaw.plot_psd
-# '''
+'''
 # Define new functions that force show=False
 def plot_no_show(self, *args, **kwargs):
     kwargs['show'] = False
@@ -1479,9 +1479,9 @@ np.save("roi_group_psd_pre.npy", roi_group_psd_pre, allow_pickle=True)
 # np.savez(os.path.join(out_dir, "group_psd_pre.npz"), **{r: np.array(v[1]) for r, v in roi_group_psd_pre.items()})
 
 print("\n[OK] Group PSDs computed and saved in", out_dir)
-
-#########################################################################
 '''
+#########################################################################
+# '''
 
 # Generation of the 5 final graphs (PSDs)
 
@@ -1507,7 +1507,7 @@ epsilon = 1e-14
 
 for roi in roi_list:
     # DEBUG
-    # print(f"Checking ROI {roi}...")
+    print(f"Checking ROI {roi}...")
     if roi not in files_pre or roi not in files_rand:
         print(f"ROI {roi} not found in the files, skipping.")
         continue
@@ -1515,7 +1515,7 @@ for roi in roi_list:
     freqs_rand, psd_rand = files_rand[roi]
     freqs_pre, psd_pre = files_pre[roi]
     # DEBUG
-    # print(f"\n\n\n For ROI: {roi}, \n psd_pre: {psd_pre} \n")
+    print(f"\n\n\n For ROI: {roi}, \n psd_pre: {psd_pre} \n")
 
     # normalization step between 1 & 30 Hz
     mask_pre = freqs_pre <= 30
@@ -1557,7 +1557,7 @@ for roi in roi_list:
     plt.savefig(os.path.join(psd_output_dir, f"normalized_PSD_1-30Hz_{roi}_2s.png"))
     plt.savefig(os.path.join(psd_output_dir, f"normalized_PSD_1-30Hz_{roi}_2s.eps"), format='eps')
     plt.close("all")
-'''
+# '''
 
 
 # Test 1 patient by 1 patient
