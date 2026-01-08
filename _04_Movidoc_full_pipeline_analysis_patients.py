@@ -1403,7 +1403,7 @@ for subject, info in results_psd.items():
     else:
         raise ValueError(f"Unknown montage for the patient {subject}: {patient['montage']}")
   
-    print(f"ROIs pour ce patient: {list(rois_for_patient.keys())}")
+    print(f"ROIs for this patient: {list(rois_for_patient.keys())}")
     for roi, chans in rois_for_patient.items():
         print(f"{roi} -> {chans}")
 
@@ -1452,7 +1452,7 @@ for roi in roi_signals_random.keys():
     group_avg_signal = np.mean(np.stack(sigs, axis=0), axis=0)
     freqs, psd_vals = compute_psd_from_signal(group_avg_signal, sfreq=group_sfreq, fmin=1, fmax=40)
     # DEBUG
-    # print(f"For ROI : {roi} in Random : \nFreqs : {freqs}\nValue : {psd_vals}")
+    print(f"For ROI : {roi} in Random : \nFreqs : {freqs}\nValue : {psd_vals}")
     roi_group_psd_random[roi] = (freqs, psd_vals)
 
 for roi in roi_signals_pre.keys():
@@ -1478,7 +1478,7 @@ np.save("roi_group_psd_pre.npy", roi_group_psd_pre, allow_pickle=True)
 # np.savez(os.path.join(out_dir, "group_psd_random.npz"), **{r: np.array(v[1]) for r, v in roi_group_psd_random.items()})
 # np.savez(os.path.join(out_dir, "group_psd_pre.npz"), **{r: np.array(v[1]) for r, v in roi_group_psd_pre.items()})
 
-print("\n✅ Group PSDs computed and saved in", out_dir)
+print("\n[OK] Group PSDs computed and saved in", out_dir)
 
 #########################################################################
 '''
