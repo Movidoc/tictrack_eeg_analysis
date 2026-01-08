@@ -1,0 +1,2469 @@
+>>> LE SCRIPT A BIEN ÉTÉ LANCÉ
+
+===== START Patient C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\PATIENT FILES\EEG PATIENT FILES\MOVIDOCTicTrack000010.vhdr =====
+
+--- Traitement du fichier : 000010 ---
+
+Extracting parameters from C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\PATIENT FILES\EEG PATIENT FILES\MOVIDOCTicTrack000010.vhdr...
+C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\_02_Movidoc_tictrack_prepro_TTL_extraction_patients.py:62: RuntimeWarning: Online software filter detected. Using software filter settings and ignoring hardware values
+  raw = mne.io.read_raw_brainvision(FilePath, preload=True)
+Setting channel info structure...
+Reading 0 ... 837089  =      0.000 ...  1674.178 secs...
+['Fp1', 'F3', 'F7', 'FT9', 'FC5', 'FC1', 'C3', 'T7', 'TP9', 'CP5', 'CP1', 'Pz', 'P3', 'P7', 'O1', 'Oz', 'O2', 'P4', 'P8', 'TP10', 'CP6', 'CP2', 'Cz', 'C4', 'T8', 'FT10', 'FC6', 'FC2', 'F4', 'F8', 'Fp2']
+None
+Filtering raw data in 1 contiguous segment
+Setting up band-pass filter from 1 - 40 Hz
+
+FIR filter parameters
+---------------------
+Designing a one-pass, zero-phase, non-causal bandpass filter:
+- Windowed time-domain design (firwin) method
+- Hamming window with 0.0194 passband ripple and 53 dB stopband attenuation
+- Lower passband edge: 1.00
+- Lower transition bandwidth: 1.00 Hz (-6 dB cutoff frequency: 0.50 Hz)
+- Upper passband edge: 40.00 Hz
+- Upper transition bandwidth: 10.00 Hz (-6 dB cutoff frequency: 45.00 Hz)
+- Filter length: 1651 samples (3.302 s)
+
+[Parallel(n_jobs=1)]: Done  17 tasks      | elapsed:    0.3s
+[Parallel(n_jobs=1)]: Done  31 out of  31 | elapsed:    0.8s finished
+Filtering raw data in 1 contiguous segment
+Removed notch frequencies (Hz):
+     50.00 : 10323 windows
+Applying REST reference...
+Fitted sphere radius:         96.0 mm
+Origin head coordinates:      -0.9 13.5 42.7 mm
+Origin device coordinates:    -0.9 13.5 42.7 mm
+
+Equiv. model fitting -> RV = 0.00349057 %%
+mu1 = 0.944702    lambda1 = 0.137194
+mu2 = 0.667435    lambda2 = 0.683781
+mu3 = -0.26548    lambda3 = -0.0106058
+Set up EEG sphere model with scalp radius    96.0 mm
+
+EEG channel type selected for re-referencing
+Applying REST reference.
+Applying a custom ('EEG',) reference.
+    31 out of 31 channels remain after picking
+Before crop: [ 0.    38.41  38.418 58.792 58.802]
+Cropping EEG at stimulus 'Stimulus/S  2' = 58.802 s
+DEBUG after set_annotations: [58.802 72.648 72.656 80.206 80.222]
+Using qt as 2D backend.
+Used Annotations descriptions: [np.str_('Stimulus/S  2'), np.str_('Stimulus/S  3'), np.str_('Stimulus/S  4'), np.str_('Stimulus/S  5'), np.str_('Stimulus/S  6'), np.str_('Stimulus/S  7'), np.str_('Stimulus/S  8'), np.str_('Stimulus/S  9'), np.str_('Stimulus/S 10'), np.str_('Stimulus/S 11'), np.str_('Stimulus/S 12'), np.str_('Stimulus/S 13'), np.str_('Stimulus/S 14'), np.str_('Stimulus/S 21'), np.str_('Stimulus/S 22'), np.str_('Stimulus/S 23'), np.str_('Stimulus/S 24'), np.str_('Stimulus/S 25'), np.str_('Stimulus/S 26'), np.str_('Stimulus/S 31'), np.str_('Stimulus/S 32'), np.str_('Stimulus/S 33'), np.str_('Stimulus/S 34'), np.str_('Stimulus/S 41'), np.str_('Stimulus/S 42')]
+Events list :
+{np.str_('Stimulus/S  2'): 2, np.str_('Stimulus/S  3'): 3, np.str_('Stimulus/S  4'): 4, np.str_('Stimulus/S  5'): 5, np.str_('Stimulus/S  6'): 6, np.str_('Stimulus/S  7'): 7, np.str_('Stimulus/S  8'): 8, np.str_('Stimulus/S  9'): 9, np.str_('Stimulus/S 10'): 10, np.str_('Stimulus/S 11'): 11, np.str_('Stimulus/S 12'): 12, np.str_('Stimulus/S 13'): 13, np.str_('Stimulus/S 14'): 14, np.str_('Stimulus/S 21'): 21, np.str_('Stimulus/S 22'): 22, np.str_('Stimulus/S 23'): 23, np.str_('Stimulus/S 24'): 24, np.str_('Stimulus/S 25'): 25, np.str_('Stimulus/S 26'): 26, np.str_('Stimulus/S 31'): 31, np.str_('Stimulus/S 32'): 32, np.str_('Stimulus/S 33'): 33, np.str_('Stimulus/S 34'): 34, np.str_('Stimulus/S 41'): 41, np.str_('Stimulus/S 42'): 42}
+[[ 29401      0      2]
+ [ 36324      0     25]
+ [ 36328      0      3]
+ [ 40103      0     21]
+ [ 40111      0     31]
+ [ 40427      0     21]
+ [ 40434      0     31]
+ [ 40987      0     21]
+ [ 40995      0     31]
+ [ 41299      0     21]
+ [ 41307      0     31]
+ [ 41591      0     21]
+ [ 41599      0     31]
+ [ 41843      0     21]
+ [ 41851      0     31]
+ [ 42083      0     21]
+ [ 42091      0     31]
+ [ 42291      0     21]
+ [ 42299      0     31]
+ [ 42471      0     21]
+ [ 42479      0     31]
+ [ 42631      0     21]
+ [ 42639      0     31]
+ [ 42783      0     21]
+ [ 42790      0     31]
+ [ 42951      0     21]
+ [ 42959      0     31]
+ [ 43135      0     21]
+ [ 43142      0     31]
+ [ 43319      0     21]
+ [ 43326      0     31]
+ [ 43515      0     21]
+ [ 43522      0     31]
+ [ 43691      0     21]
+ [ 43700      0     31]
+ [ 43859      0     21]
+ [ 43867      0     31]
+ [ 44039      0     21]
+ [ 44047      0     31]
+ [ 44223      0     21]
+ [ 44231      0     31]
+ [ 44395      0     21]
+ [ 44404      0     31]
+ [ 44587      0     21]
+ [ 44594      0     31]
+ [ 44767      0     21]
+ [ 44774      0     31]
+ [ 44935      0     21]
+ [ 44942      0     31]
+ [ 45091      0     21]
+ [ 45099      0     31]
+ [ 45267      0     21]
+ [ 45274      0     31]
+ [ 45431      0     21]
+ [ 45438      0     31]
+ [ 45607      0     21]
+ [ 45615      0     31]
+ [ 45787      0     21]
+ [ 45795      0     31]
+ [ 46039      0     21]
+ [ 46047      0     31]
+ [ 46299      0     21]
+ [ 46307      0     31]
+ [ 46312      0      4]
+ [ 54675      0     25]
+ [ 54679      0      5]
+ [ 54894      0     41]
+ [115131      0     42]
+ [115161      0      6]
+ [125400      0     25]
+ [125404      0      7]
+ [125620      0     41]
+ [185851      0     42]
+ [185881      0      8]
+ [205805      0     25]
+ [205810      0      9]
+ [230433      0     21]
+ [230438      0     31]
+ [232590      0     22]
+ [232595      0     32]
+ [298946      0     21]
+ [298951      0     31]
+ [303705      0     22]
+ [303710      0     32]
+ [308779      0     21]
+ [308783      0     31]
+ [309817      0     22]
+ [309822      0     32]
+ [374785      0     21]
+ [374790      0     31]
+ [376848      0     22]
+ [376853      0     32]
+ [385148      0     21]
+ [385153      0     31]
+ [386268      0     22]
+ [386273      0     32]
+ [400191      0     21]
+ [400196      0     31]
+ [400793      0     22]
+ [400798      0     32]
+ [453697      0     21]
+ [453702      0     31]
+ [454922      0     22]
+ [454927      0     32]
+ [504856      0     21]
+ [504861      0     31]
+ [505375      0     22]
+ [505379      0     32]
+ [505856      0     10]
+ [524697      0     25]
+ [524702      0     11]
+ [546754      0     21]
+ [546760      0     31]
+ [551763      0     22]
+ [551769      0     32]
+ [554224      0     21]
+ [554230      0     31]
+ [557904      0     22]
+ [557909      0     32]
+ [561080      0     21]
+ [561085      0     31]
+ [562756      0     22]
+ [562761      0     32]
+ [567507      0     21]
+ [567512      0     31]
+ [569844      0     22]
+ [569849      0     32]
+ [571467      0     21]
+ [571471      0     31]
+ [575200      0     22]
+ [575205      0     32]
+ [584111      0     21]
+ [584117      0     31]
+ [585863      0     22]
+ [585868      0     32]
+ [610441      0     24]
+ [610446      0     34]
+ [612277      0     22]
+ [612281      0     32]
+ [624755      0     21]
+ [624760      0     31]
+ [627985      0     22]
+ [627990      0     32]
+ [634863      0     21]
+ [634868      0     31]
+ [635381      0     24]
+ [635385      0     34]
+ [637635      0     22]
+ [637640      0     32]
+ [646415      0     21]
+ [646420      0     31]
+ [647455      0     22]
+ [647461      0     32]
+ [650281      0     21]
+ [650286      0     31]
+ [651186      0     22]
+ [651191      0     32]
+ [651228      0     12]
+ [674832      0     25]
+ [674836      0     13]
+ [677104      0     23]
+ [677109      0     33]
+ [824887      0     14]
+ [834482      0     26]]
+After crop: [58.802 72.648 72.656 80.206 80.222]
+Used Annotations descriptions: [np.str_('Stimulus/S  2'), np.str_('Stimulus/S  3'), np.str_('Stimulus/S  4'), np.str_('Stimulus/S  5'), np.str_('Stimulus/S  6'), np.str_('Stimulus/S  7'), np.str_('Stimulus/S  8'), np.str_('Stimulus/S  9'), np.str_('Stimulus/S 10'), np.str_('Stimulus/S 11'), np.str_('Stimulus/S 12'), np.str_('Stimulus/S 13'), np.str_('Stimulus/S 14'), np.str_('Stimulus/S 21'), np.str_('Stimulus/S 22'), np.str_('Stimulus/S 23'), np.str_('Stimulus/S 24'), np.str_('Stimulus/S 25'), np.str_('Stimulus/S 26'), np.str_('Stimulus/S 31'), np.str_('Stimulus/S 32'), np.str_('Stimulus/S 33'), np.str_('Stimulus/S 34'), np.str_('Stimulus/S 41'), np.str_('Stimulus/S 42')]
+Collected 164 TTLs for 000010.
+
+===== EEG phase times (from TTL) =====
+[13.854, 50.556, 192.006, 352.818, 990.602, 1290.87]
+
+===== Excel times realigned on EEG =====
+[np.float64(13.877979347007038), np.float64(50.54340256916826), np.float64(192.00527180085214), np.float64(352.79981873149364), np.float64(990.6115217824528), np.float64(1290.868005769024)]
+Linear drift: slope=1.010067, intercept=0.011783
+
+===== DEBUG: Phases readjusted timestamps for this patient =====
+spontaneous_tics      start=352.818  end=952.910
+imitated_tics         start=990.602  end=1243.654
+retention_tics        start=1290.870  end=1590.972
+Checkpoint : Total frames to process: 47732
+
+
+
+This is the dictionnary : {'D': 21, 'F': 22, 'S': 23, 'T': 24, 'right': 25, 'start_spont': 9, 'end_spont': 10, 'start_imit': 11, 'end_imit': 12, 'start_ret': 13, 'end_ret': 14}
+
+
+
+
+===== START Patient C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\PATIENT FILES\EEG PATIENT FILES\MOVIDOCTicTrack_BB28-bis.vhdr =====
+
+--- Traitement du fichier : _BB28-bis ---
+
+Extracting parameters from C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\PATIENT FILES\EEG PATIENT FILES\MOVIDOCTicTrack_BB28-bis.vhdr...
+C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\_02_Movidoc_tictrack_prepro_TTL_extraction_patients.py:62: RuntimeWarning: Online software filter detected. Using software filter settings and ignoring hardware values
+  raw = mne.io.read_raw_brainvision(FilePath, preload=True)
+Setting channel info structure...
+Reading 0 ... 841719  =      0.000 ...  1683.438 secs...
+['Fp1', 'F3', 'F7', 'FT9', 'FC5', 'FC1', 'C3', 'T7', 'TP9', 'CP5', 'CP1', 'Pz', 'P3', 'P7', 'O1', 'Oz', 'O2', 'P4', 'P8', 'TP10', 'CP6', 'CP2', 'Cz', 'C4', 'T8', 'FT10', 'FC6', 'FC2', 'F4', 'F8', 'Fp2']
+None
+Filtering raw data in 1 contiguous segment
+Setting up band-pass filter from 1 - 40 Hz
+
+FIR filter parameters
+---------------------
+Designing a one-pass, zero-phase, non-causal bandpass filter:
+- Windowed time-domain design (firwin) method
+- Hamming window with 0.0194 passband ripple and 53 dB stopband attenuation
+- Lower passband edge: 1.00
+- Lower transition bandwidth: 1.00 Hz (-6 dB cutoff frequency: 0.50 Hz)
+- Upper passband edge: 40.00 Hz
+- Upper transition bandwidth: 10.00 Hz (-6 dB cutoff frequency: 45.00 Hz)
+- Filter length: 1651 samples (3.302 s)
+
+[Parallel(n_jobs=1)]: Done  17 tasks      | elapsed:    0.4s
+[Parallel(n_jobs=1)]: Done  31 out of  31 | elapsed:    0.7s finished
+Filtering raw data in 1 contiguous segment
+Removed notch frequencies (Hz):
+     50.00 : 10385 windows
+Applying REST reference...
+Fitted sphere radius:         96.0 mm
+Origin head coordinates:      -0.9 13.5 42.7 mm
+Origin device coordinates:    -0.9 13.5 42.7 mm
+
+Equiv. model fitting -> RV = 0.00349057 %%
+mu1 = 0.944702    lambda1 = 0.137194
+mu2 = 0.667435    lambda2 = 0.683781
+mu3 = -0.26548    lambda3 = -0.0106058
+Set up EEG sphere model with scalp radius    96.0 mm
+
+EEG channel type selected for re-referencing
+Applying REST reference.
+Applying a custom ('EEG',) reference.
+    31 out of 31 channels remain after picking
+Before crop: [ 0.     4.482  4.492 19.53  19.538]
+Cropping EEG at stimulus 'Stimulus/S  2' = 19.538 s
+DEBUG after set_annotations: [19.538 29.424 29.432 31.616 31.632]
+Used Annotations descriptions: [np.str_('Stimulus/S  2'), np.str_('Stimulus/S  3'), np.str_('Stimulus/S  4'), np.str_('Stimulus/S  5'), np.str_('Stimulus/S  6'), np.str_('Stimulus/S  7'), np.str_('Stimulus/S  8'), np.str_('Stimulus/S  9'), np.str_('Stimulus/S 10'), np.str_('Stimulus/S 11'), np.str_('Stimulus/S 12'), np.str_('Stimulus/S 13'), np.str_('Stimulus/S 14'), np.str_('Stimulus/S 21'), np.str_('Stimulus/S 22'), np.str_('Stimulus/S 23'), np.str_('Stimulus/S 24'), np.str_('Stimulus/S 25'), np.str_('Stimulus/S 26'), np.str_('Stimulus/S 31'), np.str_('Stimulus/S 32'), np.str_('Stimulus/S 33'), np.str_('Stimulus/S 34'), np.str_('Stimulus/S 41'), np.str_('Stimulus/S 42')]
+Events list :
+{np.str_('Stimulus/S  2'): 2, np.str_('Stimulus/S  3'): 3, np.str_('Stimulus/S  4'): 4, np.str_('Stimulus/S  5'): 5, np.str_('Stimulus/S  6'): 6, np.str_('Stimulus/S  7'): 7, np.str_('Stimulus/S  8'): 8, np.str_('Stimulus/S  9'): 9, np.str_('Stimulus/S 10'): 10, np.str_('Stimulus/S 11'): 11, np.str_('Stimulus/S 12'): 12, np.str_('Stimulus/S 13'): 13, np.str_('Stimulus/S 14'): 14, np.str_('Stimulus/S 21'): 21, np.str_('Stimulus/S 22'): 22, np.str_('Stimulus/S 23'): 23, np.str_('Stimulus/S 24'): 24, np.str_('Stimulus/S 25'): 25, np.str_('Stimulus/S 26'): 26, np.str_('Stimulus/S 31'): 31, np.str_('Stimulus/S 32'): 32, np.str_('Stimulus/S 33'): 33, np.str_('Stimulus/S 34'): 34, np.str_('Stimulus/S 41'): 41, np.str_('Stimulus/S 42'): 42}
+[[  9769      0      2]
+ [ 14712      0     25]
+ [ 14716      0      3]
+ ...
+ [772781      0     32]
+ [805734      0     14]
+ [819422      0     26]]
+After crop: [19.538 29.424 29.432 31.616 31.632]
+Used Annotations descriptions: [np.str_('Stimulus/S  2'), np.str_('Stimulus/S  3'), np.str_('Stimulus/S  4'), np.str_('Stimulus/S  5'), np.str_('Stimulus/S  6'), np.str_('Stimulus/S  7'), np.str_('Stimulus/S  8'), np.str_('Stimulus/S  9'), np.str_('Stimulus/S 10'), np.str_('Stimulus/S 11'), np.str_('Stimulus/S 12'), np.str_('Stimulus/S 13'), np.str_('Stimulus/S 14'), np.str_('Stimulus/S 21'), np.str_('Stimulus/S 22'), np.str_('Stimulus/S 23'), np.str_('Stimulus/S 24'), np.str_('Stimulus/S 25'), np.str_('Stimulus/S 26'), np.str_('Stimulus/S 31'), np.str_('Stimulus/S 32'), np.str_('Stimulus/S 33'), np.str_('Stimulus/S 34'), np.str_('Stimulus/S 41'), np.str_('Stimulus/S 42')]
+Collected 436 TTLs for _BB28-bis.
+
+===== EEG phase times (from TTL) =====
+[9.894, 27.392, 156.924, 302.66, 930.022, 991.836]
+
+===== Excel times realigned on EEG =====
+[np.float64(9.896466234187322), np.float64(27.37668259371397), np.float64(156.93828622874096), np.float64(302.66008988493223), np.float64(930.0278550630006), np.float64(991.8286199954232)]
+Linear drift: slope=1.000012, intercept=0.056344
+
+===== DEBUG: Phases readjusted timestamps for this patient =====
+spontaneous_tics      start=302.660  end=902.758
+imitated_tics         start=930.022  end=961.410
+retention_tics        start=991.836  end=1591.930
+Checkpoint : Total frames to process: 39798
+
+
+
+This is the dictionnary : {'D': 21, 'F': 22, 'S': 23, 'T': 24, 'right': 25, 'start_spont': 9, 'end_spont': 10, 'start_imit': 11, 'end_imit': 12, 'start_ret': 13, 'end_ret': 14}
+
+
+
+
+===== START Patient C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\PATIENT FILES\EEG PATIENT FILES\MOVIDOCTicTrack000013.vhdr =====
+
+--- Traitement du fichier : 000013 ---
+
+Extracting parameters from C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\PATIENT FILES\EEG PATIENT FILES\MOVIDOCTicTrack000013.vhdr...
+C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\_02_Movidoc_tictrack_prepro_TTL_extraction_patients.py:62: RuntimeWarning: Online software filter detected. Using software filter settings and ignoring hardware values
+  raw = mne.io.read_raw_brainvision(FilePath, preload=True)
+Setting channel info structure...
+Reading 0 ... 844639  =      0.000 ...  1689.278 secs...
+['Fp1', 'F3', 'F7', 'FT9', 'FC5', 'FC1', 'C3', 'T7', 'TP9', 'CP5', 'CP1', 'Pz', 'P3', 'P7', 'O1', 'Oz', 'O2', 'P4', 'P8', 'TP10', 'CP6', 'CP2', 'Cz', 'C4', 'T8', 'FT10', 'FC6', 'FC2', 'F4', 'F8', 'Fp2']
+None
+Filtering raw data in 1 contiguous segment
+Setting up band-pass filter from 1 - 40 Hz
+
+FIR filter parameters
+---------------------
+Designing a one-pass, zero-phase, non-causal bandpass filter:
+- Windowed time-domain design (firwin) method
+- Hamming window with 0.0194 passband ripple and 53 dB stopband attenuation
+- Lower passband edge: 1.00
+- Lower transition bandwidth: 1.00 Hz (-6 dB cutoff frequency: 0.50 Hz)
+- Upper passband edge: 40.00 Hz
+- Upper transition bandwidth: 10.00 Hz (-6 dB cutoff frequency: 45.00 Hz)
+- Filter length: 1651 samples (3.302 s)
+
+[Parallel(n_jobs=1)]: Done  17 tasks      | elapsed:    0.4s
+[Parallel(n_jobs=1)]: Done  31 out of  31 | elapsed:    0.8s finished
+Filtering raw data in 1 contiguous segment
+Removed notch frequencies (Hz):
+     50.00 : 10416 windows
+Applying REST reference...
+Fitted sphere radius:         96.0 mm
+Origin head coordinates:      -0.9 13.5 42.7 mm
+Origin device coordinates:    -0.9 13.5 42.7 mm
+
+Equiv. model fitting -> RV = 0.00349057 %%
+mu1 = 0.944702    lambda1 = 0.137194
+mu2 = 0.667435    lambda2 = 0.683781
+mu3 = -0.26548    lambda3 = -0.0106058
+Set up EEG sphere model with scalp radius    96.0 mm
+
+EEG channel type selected for re-referencing
+Applying REST reference.
+Applying a custom ('EEG',) reference.
+    31 out of 31 channels remain after picking
+Before crop: [  0.    109.684 109.694 151.728 151.738]
+Cropping EEG at stimulus 'Stimulus/S  2' = 151.738 s
+DEBUG after set_annotations: [151.738 169.35  169.358 172.086 172.102]
+Used Annotations descriptions: [np.str_('Stimulus/S  2'), np.str_('Stimulus/S  3'), np.str_('Stimulus/S  4'), np.str_('Stimulus/S  5'), np.str_('Stimulus/S  6'), np.str_('Stimulus/S  7'), np.str_('Stimulus/S  8'), np.str_('Stimulus/S  9'), np.str_('Stimulus/S 10'), np.str_('Stimulus/S 11'), np.str_('Stimulus/S 12'), np.str_('Stimulus/S 13'), np.str_('Stimulus/S 14'), np.str_('Stimulus/S 21'), np.str_('Stimulus/S 22'), np.str_('Stimulus/S 23'), np.str_('Stimulus/S 24'), np.str_('Stimulus/S 25'), np.str_('Stimulus/S 31'), np.str_('Stimulus/S 32'), np.str_('Stimulus/S 33'), np.str_('Stimulus/S 34'), np.str_('Stimulus/S 41'), np.str_('Stimulus/S 42')]
+Events list :
+{np.str_('Stimulus/S  2'): 2, np.str_('Stimulus/S  3'): 3, np.str_('Stimulus/S  4'): 4, np.str_('Stimulus/S  5'): 5, np.str_('Stimulus/S  6'): 6, np.str_('Stimulus/S  7'): 7, np.str_('Stimulus/S  8'): 8, np.str_('Stimulus/S  9'): 9, np.str_('Stimulus/S 10'): 10, np.str_('Stimulus/S 11'): 11, np.str_('Stimulus/S 12'): 12, np.str_('Stimulus/S 13'): 13, np.str_('Stimulus/S 14'): 14, np.str_('Stimulus/S 21'): 21, np.str_('Stimulus/S 22'): 22, np.str_('Stimulus/S 23'): 23, np.str_('Stimulus/S 24'): 24, np.str_('Stimulus/S 25'): 25, np.str_('Stimulus/S 31'): 31, np.str_('Stimulus/S 32'): 32, np.str_('Stimulus/S 33'): 33, np.str_('Stimulus/S 34'): 34, np.str_('Stimulus/S 41'): 41, np.str_('Stimulus/S 42'): 42}
+[[ 75869      0      2]
+ [ 84675      0     25]
+ [ 84679      0      3]
+ ...
+ [830425      0     24]
+ [830430      0     34]
+ [834017      0     14]]
+After crop: [151.738 169.35  169.358 172.086 172.102]
+Used Annotations descriptions: [np.str_('Stimulus/S  2'), np.str_('Stimulus/S  3'), np.str_('Stimulus/S  4'), np.str_('Stimulus/S  5'), np.str_('Stimulus/S  6'), np.str_('Stimulus/S  7'), np.str_('Stimulus/S  8'), np.str_('Stimulus/S  9'), np.str_('Stimulus/S 10'), np.str_('Stimulus/S 11'), np.str_('Stimulus/S 12'), np.str_('Stimulus/S 13'), np.str_('Stimulus/S 14'), np.str_('Stimulus/S 21'), np.str_('Stimulus/S 22'), np.str_('Stimulus/S 23'), np.str_('Stimulus/S 24'), np.str_('Stimulus/S 25'), np.str_('Stimulus/S 31'), np.str_('Stimulus/S 32'), np.str_('Stimulus/S 33'), np.str_('Stimulus/S 34'), np.str_('Stimulus/S 41'), np.str_('Stimulus/S 42')]
+Collected 387 TTLs for 000013.
+
+===== EEG phase times (from TTL) =====
+[17.62, 66.37, 203.694, 361.848, 1099.684, 1216.208]
+
+===== Excel times realigned on EEG =====
+[np.float64(17.613562737247353), np.float64(66.37868259612543), np.float64(203.67432763967898), np.float64(361.86930976560876), np.float64(1099.6792400979848), np.float64(1216.2088771633557)]
+Linear drift: slope=1.010069, intercept=0.047453
+
+===== DEBUG: Phases readjusted timestamps for this patient =====
+spontaneous_tics      start=361.848  end=1081.946
+imitated_tics         start=1099.684  end=1180.696
+retention_tics        start=1216.208  end=1516.296
+Checkpoint : Total frames to process: 45490
+
+
+
+This is the dictionnary : {'D': 21, 'F': 22, 'S': 23, 'T': 24, 'right': 25, 'start_spont': 9, 'end_spont': 10, 'start_imit': 11, 'end_imit': 12, 'start_ret': 13, 'end_ret': 14}
+
+
+
+
+===== START Patient C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\PATIENT FILES\EEG PATIENT FILES\MOVIDOCTicTrack000030.vhdr =====
+
+--- Traitement du fichier : 000030 ---
+
+Extracting parameters from C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\PATIENT FILES\EEG PATIENT FILES\MOVIDOCTicTrack000030.vhdr...
+C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\_02_Movidoc_tictrack_prepro_TTL_extraction_patients.py:62: RuntimeWarning: Online software filter detected. Using software filter settings and ignoring hardware values
+  raw = mne.io.read_raw_brainvision(FilePath, preload=True)
+Setting channel info structure...
+Reading 0 ... 822569  =      0.000 ...  1645.138 secs...
+['Fp1', 'F3', 'F7', 'FT9', 'FC5', 'FC1', 'C3', 'T7', 'TP9', 'CP5', 'CP1', 'Pz', 'P3', 'P7', 'O1', 'Oz', 'O2', 'P4', 'P8', 'TP10', 'CP6', 'CP2', 'Cz', 'C4', 'T8', 'FT10', 'FC6', 'FC2', 'F4', 'F8', 'Fp2', 'AF7', 'AF3', 'AFz', 'F1', 'F5', 'FT7', 'FC3', 'FCz', 'C1', 'C5', 'TP7', 'CP3', 'P1', 'P5', 'PO7', 'PO3', 'POz', 'PO4', 'PO8', 'P6', 'P2', 'CPz', 'CP4', 'TP8', 'C6', 'C2', 'FC4', 'FT8', 'F6', 'F2', 'AF4', 'AF8']
+None
+Filtering raw data in 1 contiguous segment
+Setting up band-pass filter from 1 - 40 Hz
+
+FIR filter parameters
+---------------------
+Designing a one-pass, zero-phase, non-causal bandpass filter:
+- Windowed time-domain design (firwin) method
+- Hamming window with 0.0194 passband ripple and 53 dB stopband attenuation
+- Lower passband edge: 1.00
+- Lower transition bandwidth: 1.00 Hz (-6 dB cutoff frequency: 0.50 Hz)
+- Upper passband edge: 40.00 Hz
+- Upper transition bandwidth: 10.00 Hz (-6 dB cutoff frequency: 45.00 Hz)
+- Filter length: 1651 samples (3.302 s)
+
+[Parallel(n_jobs=1)]: Done  17 tasks      | elapsed:    0.4s
+[Parallel(n_jobs=1)]: Done  63 out of  63 | elapsed:    1.5s finished
+Filtering raw data in 1 contiguous segment
+Removed notch frequencies (Hz):
+     50.00 : 20664 windows
+Applying REST reference...
+Fitted sphere radius:         95.6 mm
+Origin head coordinates:      -0.8 14.6 43.9 mm
+Origin device coordinates:    -0.8 14.6 43.9 mm
+
+Equiv. model fitting -> RV = 0.0035761 %%
+mu1 = 0.944293    lambda1 = 0.138207
+mu2 = 0.666456    lambda2 = 0.684137
+mu3 = -0.184511    lambda3 = -0.011975
+Set up EEG sphere model with scalp radius    95.6 mm
+
+EEG channel type selected for re-referencing
+Applying REST reference.
+Applying a custom ('EEG',) reference.
+    63 out of 63 channels remain after picking
+Before crop: [ 0.    17.538 17.546 24.272 24.28 ]
+Cropping EEG at stimulus 'Stimulus/S  2' = 17.546 s
+DEBUG after set_annotations: [17.546 24.272 24.28  26.312 26.328]
+Used Annotations descriptions: [np.str_('Stimulus/S  2'), np.str_('Stimulus/S  3'), np.str_('Stimulus/S  4'), np.str_('Stimulus/S  5'), np.str_('Stimulus/S  6'), np.str_('Stimulus/S  7'), np.str_('Stimulus/S  8'), np.str_('Stimulus/S  9'), np.str_('Stimulus/S 10'), np.str_('Stimulus/S 11'), np.str_('Stimulus/S 12'), np.str_('Stimulus/S 13'), np.str_('Stimulus/S 14'), np.str_('Stimulus/S 21'), np.str_('Stimulus/S 22'), np.str_('Stimulus/S 23'), np.str_('Stimulus/S 24'), np.str_('Stimulus/S 25'), np.str_('Stimulus/S 31'), np.str_('Stimulus/S 32'), np.str_('Stimulus/S 33'), np.str_('Stimulus/S 34'), np.str_('Stimulus/S 41'), np.str_('Stimulus/S 42')]
+Events list :
+{np.str_('Stimulus/S  2'): 2, np.str_('Stimulus/S  3'): 3, np.str_('Stimulus/S  4'): 4, np.str_('Stimulus/S  5'): 5, np.str_('Stimulus/S  6'): 6, np.str_('Stimulus/S  7'): 7, np.str_('Stimulus/S  8'): 8, np.str_('Stimulus/S  9'): 9, np.str_('Stimulus/S 10'): 10, np.str_('Stimulus/S 11'): 11, np.str_('Stimulus/S 12'): 12, np.str_('Stimulus/S 13'): 13, np.str_('Stimulus/S 14'): 14, np.str_('Stimulus/S 21'): 21, np.str_('Stimulus/S 22'): 22, np.str_('Stimulus/S 23'): 23, np.str_('Stimulus/S 24'): 24, np.str_('Stimulus/S 25'): 25, np.str_('Stimulus/S 31'): 31, np.str_('Stimulus/S 32'): 32, np.str_('Stimulus/S 33'): 33, np.str_('Stimulus/S 34'): 34, np.str_('Stimulus/S 41'): 41, np.str_('Stimulus/S 42'): 42}
+[[  8773      0      2]
+ [ 12136      0     25]
+ [ 12140      0      3]
+ ...
+ [810758      0     22]
+ [810763      0     32]
+ [811352      0     14]]
+After crop: [17.546 24.272 24.28  26.312 26.328]
+Used Annotations descriptions: [np.str_('Stimulus/S  2'), np.str_('Stimulus/S  3'), np.str_('Stimulus/S  4'), np.str_('Stimulus/S  5'), np.str_('Stimulus/S  6'), np.str_('Stimulus/S  7'), np.str_('Stimulus/S  8'), np.str_('Stimulus/S  9'), np.str_('Stimulus/S 10'), np.str_('Stimulus/S 11'), np.str_('Stimulus/S 12'), np.str_('Stimulus/S 13'), np.str_('Stimulus/S 14'), np.str_('Stimulus/S 21'), np.str_('Stimulus/S 22'), np.str_('Stimulus/S 23'), np.str_('Stimulus/S 24'), np.str_('Stimulus/S 25'), np.str_('Stimulus/S 31'), np.str_('Stimulus/S 32'), np.str_('Stimulus/S 33'), np.str_('Stimulus/S 34'), np.str_('Stimulus/S 41'), np.str_('Stimulus/S 42')]
+Collected 545 TTLs for 000030.
+
+===== EEG phase times (from TTL) =====
+[6.734, 68.972, 198.558, 327.242, 940.556, 1005.074]
+
+===== Excel times realigned on EEG =====
+[np.float64(6.710788325286734), np.float64(68.9742577103444), np.float64(198.56760298288415), np.float64(327.2609944688091), np.float64(940.5628342359724), np.float64(1005.0595222767041)]
+Linear drift: slope=1.010049, intercept=0.011132
+
+===== DEBUG: Phases readjusted timestamps for this patient =====
+spontaneous_tics      start=327.242  end=927.318
+imitated_tics         start=940.556  end=994.442
+retention_tics        start=1005.074  end=1605.158
+Checkpoint : Total frames to process: 48157
+
+
+
+This is the dictionnary : {'D': 21, 'F': 22, 'S': 23, 'T': 24, 'right': 25, 'start_spont': 9, 'end_spont': 10, 'start_imit': 11, 'end_imit': 12, 'start_ret': 13, 'end_ret': 14}
+
+
+
+
+===== START Patient C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\PATIENT FILES\EEG PATIENT FILES\MOVIDOCTicTrack000031.vhdr =====
+
+--- Traitement du fichier : 000031 ---
+
+Extracting parameters from C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\PATIENT FILES\EEG PATIENT FILES\MOVIDOCTicTrack000031.vhdr...
+Setting channel info structure...
+Reading 0 ... 921119  =      0.000 ...  1842.238 secs...
+['Fp1', 'F3', 'F7', 'FT9', 'FC5', 'FC1', 'C3', 'T7', 'TP9', 'CP5', 'CP1', 'Pz', 'P3', 'P7', 'O1', 'Oz', 'O2', 'P4', 'P8', 'TP10', 'CP6', 'CP2', 'Cz', 'C4', 'T8', 'FT10', 'FC6', 'FC2', 'F4', 'F8', 'Fp2', 'AF7', 'AF3', 'AFz', 'F1', 'F5', 'FT7', 'FC3', 'FCz', 'C1', 'C5', 'TP7', 'CP3', 'P1', 'P5', 'PO7', 'PO3', 'POz', 'PO4', 'PO8', 'P6', 'P2', 'CPz', 'CP4', 'TP8', 'C6', 'C2', 'FC4', 'FT8', 'F6', 'F2', 'AF4', 'AF8']
+None
+Filtering raw data in 1 contiguous segment
+Setting up band-pass filter from 1 - 40 Hz
+
+FIR filter parameters
+---------------------
+Designing a one-pass, zero-phase, non-causal bandpass filter:
+- Windowed time-domain design (firwin) method
+- Hamming window with 0.0194 passband ripple and 53 dB stopband attenuation
+- Lower passband edge: 1.00
+- Lower transition bandwidth: 1.00 Hz (-6 dB cutoff frequency: 0.50 Hz)
+- Upper passband edge: 40.00 Hz
+- Upper transition bandwidth: 10.00 Hz (-6 dB cutoff frequency: 45.00 Hz)
+- Filter length: 1651 samples (3.302 s)
+
+[Parallel(n_jobs=1)]: Done  17 tasks      | elapsed:    0.4s
+[Parallel(n_jobs=1)]: Done  63 out of  63 | elapsed:    2.0s finished
+Filtering raw data in 1 contiguous segment
+Removed notch frequencies (Hz):
+     50.00 : 23121 windows
+Applying REST reference...
+Fitted sphere radius:         95.6 mm
+Origin head coordinates:      -0.8 14.6 43.9 mm
+Origin device coordinates:    -0.8 14.6 43.9 mm
+
+Equiv. model fitting -> RV = 0.0035761 %%
+mu1 = 0.944293    lambda1 = 0.138207
+mu2 = 0.666456    lambda2 = 0.684137
+mu3 = -0.184511    lambda3 = -0.011975
+Set up EEG sphere model with scalp radius    95.6 mm
+
+EEG channel type selected for re-referencing
+Applying REST reference.
+Applying a custom ('EEG',) reference.
+    63 out of 63 channels remain after picking
+Before crop: [  0.    100.128 100.138 123.916 123.926]
+Cropping EEG at stimulus 'Stimulus/S  2' = 123.926 s
+DEBUG after set_annotations: [123.926 136.322 136.33  137.93  137.944]
+Used Annotations descriptions: [np.str_('Stimulus/S  2'), np.str_('Stimulus/S  3'), np.str_('Stimulus/S  4'), np.str_('Stimulus/S  5'), np.str_('Stimulus/S  6'), np.str_('Stimulus/S  7'), np.str_('Stimulus/S  8'), np.str_('Stimulus/S  9'), np.str_('Stimulus/S 10'), np.str_('Stimulus/S 11'), np.str_('Stimulus/S 12'), np.str_('Stimulus/S 13'), np.str_('Stimulus/S 14'), np.str_('Stimulus/S 21'), np.str_('Stimulus/S 22'), np.str_('Stimulus/S 23'), np.str_('Stimulus/S 24'), np.str_('Stimulus/S 25'), np.str_('Stimulus/S 26'), np.str_('Stimulus/S 31'), np.str_('Stimulus/S 32'), np.str_('Stimulus/S 33'), np.str_('Stimulus/S 34'), np.str_('Stimulus/S 41'), np.str_('Stimulus/S 42')]
+Events list :
+{np.str_('Stimulus/S  2'): 2, np.str_('Stimulus/S  3'): 3, np.str_('Stimulus/S  4'): 4, np.str_('Stimulus/S  5'): 5, np.str_('Stimulus/S  6'): 6, np.str_('Stimulus/S  7'): 7, np.str_('Stimulus/S  8'): 8, np.str_('Stimulus/S  9'): 9, np.str_('Stimulus/S 10'): 10, np.str_('Stimulus/S 11'): 11, np.str_('Stimulus/S 12'): 12, np.str_('Stimulus/S 13'): 13, np.str_('Stimulus/S 14'): 14, np.str_('Stimulus/S 21'): 21, np.str_('Stimulus/S 22'): 22, np.str_('Stimulus/S 23'): 23, np.str_('Stimulus/S 24'): 24, np.str_('Stimulus/S 25'): 25, np.str_('Stimulus/S 26'): 26, np.str_('Stimulus/S 31'): 31, np.str_('Stimulus/S 32'): 32, np.str_('Stimulus/S 33'): 33, np.str_('Stimulus/S 34'): 34, np.str_('Stimulus/S 41'): 41, np.str_('Stimulus/S 42'): 42}
+[[ 61963      0      2]
+ [ 68161      0     25]
+ [ 68165      0      3]
+ [ 68965      0     21]
+ [ 68972      0     31]
+ [ 69621      0     21]
+ [ 69629      0     31]
+ [ 70381      0     21]
+ [ 70390      0     31]
+ [ 71033      0     21]
+ [ 71041      0     31]
+ [ 71657      0     21]
+ [ 71665      0     31]
+ [ 72457      0     21]
+ [ 72464      0     31]
+ [ 73033      0     21]
+ [ 73041      0     31]
+ [ 73625      0     21]
+ [ 73634      0     31]
+ [ 74229      0     21]
+ [ 74236      0     31]
+ [ 74681      0     21]
+ [ 74689      0     31]
+ [ 75241      0     21]
+ [ 75250      0     31]
+ [ 75833      0     21]
+ [ 75841      0     31]
+ [ 76685      0     21]
+ [ 76693      0     31]
+ [ 77337      0     21]
+ [ 77346      0     31]
+ [ 77965      0     21]
+ [ 77972      0     31]
+ [ 78577      0     21]
+ [ 78584      0     31]
+ [ 79261      0     21]
+ [ 79269      0     31]
+ [ 79965      0     21]
+ [ 79972      0     31]
+ [ 80605      0     21]
+ [ 80612      0     31]
+ [ 81289      0     21]
+ [ 81296      0     31]
+ [ 81909      0     21]
+ [ 81916      0     31]
+ [ 82529      0     21]
+ [ 82536      0     31]
+ [ 83197      0     21]
+ [ 83205      0     31]
+ [ 83869      0     21]
+ [ 83876      0     31]
+ [ 84521      0     21]
+ [ 84528      0     31]
+ [ 85177      0     21]
+ [ 85184      0     31]
+ [ 85709      0     21]
+ [ 85716      0     31]
+ [ 86313      0     21]
+ [ 86320      0     31]
+ [ 86965      0     21]
+ [ 86972      0     31]
+ [ 87552      0     21]
+ [ 87560      0     31]
+ [ 87564      0      4]
+ [ 93300      0     25]
+ [ 93304      0      5]
+ [ 93526      0     41]
+ [153758      0     42]
+ [153788      0      6]
+ [158754      0     25]
+ [158758      0      7]
+ [158973      0     41]
+ [219209      0     42]
+ [219238      0      8]
+ [236683      0     25]
+ [236688      0      9]
+ [238421      0     21]
+ [238426      0     31]
+ [275958      0     22]
+ [275963      0     32]
+ [277045      0     21]
+ [277050      0     31]
+ [285588      0     22]
+ [285594      0     32]
+ [287242      0     21]
+ [287247      0     31]
+ [296373      0     22]
+ [296377      0     32]
+ [297392      0     21]
+ [297397      0     31]
+ [304513      0     22]
+ [304519      0     32]
+ [309913      0     21]
+ [309918      0     31]
+ [314895      0     22]
+ [314899      0     32]
+ [319313      0     21]
+ [319318      0     31]
+ [321774      0     22]
+ [321779      0     32]
+ [325241      0     21]
+ [325246      0     31]
+ [325794      0     22]
+ [325799      0     32]
+ [332142      0     21]
+ [332147      0     31]
+ [336785      0     22]
+ [336790      0     32]
+ [337927      0     21]
+ [337932      0     31]
+ [342291      0     22]
+ [342296      0     32]
+ [345674      0     21]
+ [345678      0     31]
+ [350945      0     22]
+ [350950      0     32]
+ [367970      0     21]
+ [367975      0     31]
+ [380964      0     22]
+ [380969      0     32]
+ [405813      0     21]
+ [405818      0     31]
+ [409806      0     22]
+ [409811      0     32]
+ [417509      0     21]
+ [417514      0     31]
+ [423219      0     22]
+ [423224      0     32]
+ [428808      0     21]
+ [428813      0     31]
+ [432831      0     22]
+ [432836      0     32]
+ [440118      0     21]
+ [440124      0     31]
+ [443355      0     22]
+ [443360      0     32]
+ [446690      0     21]
+ [446695      0     31]
+ [453216      0     22]
+ [453221      0     32]
+ [457891      0     21]
+ [457897      0     31]
+ [478348      0     21]
+ [478353      0     31]
+ [479015      0     22]
+ [479020      0     32]
+ [504394      0     21]
+ [504401      0     31]
+ [514267      0     22]
+ [514272      0     32]
+ [520245      0     21]
+ [520250      0     31]
+ [520647      0     22]
+ [520652      0     32]
+ [525914      0     21]
+ [525919      0     31]
+ [526870      0     22]
+ [526876      0     32]
+ [527358      0     21]
+ [527363      0     31]
+ [531455      0     22]
+ [531460      0     32]
+ [532927      0     21]
+ [532932      0     31]
+ [536666      0     22]
+ [536671      0     32]
+ [536725      0     10]
+ [551951      0     25]
+ [551956      0     11]
+ [553631      0     21]
+ [553637      0     31]
+ [555809      0     21]
+ [555814      0     31]
+ [567715      0     22]
+ [567720      0     32]
+ [571603      0     21]
+ [571608      0     31]
+ [572525      0     22]
+ [572530      0     32]
+ [574011      0     21]
+ [574016      0     31]
+ [574978      0     22]
+ [574983      0     32]
+ [577594      0     21]
+ [577599      0     31]
+ [578247      0     22]
+ [578252      0     32]
+ [578829      0     24]
+ [578834      0     34]
+ [581838      0     21]
+ [581843      0     31]
+ [582522      0     22]
+ [582527      0     32]
+ [583609      0     21]
+ [583614      0     31]
+ [584062      0     22]
+ [584068      0     32]
+ [585403      0     21]
+ [585408      0     31]
+ [585801      0     22]
+ [585808      0     32]
+ [586887      0     21]
+ [586892      0     31]
+ [587370      0     22]
+ [587375      0     32]
+ [589963      0     21]
+ [589968      0     31]
+ [590548      0     22]
+ [590553      0     32]
+ [591451      0     21]
+ [591456      0     31]
+ [592053      0     22]
+ [592058      0     32]
+ [593003      0     21]
+ [593008      0     31]
+ [593636      0     22]
+ [593641      0     32]
+ [594407      0     21]
+ [594412      0     31]
+ [594959      0     22]
+ [594964      0     32]
+ [595001      0     12]
+ [604645      0     25]
+ [604649      0     13]
+ [607933      0     24]
+ [607938      0     34]
+ [608703      0     24]
+ [608708      0     34]
+ [616296      0     23]
+ [616302      0     33]
+ [669237      0     22]
+ [669243      0     32]
+ [670778      0     24]
+ [670783      0     34]
+ [675403      0     23]
+ [675408      0     33]
+ [680903      0     22]
+ [680908      0     32]
+ [712562      0     23]
+ [712567      0     33]
+ [724479      0     24]
+ [724484      0     34]
+ [729400      0     22]
+ [729406      0     32]
+ [729819      0     24]
+ [729824      0     34]
+ [732866      0     24]
+ [732871      0     34]
+ [733603      0     23]
+ [733608      0     33]
+ [759208      0     24]
+ [759213      0     34]
+ [771969      0     22]
+ [771973      0     32]
+ [782204      0     24]
+ [782209      0     34]
+ [813934      0     23]
+ [813939      0     33]
+ [817635      0     22]
+ [817641      0     32]
+ [844353      0     23]
+ [844358      0     33]
+ [864337      0     22]
+ [864343      0     32]
+ [869986      0     23]
+ [869991      0     33]
+ [879149      0     22]
+ [879154      0     32]
+ [894653      0     23]
+ [894658      0     33]
+ [904701      0     14]
+ [915298      0     26]]
+After crop: [123.926 136.322 136.33  137.93  137.944]
+Used Annotations descriptions: [np.str_('Stimulus/S  2'), np.str_('Stimulus/S  3'), np.str_('Stimulus/S  4'), np.str_('Stimulus/S  5'), np.str_('Stimulus/S  6'), np.str_('Stimulus/S  7'), np.str_('Stimulus/S  8'), np.str_('Stimulus/S  9'), np.str_('Stimulus/S 10'), np.str_('Stimulus/S 11'), np.str_('Stimulus/S 12'), np.str_('Stimulus/S 13'), np.str_('Stimulus/S 14'), np.str_('Stimulus/S 21'), np.str_('Stimulus/S 22'), np.str_('Stimulus/S 23'), np.str_('Stimulus/S 24'), np.str_('Stimulus/S 25'), np.str_('Stimulus/S 26'), np.str_('Stimulus/S 31'), np.str_('Stimulus/S 32'), np.str_('Stimulus/S 33'), np.str_('Stimulus/S 34'), np.str_('Stimulus/S 41'), np.str_('Stimulus/S 42')]
+Collected 272 TTLs for 000031.
+
+===== EEG phase times (from TTL) =====
+[12.404, 62.682, 193.59, 349.45, 979.986, 1085.372]
+
+===== Excel times realigned on EEG =====
+[np.float64(12.381085006121584), np.float64(62.679108899561406), np.float64(193.60729833192164), np.float64(349.46784155639125), np.float64(979.9764034969531), np.float64(1085.3722627090517)]
+Linear drift: slope=1.010061, intercept=0.014904
+
+===== DEBUG: Phases readjusted timestamps for this patient =====
+spontaneous_tics      start=349.450  end=949.524
+imitated_tics         start=979.986  end=1066.076
+retention_tics        start=1085.372  end=1685.476
+Checkpoint : Total frames to process: 50566
+
+
+
+This is the dictionnary : {'D': 21, 'F': 22, 'S': 23, 'T': 24, 'right': 25, 'start_spont': 9, 'end_spont': 10, 'start_imit': 11, 'end_imit': 12, 'start_ret': 13, 'end_ret': 14}
+
+
+
+Pipeline finished for all the patients.
+
+============================================================
+ Patient : 000010
+============================================================
+
+ --- Merged TTL + Tics timeline ---
+{'start_spont': 352.818}
+{'start_1': 356.566}
+{'end_1': 358.8}
+{'start_2': 364.433}
+{'end_2': 364.966}
+{'start_3': 383.332}
+{'end_3': 383.999}
+{'start_4': 388.032}
+{'end_4': 388.465}
+{'start_5': 401.998}
+{'D': 402.064}
+{'end_5': 406.131}
+{'F': 406.378}
+{'start_6': 407.698}
+{'end_6': 413.298}
+{'start_7': 422.431}
+{'end_7': 422.531}
+{'start_8': 443.663}
+{'end_8': 444.33}
+{'start_9': 464.096}
+{'end_9': 468.296}
+{'start_10': 477.862}
+{'end_10': 478.329}
+{'start_11': 490.228}
+{'end_11': 492.195}
+{'start_12': 501.028}
+{'end_12': 503.761}
+{'start_13': 519.594}
+{'end_13': 531.927}
+{'start_14': 537.527}
+{'D': 539.09}
+{'F': 548.608}
+{'end_14': 552.693}
+{'start_15': 553.726}
+{'end_15': 554.06}
+{'start_16': 557.893}
+{'D': 558.756}
+{'F': 560.832}
+{'end_16': 561.426}
+{'start_17': 563.826}
+{'end_17': 564.793}
+{'start_18': 567.493}
+{'end_18': 569.926}
+{'start_19': 573.859}
+{'end_19': 573.992}
+{'start_20': 593.458}
+{'end_20': 594.558}
+{'start_21': 596.592}
+{'end_21': 596.725}
+{'start_22': 604.591}
+{'end_22': 605.258}
+{'start_23': 652.356}
+{'end_23': 654.49}
+{'start_24': 657.756}
+{'end_24': 658.523}
+{'start_25': 683.822}
+{'end_25': 685.589}
+{'start_26': 688.322}
+{'D': 690.768}
+{'F': 694.894}
+{'end_26': 695.988}
+{'start_27': 697.188}
+{'end_27': 699.721}
+{'start_28': 701.221}
+{'end_28': 701.988}
+{'start_29': 703.055}
+{'end_29': 703.688}
+{'start_30': 707.554}
+{'end_30': 707.954}
+{'start_31': 710.088}
+{'D': 711.494}
+{'F': 713.734}
+{'end_31': 716.987}
+{'start_32': 719.087}
+{'end_32': 719.387}
+{'start_33': 721.387}
+{'end_33': 722.154}
+{'start_34': 738.02}
+{'end_34': 738.487}
+{'start_35': 739.987}
+{'D': 741.58}
+{'F': 742.784}
+{'end_35': 744.187}
+{'start_36': 755.353}
+{'end_36': 755.686}
+{'start_37': 759.419}
+{'end_37': 759.753}
+{'start_38': 780.785}
+{'end_38': 781.252}
+{'start_39': 787.785}
+{'end_39': 788.685}
+{'start_40': 797.518}
+{'end_40': 799.651}
+{'start_41': 803.885}
+{'end_41': 804.385}
+{'start_42': 819.351}
+{'end_42': 820.251}
+{'start_43': 843.85}
+{'end_43': 845.283}
+{'start_44': 847.383}
+{'D': 848.592}
+{'F': 851.042}
+{'end_44': 852.583}
+{'start_45': 854.849}
+{'end_45': 856.316}
+{'start_46': 858.516}
+{'end_46': 859.083}
+{'start_47': 862.783}
+{'end_47': 863.349}
+{'start_48': 875.849}
+{'end_48': 875.849}
+{'start_49': 899.515}
+{'end_49': 900.181}
+{'start_50': 905.681}
+{'end_50': 910.014}
+{'start_51': 921.447}
+{'end_51': 921.881}
+{'start_52': 938.347}
+{'end_52': 938.747}
+{'start_53': 946.913}
+{'end_53': 947.646}
+{'start_54': 949.013}
+{'D': 950.91}
+{'end_54': 951.513}
+{'F': 951.948}
+{'end_spont': 952.91}
+{'start_imit': 990.602}
+{'D': 1034.706}
+{'F': 1044.724}
+{'D': 1049.646}
+{'F': 1057.006}
+{'D': 1063.358}
+{'F': 1066.71}
+{'D': 1076.212}
+{'F': 1080.886}
+{'D': 1084.132}
+{'F': 1091.598}
+{'D': 1109.42}
+{'F': 1112.924}
+{'T': 1162.08}
+{'F': 1165.752}
+{'D': 1190.708}
+{'F': 1197.168}
+{'D': 1210.924}
+{'T': 1211.96}
+{'F': 1216.468}
+{'D': 1234.028}
+{'F': 1236.108}
+{'D': 1241.76}
+{'F': 1243.57}
+{'end_imit': 1243.654}
+{'start_ret': 1290.87}
+{'start_59': 1291.001}
+{'end_59': 1293.068}
+{'S': 1295.406}
+{'start_60': 1303.434}
+{'end_60': 1305.834}
+{'start_61': 1334.067}
+{'end_61': 1334.333}
+{'start_62': 1412.031}
+{'end_62': 1412.597}
+{'start_63': 1416.297}
+{'end_63': 1416.43}
+{'start_64': 1424.063}
+{'end_64': 1425.063}
+{'start_65': 1455.062}
+{'end_65': 1456.996}
+{'start_66': 1473.795}
+{'end_66': 1474.062}
+{'start_67': 1514.794}
+{'end_67': 1515.727}
+{'start_68': 1536.06}
+{'end_68': 1537.126}
+{'end_ret': 1590.972}
+
+============================================================
+ Patient : _BB28-bis
+============================================================
+
+ --- Merged TTL + Tics timeline ---
+{'start_spont': 302.66}
+{'D': 304.974}
+{'F': 306.01}
+{'D': 314.448}
+{'F': 315.052}
+{'start_1': 328.18}
+{'D': 328.212}
+{'F': 328.948}
+{'end_1': 329.14}
+{'D': 331.162}
+{'start_2': 331.22}
+{'F': 332.198}
+{'end_2': 332.34}
+{'D': 344.952}
+{'F': 346.626}
+{'D': 353.622}
+{'F': 356.17}
+{'start_3': 362.101}
+{'D': 362.412}
+{'end_3': 362.821}
+{'F': 363.186}
+{'start_4': 378.101}
+{'D': 378.222}
+{'end_4': 378.701}
+{'start_5': 380.301}
+{'end_5': 381.341}
+{'F': 381.342}
+{'start_6': 401.301}
+{'D': 401.918}
+{'F': 404.358}
+{'end_6': 404.381}
+{'start_7': 405.781}
+{'D': 406.106}
+{'end_7': 406.381}
+{'F': 406.912}
+{'start_8': 408.861}
+{'D': 409.382}
+{'end_8': 409.541}
+{'F': 410.384}
+{'start_9': 412.741}
+{'D': 412.862}
+{'F': 413.632}
+{'D': 414.838}
+{'end_9': 420.462}
+{'F': 421.224}
+{'start_10': 427.702}
+{'D': 427.702}
+{'end_10': 428.742}
+{'F': 428.806}
+{'start_11': 430.662}
+{'D': 430.752}
+{'F': 431.488}
+{'end_11': 431.542}
+{'start_12': 487.302}
+{'D': 487.828}
+{'F': 490.144}
+{'D': 492.9}
+{'F': 495.21}
+{'D': 498.188}
+{'F': 500.738}
+{'end_12': 500.783}
+{'D': 550.454}
+{'start_13': 550.503}
+{'end_13': 555.543}
+{'F': 555.554}
+{'start_14': 560.583}
+{'D': 561.754}
+{'end_14': 568.783}
+{'F': 568.996}
+{'D': 623.526}
+{'start_15': 623.544}
+{'F': 626.094}
+{'end_15': 626.184}
+{'D': 663.68}
+{'start_16': 666.385}
+{'end_16': 669.385}
+{'F': 669.542}
+{'D': 691.26}
+{'start_17': 691.905}
+{'end_17': 692.585}
+{'F': 695.286}
+{'D': 772.03}
+{'start_18': 775.186}
+{'D': 775.738}
+{'F': 776.61}
+{'end_18': 777.826}
+{'F': 778.054}
+{'start_19': 805.346}
+{'D': 808.068}
+{'end_19': 809.706}
+{'F': 809.742}
+{'start_20': 812.506}
+{'D': 813.464}
+{'end_20': 816.746}
+{'F': 816.786}
+{'start_21': 833.947}
+{'D': 834.136}
+{'end_21': 840.427}
+{'F': 840.504}
+{'start_22': 888.307}
+{'end_22': 889.187}
+{'end_spont': 902.758}
+{'start_imit': 930.022}
+{'D': 930.87}
+{'D': 932.61}
+{'D': 933.88}
+{'F': 934.852}
+{'F': 936.566}
+{'F': 936.938}
+{'D': 937.904}
+{'F': 938.372}
+{'D': 939.616}
+{'F': 940.218}
+{'D': 941.092}
+{'F': 941.766}
+{'D': 942.742}
+{'F': 943.21}
+{'T': 945.052}
+{'D': 949.524}
+{'F': 950.834}
+{'D': 953.076}
+{'F': 953.542}
+{'D': 954.314}
+{'F': 954.714}
+{'D': 955.452}
+{'F': 955.922}
+{'T': 957.536}
+{'D': 959.142}
+{'F': 961.326}
+{'end_imit': 961.41}
+{'start_ret': 991.836}
+{'S': 994.526}
+{'T': 996.194}
+{'F': 1001.226}
+{'T': 1006.15}
+{'start_23': 1008.069}
+{'T': 1008.264}
+{'T': 1009.944}
+{'end_23': 1010.069}
+{'start_24': 1014.509}
+{'T': 1014.526}
+{'end_24': 1015.229}
+{'S': 1026.452}
+{'F': 1028.226}
+{'S': 1048.416}
+{'F': 1049.45}
+{'S': 1056.986}
+{'F': 1063.966}
+{'T': 1069.384}
+{'start_25': 1071.55}
+{'T': 1071.7}
+{'end_25': 1072.47}
+{'start_26': 1073.91}
+{'T': 1074.418}
+{'end_26': 1075.95}
+{'T': 1076.758}
+{'T': 1081.376}
+{'T': 1106.512}
+{'S': 1116.408}
+{'T': 1118.546}
+{'start_27': 1120.51}
+{'T': 1120.85}
+{'end_27': 1121.51}
+{'F': 1125.038}
+{'S': 1149.078}
+{'F': 1151.348}
+{'S': 1151.814}
+{'F': 1152.314}
+{'S': 1181.208}
+{'F': 1182.344}
+{'S': 1184.048}
+{'F': 1188.224}
+{'S': 1207.496}
+{'F': 1214.502}
+{'S': 1214.902}
+{'F': 1223.854}
+{'T': 1224.188}
+{'S': 1227.696}
+{'F': 1233.304}
+{'S': 1233.938}
+{'F': 1240.324}
+{'S': 1246.474}
+{'F': 1259.49}
+{'S': 1271.282}
+{'S': 1277.666}
+{'F': 1284.512}
+{'F': 1287.282}
+{'T': 1287.754}
+{'T': 1289.592}
+{'start_28': 1290.632}
+{'T': 1292.03}
+{'T': 1293.536}
+{'end_28': 1294.272}
+{'T': 1295.048}
+{'T': 1295.216}
+{'T': 1298.322}
+{'S': 1311.158}
+{'F': 1314.234}
+{'S': 1331.18}
+{'F': 1335.96}
+{'T': 1353.466}
+{'S': 1354.566}
+{'S': 1357.94}
+{'T': 1363.856}
+{'F': 1364.492}
+{'F': 1364.694}
+{'S': 1374.108}
+{'F': 1378.148}
+{'S': 1378.484}
+{'F': 1387.084}
+{'S': 1387.552}
+{'F': 1402.34}
+{'S': 1422.282}
+{'F': 1426.218}
+{'S': 1428.354}
+{'T': 1432.1}
+{'S': 1435.544}
+{'F': 1440.892}
+{'F': 1449.112}
+{'S': 1485.6}
+{'S': 1490.882}
+{'F': 1492.918}
+{'S': 1493.252}
+{'F': 1497.834}
+{'S': 1501.008}
+{'T': 1503.176}
+{'F': 1503.376}
+{'F': 1504.04}
+{'S': 1504.842}
+{'F': 1511.334}
+{'S': 1512.944}
+{'T': 1515.474}
+{'T': 1516.912}
+{'T': 1519.258}
+{'F': 1520.096}
+{'S': 1520.934}
+{'F': 1526.014}
+{'end_ret': 1591.93}
+
+============================================================
+ Patient : 000013
+============================================================
+
+ --- Merged TTL + Tics timeline ---
+{'start_spont': 361.848}
+{'D': 366.912}
+{'F': 368.35}
+{'start_1': 369.002}
+{'end_1': 373.002}
+{'D': 382.688}
+{'start_2': 383.169}
+{'F': 384.422}
+{'D': 389.812}
+{'F': 391.318}
+{'D': 396.052}
+{'F': 400.25}
+{'end_2': 403.268}
+{'start_3': 404.435}
+{'D': 408.672}
+{'end_3': 410.634}
+{'F': 410.986}
+{'D': 419.246}
+{'F': 420.486}
+{'start_4': 422.434}
+{'D': 424.398}
+{'F': 426.334}
+{'end_4': 428.767}
+{'start_5': 439.967}
+{'D': 440.636}
+{'end_5': 443.3}
+{'F': 443.382}
+{'D': 460.992}
+{'start_6': 461.299}
+{'F': 464.046}
+{'end_6': 469.466}
+{'D': 470.926}
+{'start_7': 471.299}
+{'F': 472.796}
+{'D': 483.134}
+{'F': 484.98}
+{'D': 486.092}
+{'F': 488.006}
+{'end_7': 492.032}
+{'start_8': 501.032}
+{'end_8': 505.565}
+{'D': 513.712}
+{'start_9': 513.964}
+{'F': 517.538}
+{'D': 520.894}
+{'F': 523.884}
+{'end_9': 525.564}
+{'D': 554.764}
+{'F': 555.8}
+{'start_10': 557.03}
+{'end_10': 560.53}
+{'start_11': 562.196}
+{'end_11': 567.829}
+{'start_12': 569.963}
+{'D': 570.55}
+{'F': 573.64}
+{'end_12': 573.929}
+{'start_13': 577.129}
+{'end_13': 587.662}
+{'D': 600.79}
+{'start_14': 601.062}
+{'F': 602.574}
+{'end_14': 603.195}
+{'D': 612.832}
+{'start_15': 613.428}
+{'F': 614.28}
+{'end_15': 614.661}
+{'D': 620.544}
+{'start_16': 620.661}
+{'end_16': 622.494}
+{'F': 622.988}
+{'start_17': 625.361}
+{'D': 627.702}
+{'end_17': 629.361}
+{'F': 629.59}
+{'D': 634.308}
+{'start_18': 634.527}
+{'F': 636.154}
+{'end_18': 636.361}
+{'D': 666.104}
+{'F': 667.216}
+{'D': 675.062}
+{'start_19': 675.393}
+{'F': 676.434}
+{'end_19': 680.059}
+{'start_20': 684.759}
+{'end_20': 687.926}
+{'D': 692.082}
+{'start_21': 693.192}
+{'F': 693.79}
+{'end_21': 694.559}
+{'D': 705.464}
+{'F': 706.746}
+{'start_22': 723.191}
+{'end_22': 724.591}
+{'start_23': 749.724}
+{'D': 755.518}
+{'F': 759.47}
+{'end_23': 763.09}
+{'D': 768.792}
+{'F': 770.194}
+{'D': 790.46}
+{'start_24': 790.856}
+{'F': 792.1}
+{'end_24': 792.789}
+{'start_25': 802.322}
+{'D': 803.12}
+{'F': 804.424}
+{'D': 807.162}
+{'F': 812.43}
+{'end_25': 815.288}
+{'start_26': 830.888}
+{'end_26': 833.754}
+{'D': 840.422}
+{'start_27': 840.921}
+{'F': 843.402}
+{'D': 845.546}
+{'F': 848.822}
+{'end_27': 849.221}
+{'start_28': 852.587}
+{'end_28': 854.754}
+{'D': 860.496}
+{'F': 862.668}
+{'D': 887.23}
+{'start_29': 887.586}
+{'F': 889.432}
+{'end_29': 889.853}
+{'start_30': 901.719}
+{'D': 904.064}
+{'F': 907.578}
+{'D': 911.26}
+{'F': 912.798}
+{'D': 916.044}
+{'F': 918.056}
+{'end_30': 922.785}
+{'D': 933.828}
+{'start_31': 934.184}
+{'F': 935.698}
+{'end_31': 935.918}
+{'D': 948.872}
+{'start_32': 950.651}
+{'F': 951.018}
+{'end_32': 954.651}
+{'D': 982.022}
+{'F': 983.422}
+{'D': 992.216}
+{'F': 993.826}
+{'start_33': 996.249}
+{'end_33': 1000.682}
+{'D': 1004.216}
+{'F': 1007.024}
+{'D': 1012.512}
+{'start_34': 1012.782}
+{'F': 1013.584}
+{'end_34': 1014.749}
+{'D': 1033.054}
+{'start_35': 1033.415}
+{'F': 1034.396}
+{'D': 1035.564}
+{'F': 1038.35}
+{'end_35': 1039.114}
+{'D': 1057.54}
+{'start_36': 1057.947}
+{'F': 1058.952}
+{'D': 1060.056}
+{'F': 1061.502}
+{'end_36': 1062.48}
+{'D': 1065.158}
+{'F': 1066.394}
+{'D': 1068.94}
+{'F': 1070.748}
+{'start_37': 1078.98}
+{'D': 1080.656}
+{'F': 1081.394}
+{'end_spont': 1081.946}
+{'end_37': 1085.88}
+{'start_imit': 1099.684}
+{'D': 1104.738}
+{'F': 1109.884}
+{'D': 1112.73}
+{'F': 1115.676}
+{'D': 1117.416}
+{'F': 1119.892}
+{'D': 1127.15}
+{'F': 1129.488}
+{'D': 1134.772}
+{'F': 1136.716}
+{'T': 1138.388}
+{'T': 1143.038}
+{'T': 1143.904}
+{'D': 1148.656}
+{'F': 1149.962}
+{'D': 1152.574}
+{'F': 1154.78}
+{'D': 1168.588}
+{'F': 1170.658}
+{'D': 1174.036}
+{'F': 1175.812}
+{'D': 1177.726}
+{'F': 1180.61}
+{'end_imit': 1180.696}
+{'start_ret': 1216.208}
+{'S': 1221.438}
+{'F': 1225.854}
+{'S': 1233.35}
+{'T': 1245.58}
+{'T': 1247.626}
+{'F': 1251.102}
+{'S': 1253.57}
+{'F': 1265.274}
+{'S': 1272.378}
+{'F': 1278.716}
+{'S': 1295.25}
+{'F': 1311.204}
+{'S': 1321.502}
+{'F': 1350.982}
+{'T': 1351.286}
+{'T': 1352.13}
+{'T': 1357.506}
+{'S': 1378.578}
+{'F': 1392.83}
+{'S': 1427.508}
+{'F': 1441.844}
+{'T': 1442.28}
+{'T': 1442.446}
+{'T': 1444.734}
+{'S': 1461.702}
+{'F': 1467.242}
+{'S': 1474.446}
+{'F': 1491.882}
+{'T': 1509.112}
+{'end_ret': 1516.296}
+
+============================================================
+ Patient : 000030
+============================================================
+
+ --- Merged TTL + Tics timeline ---
+{'start_spont': 327.242}
+{'start_1': 328.528}
+{'end_1': 328.794}
+{'start_2': 329.961}
+{'D': 330.138}
+{'end_2': 332.027}
+{'F': 333.454}
+{'start_3': 333.961}
+{'D': 335.024}
+{'end_3': 336.894}
+{'F': 337.034}
+{'start_4': 343.06}
+{'D': 343.24}
+{'end_4': 344.127}
+{'F': 344.508}
+{'start_5': 347.227}
+{'D': 347.874}
+{'end_5': 348.727}
+{'F': 349.18}
+{'start_6': 350.493}
+{'end_6': 351.093}
+{'F': 351.126}
+{'D': 351.226}
+{'F': 352.164}
+{'start_7': 352.193}
+{'end_7': 354.96}
+{'start_8': 358.559}
+{'D': 359.26}
+{'end_8': 361.126}
+{'F': 361.816}
+{'D': 369.772}
+{'start_9': 370.025}
+{'end_9': 371.125}
+{'F': 372.55}
+{'start_10': 376.125}
+{'D': 377.2}
+{'F': 379.404}
+{'end_10': 380.492}
+{'start_11': 384.758}
+{'D': 385.098}
+{'F': 387.276}
+{'end_11': 387.491}
+{'D': 388.586}
+{'F': 389.994}
+{'D': 397.0}
+{'F': 398.674}
+{'start_12': 409.29}
+{'D': 409.544}
+{'end_12': 410.323}
+{'F': 410.786}
+{'start_13': 411.523}
+{'D': 412.022}
+{'F': 412.83}
+{'end_13': 415.89}
+{'start_14': 417.723}
+{'D': 418.096}
+{'F': 419.198}
+{'end_14': 419.49}
+{'start_15': 421.723}
+{'end_15': 422.189}
+{'D': 427.598}
+{'start_16': 427.956}
+{'end_16': 429.322}
+{'F': 429.438}
+{'start_17': 442.222}
+{'D': 443.484}
+{'end_17': 443.588}
+{'F': 443.69}
+{'start_18': 444.988}
+{'D': 447.274}
+{'F': 447.58}
+{'end_18': 448.888}
+{'start_19': 451.788}
+{'D': 452.246}
+{'end_19': 452.588}
+{'F': 454.89}
+{'start_20': 456.721}
+{'end_20': 458.521}
+{'start_21': 464.521}
+{'D': 465.69}
+{'F': 468.406}
+{'D': 470.88}
+{'F': 472.328}
+{'end_21': 475.887}
+{'start_22': 485.653}
+{'D': 485.976}
+{'end_22': 487.186}
+{'start_23': 490.719}
+{'F': 491.302}
+{'D': 495.248}
+{'end_23': 498.119}
+{'F': 498.128}
+{'D': 516.496}
+{'F': 518.942}
+{'start_24': 529.151}
+{'D': 531.896}
+{'end_24': 533.184}
+{'start_25': 534.717}
+{'F': 535.414}
+{'D': 536.414}
+{'end_25': 538.583}
+{'F': 538.594}
+{'start_26': 547.716}
+{'end_26': 553.849}
+{'start_27': 555.983}
+{'end_27': 556.816}
+{'start_28': 563.982}
+{'D': 564.506}
+{'F': 567.454}
+{'end_28': 568.982}
+{'start_29': 583.081}
+{'end_29': 584.714}
+{'start_30': 585.948}
+{'D': 586.766}
+{'end_30': 588.548}
+{'F': 591.12}
+{'D': 595.108}
+{'F': 597.022}
+{'start_31': 609.18}
+{'D': 609.972}
+{'F': 611.622}
+{'D': 613.498}
+{'F': 613.734}
+{'end_31': 616.513}
+{'start_32': 642.611}
+{'D': 643.326}
+{'F': 645.204}
+{'end_32': 646.078}
+{'start_33': 650.311}
+{'end_33': 653.044}
+{'start_34': 654.444}
+{'D': 656.192}
+{'F': 659.878}
+{'end_34': 664.21}
+{'start_35': 668.477}
+{'D': 671.92}
+{'D': 674.096}
+{'F': 674.23}
+{'end_35': 675.643}
+{'start_36': 677.643}
+{'D': 681.3}
+{'F': 683.21}
+{'end_36': 683.243}
+{'start_37': 693.176}
+{'D': 693.764}
+{'F': 695.61}
+{'end_37': 698.809}
+{'start_38': 711.275}
+{'D': 714.55}
+{'F': 716.294}
+{'end_38': 718.874}
+{'D': 728.162}
+{'start_39': 729.04}
+{'F': 730.276}
+{'end_39': 730.54}
+{'start_40': 733.74}
+{'end_40': 734.673}
+{'start_41': 740.64}
+{'D': 741.872}
+{'F': 744.65}
+{'end_41': 744.706}
+{'start_42': 746.839}
+{'end_42': 752.073}
+{'start_43': 757.506}
+{'D': 758.176}
+{'end_43': 759.305}
+{'start_44': 760.705}
+{'F': 761.462}
+{'end_44': 761.539}
+{'start_45': 771.705}
+{'D': 776.72}
+{'F': 779.534}
+{'end_45': 781.104}
+{'D': 784.858}
+{'F': 786.366}
+{'start_46': 786.404}
+{'D': 788.11}
+{'F': 790.282}
+{'end_46': 791.204}
+{'D': 808.098}
+{'start_47': 808.47}
+{'F': 810.516}
+{'end_47': 811.836}
+{'D': 816.704}
+{'start_48': 817.036}
+{'F': 820.026}
+{'end_48': 820.436}
+{'start_49': 830.169}
+{'end_49': 830.735}
+{'start_50': 833.835}
+{'D': 834.312}
+{'F': 836.264}
+{'end_50': 836.968}
+{'start_51': 841.268}
+{'end_51': 841.801}
+{'D': 854.604}
+{'start_52': 855.167}
+{'F': 857.392}
+{'end_52': 858.134}
+{'start_53': 859.6}
+{'end_53': 867.433}
+{'D': 868.522}
+{'start_54': 868.833}
+{'F': 871.704}
+{'D': 880.006}
+{'end_54': 880.699}
+{'start_55': 883.366}
+{'end_55': 884.832}
+{'start_56': 886.199}
+{'F': 886.972}
+{'end_56': 890.399}
+{'start_57': 893.932}
+{'end_57': 898.332}
+{'start_58': 903.365}
+{'D': 904.526}
+{'F': 908.034}
+{'end_58': 908.531}
+{'start_59': 913.064}
+{'D': 913.5}
+{'F': 916.514}
+{'D': 923.082}
+{'F': 924.186}
+{'end_59': 926.664}
+{'end_spont': 927.318}
+{'start_imit': 940.556}
+{'D': 944.05}
+{'F': 948.542}
+{'D': 951.154}
+{'F': 953.772}
+{'D': 956.182}
+{'F': 958.086}
+{'D': 960.096}
+{'F': 961.838}
+{'D': 964.018}
+{'F': 967.47}
+{'D': 971.022}
+{'F': 973.17}
+{'D': 974.542}
+{'F': 977.424}
+{'D': 979.566}
+{'F': 982.316}
+{'D': 984.332}
+{'F': 988.09}
+{'D': 990.904}
+{'F': 994.356}
+{'end_imit': 994.442}
+{'start_ret': 1005.074}
+{'S': 1009.92}
+{'S': 1012.296}
+{'S': 1024.834}
+{'F': 1026.712}
+{'start_60': 1031.425}
+{'end_60': 1033.125}
+{'F': 1033.212}
+{'start_61': 1040.191}
+{'T': 1040.23}
+{'end_61': 1040.591}
+{'start_62': 1042.324}
+{'end_62': 1042.858}
+{'S': 1043.52}
+{'start_63': 1049.491}
+{'end_63': 1049.857}
+{'S': 1053.71}
+{'F': 1057.4}
+{'S': 1064.502}
+{'S': 1069.826}
+{'start_64': 1071.423}
+{'T': 1071.806}
+{'T': 1073.08}
+{'S': 1076.494}
+{'end_64': 1078.222}
+{'F': 1079.34}
+{'S': 1086.446}
+{'start_65': 1088.989}
+{'S': 1092.702}
+{'F': 1093.908}
+{'end_65': 1094.888}
+{'start_66': 1099.455}
+{'end_66': 1100.555}
+{'start_67': 1105.754}
+{'S': 1114.56}
+{'F': 1115.862}
+{'S': 1124.866}
+{'end_67': 1130.886}
+{'S': 1130.964}
+{'S': 1133.208}
+{'start_68': 1134.553}
+{'F': 1138.296}
+{'end_68': 1139.753}
+{'start_69': 1153.885}
+{'S': 1154.144}
+{'T': 1155.92}
+{'T': 1156.12}
+{'T': 1158.604}
+{'end_69': 1158.852}
+{'start_70': 1160.085}
+{'T': 1160.448}
+{'T': 1161.452}
+{'end_70': 1161.918}
+{'S': 1165.612}
+{'start_71': 1166.218}
+{'end_71': 1168.951}
+{'S': 1171.296}
+{'start_72': 1172.951}
+{'end_72': 1173.551}
+{'start_73': 1177.251}
+{'end_73': 1177.917}
+{'S': 1186.272}
+{'F': 1188.642}
+{'S': 1194.412}
+{'start_74': 1195.75}
+{'T': 1196.328}
+{'T': 1198.432}
+{'T': 1199.604}
+{'end_74': 1201.716}
+{'start_75': 1205.283}
+{'end_75': 1210.882}
+{'S': 1211.764}
+{'start_76': 1217.849}
+{'end_76': 1221.282}
+{'S': 1224.768}
+{'F': 1228.616}
+{'start_77': 1230.115}
+{'T': 1230.724}
+{'T': 1232.43}
+{'end_77': 1234.881}
+{'start_78': 1242.581}
+{'S': 1242.788}
+{'S': 1258.946}
+{'T': 1261.92}
+{'end_78': 1264.713}
+{'start_79': 1267.079}
+{'S': 1268.732}
+{'end_79': 1269.746}
+{'F': 1271.744}
+{'start_80': 1278.412}
+{'S': 1279.218}
+{'end_80': 1279.645}
+{'start_81': 1281.345}
+{'F': 1281.8}
+{'end_81': 1282.045}
+{'S': 1300.352}
+{'start_82': 1301.078}
+{'T': 1301.12}
+{'T': 1301.896}
+{'end_82': 1302.278}
+{'S': 1310.26}
+{'start_83': 1315.01}
+{'end_83': 1316.577}
+{'S': 1317.1}
+{'S': 1327.654}
+{'F': 1329.096}
+{'T': 1332.006}
+{'start_84': 1332.209}
+{'T': 1334.214}
+{'T': 1335.954}
+{'end_84': 1336.543}
+{'start_85': 1338.876}
+{'S': 1349.192}
+{'end_85': 1358.508}
+{'S': 1361.624}
+{'start_86': 1362.275}
+{'end_86': 1363.574}
+{'start_87': 1369.007}
+{'S': 1369.962}
+{'end_87': 1373.207}
+{'F': 1373.744}
+{'T': 1376.222}
+{'start_88': 1376.24}
+{'T': 1378.338}
+{'T': 1379.644}
+{'T': 1381.546}
+{'S': 1384.022}
+{'end_88': 1384.207}
+{'S': 1393.402}
+{'start_89': 1401.972}
+{'end_89': 1404.906}
+{'T': 1408.996}
+{'start_90': 1410.005}
+{'T': 1410.376}
+{'end_90': 1410.572}
+{'start_91': 1414.905}
+{'S': 1426.2}
+{'S': 1428.116}
+{'T': 1428.314}
+{'T': 1431.296}
+{'S': 1433.746}
+{'end_91': 1438.904}
+{'start_92': 1448.17}
+{'S': 1451.558}
+{'T': 1461.88}
+{'T': 1463.28}
+{'T': 1464.052}
+{'S': 1465.494}
+{'F': 1466.464}
+{'S': 1469.212}
+{'end_92': 1469.969}
+{'start_93': 1471.902}
+{'F': 1472.058}
+{'end_93': 1473.135}
+{'start_94': 1476.335}
+{'end_94': 1477.569}
+{'S': 1483.786}
+{'start_95': 1487.035}
+{'S': 1487.842}
+{'end_95': 1488.068}
+{'start_96': 1491.435}
+{'F': 1492.972}
+{'end_96': 1493.334}
+{'start_97': 1494.868}
+{'end_97': 1499.134}
+{'start_98': 1503.701}
+{'T': 1515.42}
+{'T': 1515.924}
+{'T': 1516.992}
+{'end_98': 1518.466}
+{'start_99': 1523.566}
+{'end_99': 1524.833}
+{'S': 1527.218}
+{'F': 1529.226}
+{'start_100': 1530.866}
+{'end_100': 1531.866}
+{'S': 1555.882}
+{'F': 1559.162}
+{'start_101': 1560.631}
+{'end_101': 1563.997}
+{'S': 1565.082}
+{'start_102': 1568.564}
+{'T': 1568.644}
+{'T': 1569.748}
+{'T': 1570.452}
+{'T': 1571.488}
+{'end_102': 1573.464}
+{'S': 1575.812}
+{'start_103': 1580.763}
+{'S': 1583.588}
+{'end_103': 1585.196}
+{'S': 1587.236}
+{'start_104': 1593.996}
+{'F': 1594.856}
+{'end_104': 1595.196}
+{'start_105': 1598.362}
+{'S': 1598.576}
+{'end_105': 1598.796}
+{'start_106': 1601.629}
+{'S': 1601.79}
+{'end_106': 1602.162}
+{'start_107': 1603.262}
+{'end_107': 1603.862}
+{'F': 1603.97}
+{'end_ret': 1605.158}
+
+============================================================
+ Patient : 000031
+============================================================
+
+ --- Merged TTL + Tics timeline ---
+{'start_spont': 349.45}
+{'start_1': 352.401}
+{'D': 352.916}
+{'end_1': 390.2}
+{'start_2': 392.966}
+{'end_2': 426.931}
+{'F': 427.99}
+{'D': 430.164}
+{'start_3': 430.998}
+{'end_3': 441.631}
+{'start_4': 443.631}
+{'end_4': 446.531}
+{'F': 447.25}
+{'start_5': 449.931}
+{'D': 450.558}
+{'end_5': 457.43}
+{'start_6': 458.83}
+{'end_6': 461.23}
+{'start_7': 462.497}
+{'end_7': 462.897}
+{'start_8': 464.33}
+{'end_8': 464.63}
+{'F': 468.82}
+{'start_9': 470.33}
+{'D': 470.858}
+{'end_9': 475.696}
+{'start_10': 477.029}
+{'end_10': 482.763}
+{'F': 485.1}
+{'start_11': 485.996}
+{'D': 495.9}
+{'F': 505.864}
+{'D': 514.7}
+{'F': 519.622}
+{'D': 526.556}
+{'F': 527.662}
+{'D': 540.358}
+{'F': 549.644}
+{'end_11': 550.393}
+{'start_12': 551.427}
+{'D': 551.928}
+{'F': 560.656}
+{'D': 567.422}
+{'F': 577.964}
+{'end_12': 600.091}
+{'start_13': 601.825}
+{'end_13': 609.558}
+{'start_14': 611.858}
+{'D': 612.014}
+{'end_14': 615.091}
+{'start_15': 617.057}
+{'end_15': 630.857}
+{'F': 638.002}
+{'start_16': 639.39}
+{'end_16': 639.856}
+{'start_17': 641.456}
+{'end_17': 644.79}
+{'start_18': 649.323}
+{'D': 687.7}
+{'F': 695.686}
+{'D': 711.092}
+{'end_18': 719.753}
+{'start_19': 721.653}
+{'F': 722.512}
+{'D': 733.69}
+{'end_19': 740.352}
+{'F': 741.736}
+{'start_20': 742.486}
+{'D': 756.31}
+{'end_20': 761.818}
+{'F': 762.784}
+{'start_21': 763.318}
+{'D': 769.454}
+{'end_21': 775.351}
+{'start_22': 776.484}
+{'end_22': 778.884}
+{'start_23': 780.918}
+{'end_23': 782.384}
+{'F': 782.506}
+{'start_24': 784.717}
+{'D': 791.856}
+{'D': 832.77}
+{'F': 834.104}
+{'end_24': 837.982}
+{'start_25': 839.015}
+{'end_25': 853.115}
+{'start_26': 854.881}
+{'end_26': 855.548}
+{'start_27': 856.948}
+{'D': 884.862}
+{'F': 904.608}
+{'end_27': 905.613}
+{'start_28': 906.713}
+{'D': 916.564}
+{'F': 917.368}
+{'end_28': 917.746}
+{'start_29': 918.779}
+{'end_29': 923.545}
+{'start_30': 925.112}
+{'D': 927.902}
+{'F': 929.814}
+{'D': 930.79}
+{'end_30': 938.178}
+{'F': 938.984}
+{'start_31': 939.945}
+{'D': 941.928}
+{'end_31': 948.578}
+{'F': 949.406}
+{'end_spont': 949.524}
+{'start_imit': 979.986}
+{'D': 983.336}
+{'D': 987.692}
+{'F': 1011.504}
+{'D': 1019.28}
+{'F': 1021.124}
+{'D': 1024.096}
+{'F': 1026.03}
+{'D': 1031.262}
+{'F': 1032.568}
+{'T': 1033.732}
+{'D': 1039.75}
+{'F': 1041.118}
+{'D': 1043.292}
+{'F': 1044.198}
+{'D': 1046.88}
+{'F': 1047.676}
+{'D': 1049.848}
+{'F': 1050.814}
+{'D': 1056.0}
+{'F': 1057.17}
+{'D': 1058.976}
+{'F': 1060.18}
+{'D': 1062.08}
+{'F': 1063.346}
+{'D': 1064.888}
+{'F': 1065.992}
+{'end_imit': 1066.076}
+{'start_ret': 1085.372}
+{'start_33': 1086.439}
+{'end_33': 1089.405}
+{'T': 1091.94}
+{'start_34': 1092.472}
+{'T': 1093.48}
+{'end_34': 1100.772}
+{'start_35': 1102.238}
+{'end_35': 1104.638}
+{'start_36': 1107.205}
+{'end_36': 1107.938}
+{'S': 1108.666}
+{'start_37': 1114.971}
+{'end_37': 1115.438}
+{'start_38': 1126.604}
+{'end_38': 1127.904}
+{'start_39': 1135.37}
+{'end_39': 1135.737}
+{'start_40': 1136.87}
+{'end_40': 1138.237}
+{'start_41': 1155.103}
+{'end_41': 1163.469}
+{'start_42': 1178.902}
+{'end_42': 1179.869}
+{'start_43': 1186.568}
+{'end_43': 1192.368}
+{'start_44': 1194.168}
+{'end_44': 1194.468}
+{'start_45': 1196.868}
+{'end_45': 1197.235}
+{'start_46': 1198.334}
+{'end_46': 1200.468}
+{'start_47': 1202.801}
+{'end_47': 1203.234}
+{'start_48': 1210.467}
+{'end_48': 1211.967}
+{'F': 1214.548}
+{'start_49': 1215.334}
+{'T': 1217.63}
+{'S': 1226.88}
+{'end_49': 1227.467}
+{'start_50': 1228.867}
+{'F': 1237.88}
+{'end_50': 1291.897}
+{'start_51': 1292.931}
+{'S': 1301.198}
+{'end_51': 1320.63}
+{'start_52': 1322.13}
+{'end_52': 1322.53}
+{'T': 1325.032}
+{'start_53': 1325.896}
+{'end_53': 1327.429}
+{'start_54': 1329.496}
+{'end_54': 1329.863}
+{'start_55': 1331.363}
+{'end_55': 1333.896}
+{'F': 1334.874}
+{'start_56': 1335.562}
+{'T': 1335.712}
+{'T': 1341.806}
+{'S': 1343.28}
+{'end_56': 1345.562}
+{'start_57': 1347.395}
+{'end_57': 1347.529}
+{'start_58': 1348.762}
+{'end_58': 1370.261}
+{'start_59': 1371.961}
+{'end_59': 1380.061}
+{'start_60': 1382.461}
+{'end_60': 1390.56}
+{'start_61': 1391.827}
+{'T': 1394.49}
+{'end_61': 1395.427}
+{'start_62': 1396.66}
+{'end_62': 1411.793}
+{'start_63': 1416.326}
+{'F': 1420.012}
+{'T': 1440.482}
+{'end_63': 1454.891}
+{'start_64': 1456.491}
+{'end_64': 1465.457}
+{'start_65': 1466.491}
+{'end_65': 1501.389}
+{'S': 1503.942}
+{'start_66': 1504.722}
+{'end_66': 1507.689}
+{'start_67': 1509.722}
+{'end_67': 1510.122}
+{'F': 1511.344}
+{'start_68': 1512.155}
+{'end_68': 1525.088}
+{'start_69': 1528.222}
+{'end_69': 1528.522}
+{'start_70': 1529.921}
+{'end_70': 1531.921}
+{'start_71': 1532.988}
+{'end_71': 1534.855}
+{'start_72': 1537.921}
+{'end_72': 1539.421}
+{'start_73': 1541.754}
+{'end_73': 1542.254}
+{'start_74': 1547.687}
+{'S': 1564.78}
+{'end_74': 1571.986}
+{'start_75': 1573.186}
+{'end_75': 1573.553}
+{'start_76': 1575.42}
+{'end_76': 1575.853}
+{'start_77': 1578.02}
+{'end_77': 1578.42}
+{'start_78': 1579.586}
+{'end_78': 1581.886}
+{'start_79': 1584.253}
+{'end_79': 1584.586}
+{'start_80': 1586.253}
+{'end_80': 1587.353}
+{'start_81': 1589.786}
+{'end_81': 1591.452}
+{'start_82': 1593.452}
+{'end_82': 1593.919}
+{'start_83': 1597.652}
+{'end_83': 1598.552}
+{'start_84': 1600.785}
+{'end_84': 1601.552}
+{'start_85': 1603.419}
+{'end_85': 1603.852}
+{'F': 1604.748}
+{'start_86': 1605.352}
+{'S': 1616.046}
+{'end_86': 1633.451}
+{'F': 1634.372}
+{'start_87': 1635.617}
+{'end_87': 1661.25}
+{'start_88': 1662.883}
+{'S': 1665.38}
+{'end_88': 1677.616}
+{'start_89': 1680.482}
+{'end_89': 1680.716}
+{'end_ret': 1685.476}
+Patients analysés : ['C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000010.vhdr', 'C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack_BB28-bis.vhdr', 'C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000013.vhdr', 'C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000030.vhdr', 'C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000031.vhdr']
+
+===== Analyse of merged_ttl_tics per patient =====
+
+
+============================================================
+ Patient : 000010
+============================================================
+start_tic at 401.998 then D pressed at 402.064
+start_tic at 537.527 then D pressed at 539.09
+start_tic at 557.893 then D pressed at 558.756
+start_tic at 688.322 then D pressed at 690.768
+start_tic at 710.088 then D pressed at 711.494
+start_tic at 739.987 then D pressed at 741.58
+start_tic at 847.383 then D pressed at 848.592
+start_tic at 949.013 then D pressed at 950.91
+Saved as: list_urges_000010
+[{'type': 'start_then_D', 'start_time': 401.998}, {'type': 'start_then_D', 'start_time': 537.527}, {'type': 'start_then_D', 'start_time': 557.893}, {'type': 'start_then_D', 'start_time': 688.322}, {'type': 'start_then_D', 'start_time': 710.088}, {'type': 'start_then_D', 'start_time': 739.987}, {'type': 'start_then_D', 'start_time': 847.383}, {'type': 'start_then_D', 'start_time': 949.013}]
+
+============================================================
+ Patient : _BB28-bis
+============================================================
+start_tic at 302.66 then D pressed at 304.974
+D pressed at 314.448
+start_tic at 328.18 then D pressed at 328.212
+D pressed at 331.162 then visible tic at 331.22
+D pressed at 344.952 without any visible tic then F pressed at 346.626
+D pressed at 353.622
+start_tic at 362.101 then D pressed at 362.412
+start_tic at 378.101 then D pressed at 378.222
+start_tic at 401.301 then D pressed at 401.918
+start_tic at 405.781 then D pressed at 406.106
+start_tic at 408.861 then D pressed at 409.382
+start_tic at 412.741 then D pressed at 412.862
+D pressed at 414.838
+start_tic at 427.702 then D pressed at 427.702
+start_tic at 430.662 then D pressed at 430.752
+start_tic at 487.302 then D pressed at 487.828
+D pressed at 492.9
+D pressed at 498.188
+D pressed at 550.454 then visible tic at 550.503
+start_tic at 560.583 then D pressed at 561.754
+D pressed at 623.526 then visible tic at 623.544
+D pressed at 663.68 then visible tic at 666.385
+D pressed at 691.26 then visible tic at 691.905
+D pressed at 772.03 then visible tic at 775.186
+start_tic at 775.186 then D pressed at 775.738
+start_tic at 805.346 then D pressed at 808.068
+start_tic at 812.506 then D pressed at 813.464
+start_tic at 833.947 then D pressed at 834.136
+Saved as: list_urges__BB28-bis
+[{'type': 'start_then_D', 'start_time': 302.66}, {'type': 'D_after_D', 'D_time': 314.448}, {'type': 'start_then_D', 'start_time': 328.18}, {'type': 'D_then_start', 'D_time': 331.162}, {'type': 'D_then_F', 'D_time': 344.952}, {'type': 'D_after_D', 'D_time': 353.622}, {'type': 'start_then_D', 'start_time': 362.101}, {'type': 'start_then_D', 'start_time': 378.101}, {'type': 'start_then_D', 'start_time': 401.301}, {'type': 'start_then_D', 'start_time': 405.781}, {'type': 'start_then_D', 'start_time': 408.861}, {'type': 'start_then_D', 'start_time': 412.741}, {'type': 'D_after_D', 'D_time': 414.838}, {'type': 'start_then_D', 'start_time': 427.702}, {'type': 'start_then_D', 'start_time': 430.662}, {'type': 'start_then_D', 'start_time': 487.302}, {'type': 'D_after_D', 'D_time': 492.9}, {'type': 'D_after_D', 'D_time': 498.188}, {'type': 'D_then_start', 'D_time': 550.454}, {'type': 'start_then_D', 'start_time': 560.583}, {'type': 'D_then_start', 'D_time': 623.526}, {'type': 'D_then_start', 'D_time': 663.68}, {'type': 'D_then_start', 'D_time': 691.26}, {'type': 'D_then_start', 'D_time': 772.03}, {'type': 'start_then_D', 'start_time': 775.186}, {'type': 'start_then_D', 'start_time': 805.346}, {'type': 'start_then_D', 'start_time': 812.506}, {'type': 'start_then_D', 'start_time': 833.947}]
+
+============================================================
+ Patient : 000013
+============================================================
+start_tic at 361.848 then D pressed at 366.912
+D pressed at 382.688 then visible tic at 383.169
+start_tic at 383.169 then D pressed at 389.812
+D pressed at 396.052
+start_tic at 404.435 then D pressed at 408.672
+D pressed at 419.246 without any visible tic then F pressed at 420.486
+start_tic at 422.434 then D pressed at 424.398
+start_tic at 439.967 then D pressed at 440.636
+D pressed at 460.992 then visible tic at 461.299
+D pressed at 470.926 then visible tic at 471.299
+start_tic at 471.299 then D pressed at 483.134
+D pressed at 486.092
+D pressed at 513.712 then visible tic at 513.964
+start_tic at 513.964 then D pressed at 520.894
+D pressed at 554.764 without any visible tic then F pressed at 555.8
+start_tic at 569.963 then D pressed at 570.55
+D pressed at 600.79 then visible tic at 601.062
+D pressed at 612.832 then visible tic at 613.428
+D pressed at 620.544 then visible tic at 620.661
+start_tic at 625.361 then D pressed at 627.702
+D pressed at 634.308 then visible tic at 634.527
+D pressed at 666.104 without any visible tic then F pressed at 667.216
+D pressed at 675.062
+D pressed at 692.082 then visible tic at 693.192
+D pressed at 705.464 without any visible tic then F pressed at 706.746
+start_tic at 749.724 then D pressed at 755.518
+D pressed at 768.792 without any visible tic then F pressed at 770.194
+D pressed at 790.46
+start_tic at 802.322 then D pressed at 803.12
+D pressed at 807.162
+D pressed at 840.422 then visible tic at 840.921
+start_tic at 840.921 then D pressed at 845.546
+D pressed at 860.496 without any visible tic then F pressed at 862.668
+D pressed at 887.23
+start_tic at 901.719 then D pressed at 904.064
+D pressed at 911.26
+D pressed at 916.044
+D pressed at 933.828 then visible tic at 934.184
+D pressed at 948.872 then visible tic at 950.651
+D pressed at 982.022 without any visible tic then F pressed at 983.422
+D pressed at 992.216
+D pressed at 1004.216 without any visible tic then F pressed at 1007.024
+D pressed at 1012.512
+D pressed at 1033.054 then visible tic at 1033.415
+start_tic at 1033.415 then D pressed at 1035.564
+D pressed at 1057.54 then visible tic at 1057.947
+start_tic at 1057.947 then D pressed at 1060.056
+D pressed at 1065.158 without any visible tic then F pressed at 1066.394
+D pressed at 1068.94
+start_tic at 1078.98 then D pressed at 1080.656
+Saved as: list_urges_000013
+[{'type': 'start_then_D', 'start_time': 361.848}, {'type': 'D_then_start', 'D_time': 382.688}, {'type': 'start_then_D', 'start_time': 383.169}, {'type': 'D_after_D', 'D_time': 396.052}, {'type': 'start_then_D', 'start_time': 404.435}, {'type': 'D_then_F', 'D_time': 419.246}, {'type': 'start_then_D', 'start_time': 422.434}, {'type': 'start_then_D', 'start_time': 439.967}, {'type': 'D_then_start', 'D_time': 460.992}, {'type': 'D_then_start', 'D_time': 470.926}, {'type': 'start_then_D', 'start_time': 471.299}, {'type': 'D_after_D', 'D_time': 486.092}, {'type': 'D_then_start', 'D_time': 513.712}, {'type': 'start_then_D', 'start_time': 513.964}, {'type': 'D_then_F', 'D_time': 554.764}, {'type': 'start_then_D', 'start_time': 569.963}, {'type': 'D_then_start', 'D_time': 600.79}, {'type': 'D_then_start', 'D_time': 612.832}, {'type': 'D_then_start', 'D_time': 620.544}, {'type': 'start_then_D', 'start_time': 625.361}, {'type': 'D_then_start', 'D_time': 634.308}, {'type': 'D_then_F', 'D_time': 666.104}, {'type': 'D_after_D', 'D_time': 675.062}, {'type': 'D_then_start', 'D_time': 692.082}, {'type': 'D_then_F', 'D_time': 705.464}, {'type': 'start_then_D', 'start_time': 749.724}, {'type': 'D_then_F', 'D_time': 768.792}, {'type': 'D_after_D', 'D_time': 790.46}, {'type': 'start_then_D', 'start_time': 802.322}, {'type': 'D_after_D', 'D_time': 807.162}, {'type': 'D_then_start', 'D_time': 840.422}, {'type': 'start_then_D', 'start_time': 840.921}, {'type': 'D_then_F', 'D_time': 860.496}, {'type': 'D_after_D', 'D_time': 887.23}, {'type': 'start_then_D', 'start_time': 901.719}, {'type': 'D_after_D', 'D_time': 911.26}, {'type': 'D_after_D', 'D_time': 916.044}, {'type': 'D_then_start', 'D_time': 933.828}, {'type': 'D_then_start', 'D_time': 948.872}, {'type': 'D_then_F', 'D_time': 982.022}, {'type': 'D_after_D', 'D_time': 992.216}, {'type': 'D_then_F', 'D_time': 1004.216}, {'type': 'D_after_D', 'D_time': 1012.512}, {'type': 'D_then_start', 'D_time': 1033.054}, {'type': 'start_then_D', 'start_time': 1033.415}, {'type': 'D_then_start', 'D_time': 1057.54}, {'type': 'start_then_D', 'start_time': 1057.947}, {'type': 'D_then_F', 'D_time': 1065.158}, {'type': 'D_after_D', 'D_time': 1068.94}, {'type': 'start_then_D', 'start_time': 1078.98}]
+
+============================================================
+ Patient : 000030
+============================================================
+start_tic at 329.961 then D pressed at 330.138
+start_tic at 333.961 then D pressed at 335.024
+start_tic at 343.06 then D pressed at 343.24
+start_tic at 347.227 then D pressed at 347.874
+D pressed at 351.226 without any visible tic then F pressed at 352.164
+start_tic at 358.559 then D pressed at 359.26
+D pressed at 369.772 then visible tic at 370.025
+start_tic at 376.125 then D pressed at 377.2
+start_tic at 384.758 then D pressed at 385.098
+D pressed at 388.586 without any visible tic then F pressed at 389.994
+D pressed at 397.0
+start_tic at 409.29 then D pressed at 409.544
+start_tic at 411.523 then D pressed at 412.022
+start_tic at 417.723 then D pressed at 418.096
+D pressed at 427.598 then visible tic at 427.956
+start_tic at 442.222 then D pressed at 443.484
+start_tic at 444.988 then D pressed at 447.274
+start_tic at 451.788 then D pressed at 452.246
+start_tic at 464.521 then D pressed at 465.69
+D pressed at 470.88
+start_tic at 485.653 then D pressed at 485.976
+start_tic at 490.719 then D pressed at 495.248
+D pressed at 516.496 without any visible tic then F pressed at 518.942
+start_tic at 529.151 then D pressed at 531.896
+start_tic at 534.717 then D pressed at 536.414
+start_tic at 563.982 then D pressed at 564.506
+start_tic at 585.948 then D pressed at 586.766
+D pressed at 595.108 without any visible tic then F pressed at 597.022
+start_tic at 609.18 then D pressed at 609.972
+D pressed at 613.498
+start_tic at 642.611 then D pressed at 643.326
+start_tic at 654.444 then D pressed at 656.192
+start_tic at 668.477 then D pressed at 671.92
+D pressed at 674.096
+start_tic at 677.643 then D pressed at 681.3
+start_tic at 693.176 then D pressed at 693.764
+start_tic at 711.275 then D pressed at 714.55
+D pressed at 728.162 then visible tic at 729.04
+start_tic at 740.64 then D pressed at 741.872
+start_tic at 757.506 then D pressed at 758.176
+start_tic at 771.705 then D pressed at 776.72
+D pressed at 784.858 without any visible tic then F pressed at 786.366
+start_tic at 786.404 then D pressed at 788.11
+D pressed at 808.098 then visible tic at 808.47
+D pressed at 816.704 then visible tic at 817.036
+start_tic at 833.835 then D pressed at 834.312
+D pressed at 854.604 then visible tic at 855.167
+D pressed at 868.522 then visible tic at 868.833
+start_tic at 868.833 then D pressed at 880.006
+start_tic at 903.365 then D pressed at 904.526
+start_tic at 913.064 then D pressed at 913.5
+D pressed at 923.082
+Saved as: list_urges_000030
+[{'type': 'start_then_D', 'start_time': 329.961}, {'type': 'start_then_D', 'start_time': 333.961}, {'type': 'start_then_D', 'start_time': 343.06}, {'type': 'start_then_D', 'start_time': 347.227}, {'type': 'D_then_F', 'D_time': 351.226}, {'type': 'start_then_D', 'start_time': 358.559}, {'type': 'D_then_start', 'D_time': 369.772}, {'type': 'start_then_D', 'start_time': 376.125}, {'type': 'start_then_D', 'start_time': 384.758}, {'type': 'D_then_F', 'D_time': 388.586}, {'type': 'D_after_D', 'D_time': 397.0}, {'type': 'start_then_D', 'start_time': 409.29}, {'type': 'start_then_D', 'start_time': 411.523}, {'type': 'start_then_D', 'start_time': 417.723}, {'type': 'D_then_start', 'D_time': 427.598}, {'type': 'start_then_D', 'start_time': 442.222}, {'type': 'start_then_D', 'start_time': 444.988}, {'type': 'start_then_D', 'start_time': 451.788}, {'type': 'start_then_D', 'start_time': 464.521}, {'type': 'D_after_D', 'D_time': 470.88}, {'type': 'start_then_D', 'start_time': 485.653}, {'type': 'start_then_D', 'start_time': 490.719}, {'type': 'D_then_F', 'D_time': 516.496}, {'type': 'start_then_D', 'start_time': 529.151}, {'type': 'start_then_D', 'start_time': 534.717}, {'type': 'start_then_D', 'start_time': 563.982}, {'type': 'start_then_D', 'start_time': 585.948}, {'type': 'D_then_F', 'D_time': 595.108}, {'type': 'start_then_D', 'start_time': 609.18}, {'type': 'D_after_D', 'D_time': 613.498}, {'type': 'start_then_D', 'start_time': 642.611}, {'type': 'start_then_D', 'start_time': 654.444}, {'type': 'start_then_D', 'start_time': 668.477}, {'type': 'D_after_D', 'D_time': 674.096}, {'type': 'start_then_D', 'start_time': 677.643}, {'type': 'start_then_D', 'start_time': 693.176}, {'type': 'start_then_D', 'start_time': 711.275}, {'type': 'D_then_start', 'D_time': 728.162}, {'type': 'start_then_D', 'start_time': 740.64}, {'type': 'start_then_D', 'start_time': 757.506}, {'type': 'start_then_D', 'start_time': 771.705}, {'type': 'D_then_F', 'D_time': 784.858}, {'type': 'start_then_D', 'start_time': 786.404}, {'type': 'D_then_start', 'D_time': 808.098}, {'type': 'D_then_start', 'D_time': 816.704}, {'type': 'start_then_D', 'start_time': 833.835}, {'type': 'D_then_start', 'D_time': 854.604}, {'type': 'D_then_start', 'D_time': 868.522}, {'type': 'start_then_D', 'start_time': 868.833}, {'type': 'start_then_D', 'start_time': 903.365}, {'type': 'start_then_D', 'start_time': 913.064}, {'type': 'D_after_D', 'D_time': 923.082}]
+
+============================================================
+ Patient : 000031
+============================================================
+start_tic at 352.401 then D pressed at 352.916
+D pressed at 430.164 then visible tic at 430.998
+start_tic at 449.931 then D pressed at 450.558
+start_tic at 470.33 then D pressed at 470.858
+start_tic at 485.996 then D pressed at 495.9
+D pressed at 514.7
+D pressed at 526.556
+D pressed at 540.358
+start_tic at 551.427 then D pressed at 551.928
+D pressed at 567.422
+start_tic at 611.858 then D pressed at 612.014
+start_tic at 649.323 then D pressed at 687.7
+D pressed at 711.092
+start_tic at 721.653 then D pressed at 733.69
+start_tic at 742.486 then D pressed at 756.31
+start_tic at 763.318 then D pressed at 769.454
+start_tic at 784.717 then D pressed at 791.856
+D pressed at 832.77
+start_tic at 856.948 then D pressed at 884.862
+start_tic at 906.713 then D pressed at 916.564
+start_tic at 925.112 then D pressed at 927.902
+D pressed at 930.79
+start_tic at 939.945 then D pressed at 941.928
+Saved as: list_urges_000031
+[{'type': 'start_then_D', 'start_time': 352.401}, {'type': 'D_then_start', 'D_time': 430.164}, {'type': 'start_then_D', 'start_time': 449.931}, {'type': 'start_then_D', 'start_time': 470.33}, {'type': 'start_then_D', 'start_time': 485.996}, {'type': 'D_after_D', 'D_time': 514.7}, {'type': 'D_after_D', 'D_time': 526.556}, {'type': 'D_after_D', 'D_time': 540.358}, {'type': 'start_then_D', 'start_time': 551.427}, {'type': 'D_after_D', 'D_time': 567.422}, {'type': 'start_then_D', 'start_time': 611.858}, {'type': 'start_then_D', 'start_time': 649.323}, {'type': 'D_after_D', 'D_time': 711.092}, {'type': 'start_then_D', 'start_time': 721.653}, {'type': 'start_then_D', 'start_time': 742.486}, {'type': 'start_then_D', 'start_time': 763.318}, {'type': 'start_then_D', 'start_time': 784.717}, {'type': 'D_after_D', 'D_time': 832.77}, {'type': 'start_then_D', 'start_time': 856.948}, {'type': 'start_then_D', 'start_time': 906.713}, {'type': 'start_then_D', 'start_time': 925.112}, {'type': 'D_after_D', 'D_time': 930.79}, {'type': 'start_then_D', 'start_time': 939.945}]
+
+Processing patient 000010
+Not setting metadata
+C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\_04_Movidoc_full_pipeline_analysis_patients.py:671: RuntimeWarning: The events passed to the Epochs constructor are not chronologically ordered.
+  epochs = mne.Epochs(
+50 matching events found
+No baseline correction applied
+0 projection items activated
+Using data from preloaded Raw for 50 events and 1251 original time points ...
+5 bad epochs dropped
+C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\_04_Movidoc_full_pipeline_analysis_patients.py:1297: RuntimeWarning: This filename (epochs_random_eyes_closed/random_epochs_000010.fif) does not conform to MNE naming conventions. All epochs files should end with -epo.fif, -epo.fif.gz, _epo.fif or _epo.fif.gz
+  random_epochs.save(f"epochs_random_eyes_closed/random_epochs_{subject}.fif", overwrite=True)
+Overwriting existing file.
+Overwriting existing file.
+Not setting metadata
+8 matching events found
+No baseline correction applied
+0 projection items activated
+Using data from preloaded Raw for 8 events and 1251 original time points ...
+0 bad epochs dropped
+C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\_04_Movidoc_full_pipeline_analysis_patients.py:1312: RuntimeWarning: This filename (epochs_pre_urge/pre_urge_epochs_000010.fif) does not conform to MNE naming conventions. All epochs files should end with -epo.fif, -epo.fif.gz, _epo.fif or _epo.fif.gz
+  epochs_pre_tic.save(f"epochs_pre_urge/pre_urge_epochs_{subject}.fif", overwrite=True)
+Overwriting existing file.
+Overwriting existing file.
+    Using multitaper spectrum estimation with 6 DPSS windows
+    Using multitaper spectrum estimation with 6 DPSS windows
+    Using multitaper spectrum estimation with 6 DPSS windows
+    Using multitaper spectrum estimation with 6 DPSS windows
+    Using multitaper spectrum estimation with 6 DPSS windows
+    Using multitaper spectrum estimation with 6 DPSS windows
+    Using multitaper spectrum estimation with 6 DPSS windows
+    Using multitaper spectrum estimation with 6 DPSS windows
+    Using multitaper spectrum estimation with 6 DPSS windows
+    Using multitaper spectrum estimation with 6 DPSS windows
+    Using multitaper spectrum estimation with 6 DPSS windows
+    Using multitaper spectrum estimation with 6 DPSS windows
+Traceback (most recent call last):
+  File "C:\Users\indira.lavocat\MOVIDOC\tictrack_eeg_analysis\_04_Movidoc_full_pipeline_analysis_patients.py", line 1329, in <module>
+    save_mean_psd_ROI(mean_psd_random, subject_name=subject, epoch_type="random_epochs")
+TypeError: save_mean_psd_ROI() missing 1 required positional argument: 'output_folder'

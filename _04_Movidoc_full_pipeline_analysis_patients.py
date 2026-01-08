@@ -51,7 +51,7 @@ import random
 # Save the original plot functions
 original_plot = mne.io.BaseRaw.plot
 original_plot_psd = mne.io.BaseRaw.plot_psd
-'''
+# '''
 # Define new functions that force show=False
 def plot_no_show(self, *args, **kwargs):
     kwargs['show'] = False
@@ -1163,24 +1163,24 @@ for vhdr_path, patient in results.items():
     print(f" Patient : {patient['subject']}")
     print("="*60)
 
-    # print("\nTTLs :")
+    # print("\n TTLs :")
     # pprint(patient["ttl"])
 
-    # print("\nTics :")
+    # print("\n Tics :")
     # for tic in patient["tics"]:
     #     print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")
 
-    # print("\n--- Tics BEFORE EEG realignment (Excel original) ---")
+    # print("\n --- Tics BEFORE EEG realignment (Excel original) ---")
     # for tic in patient["tics_original"]:
     #     print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")
 
-    # print("\n--- Tics AFTER EEG realignment (Excel corrected) ---")
+    # print("\n --- Tics AFTER EEG realignment (Excel corrected) ---")
     # for tic in patient["tics_corrected"]:
     #     print(f"start={tic['start']:.3f}  end={tic['end']:.3f}  phase={tic['phase']}")
     
-    # print("\n--- Merged TTL + Tics timeline ---")
-    # for item in patient["merged_ttl_tics"]:
-    #     print(item)
+    print("\n --- Merged TTL + Tics timeline ---")
+    for item in patient["merged_ttl_tics"]:
+        print(item)
     
     plot_events_timeline(
         merged_ttl_tics = patient["merged_ttl_tics"],
@@ -1197,7 +1197,7 @@ print("Patients analysés :", list(results.keys()))
 
 # Creating lists of the urges by patient
 
-print("\n===== Analyse des merged_ttl_tics par patient =====\n")
+print("\n===== Analyse of merged_ttl_tics per patient =====\n")
 
 urges_lists = {}
 
@@ -1230,7 +1230,7 @@ for vhdr_path, patient in results.items():
 psd_img_dir = "psd_images"
 os.makedirs(psd_img_dir, exist_ok=True)
 
-# create dictionnaries to stock the epochs for each patient -> 1 entry by patient pre_urge_epochs["000031"]=epochs_MNE
+# create dictionnaries to stock the epochs for each patient -> 1 entry by patient,0 pre_urge_epochs["000031"]=epochs_MNE
 pre_urge_epochs = {}
 random_epochs_in_phase = {}
 results_psd = {}
@@ -1261,7 +1261,7 @@ for vhdr_path, patient in results.items():
     subject = patient['subject']
     print(f"\nProcessing patient {subject}")
 
-    # Choice of the ROI depending on the patient's montaget
+    # Choice of the ROI depending on the patient's montage
     if patient["montage"] == "standard_1020":
         channels_to_use = channels_to_use_32
         roi_lists = roi_lists_32
@@ -1269,7 +1269,7 @@ for vhdr_path, patient in results.items():
         channels_to_use = channels_to_use_64
         roi_lists = roi_lists_64
     else:
-        raise ValueError(f"Montage inconnu pour le patient {subject}: {patient['montage']}")
+        raise ValueError(f"Unknown montage for the patient {subject}: {patient['montage']}")
 
 
     # A. Extract random epochs from the eyes_closed phase
@@ -1300,7 +1300,7 @@ for vhdr_path, patient in results.items():
     # B. Extract the urge epochs
 
     # 1️⃣ Shift urges times into EEG reference
-    urges_list = urges_lists[f"list_urges_{subject}"] # get the list of urges of the patient
+    urges_list = urges_lists[f"list_urges_{subject}"] # get the list of urges of the patient from all the lists
     stim2_time_patient = patient["stim2_time_original"] # get the original timestamp of Stimulus/S  2
     urges_times_eeg = shift_urges_times(urges_list, stim2_time=stim2_time_patient) # convert the urges times back to the original EEG referencial
 
@@ -1325,12 +1325,12 @@ for vhdr_path, patient in results.items():
         mean_psd_pre_tic[roi_name] = compute_mean_psd_ROI_per_epoch(epochs_pre_tic, roi_channels, fmin=1, fmax=40)
     
     # Save the PSDs for random_epochs
-    # save_psd_per_channel(psd_random, subject_name=subject, epoch_type="random_epochs")
-    # save_mean_psd_ROI(mean_psd_random, subject_name=subject, epoch_type="random_epochs")
+    save_psd_per_channel(psd_random, subject_name=subject, epoch_type="random_epochs")
+    save_mean_psd_ROI(mean_psd_random, output_folder=psd_img_dir, subject_name=subject, epoch_type="random_epochs")
 
     # Save the PSDs for pre-tic (urges) epochs
-    # save_psd_per_channel(psd_pre_tic, subject_name=subject, epoch_type="epochs_pre_tic")
-    # save_mean_psd_ROI(mean_psd_pre_tic, subject_name=subject, epoch_type="epochs_pre_tic")
+    save_psd_per_channel(psd_pre_tic, subject_name=subject, epoch_type="epochs_pre_tic")
+    save_mean_psd_ROI(mean_psd_pre_tic, output_folder=psd_img_dir, subject_name=subject, epoch_type="epochs_pre_tic")
 
 
     # OPTIONAL - D. Display the PSDs for all the epochs of the patient
@@ -1360,7 +1360,7 @@ for vhdr_path, patient in results.items():
         "n_epochs_pre_tic": len(epochs_pre_tic),
         "n_epochs_random": len(random_epochs)
     }
-# print("\n=== epochs extraction + PSDs generation complete for all the patients ===")
+print("\n=== epochs extraction + PSDs generation complete for each patient ===")
 
 
 # prepare the containers per ROI (we'll use the name of the ROIs defined in roi_lists_32 & roi_lists_64)
@@ -1391,9 +1391,11 @@ for subject, info in results_psd.items():
 
     if patient_obj["montage"] == "standard_1020":
         rois_for_patient = roi_lists_32
-    else:
+    elif patient_obj["montage"] == "standard_1005":
         rois_for_patient = roi_lists_64
-    
+    else:
+        raise ValueError(f"Unknown montage for the patient {subject}: {patient['montage']}")
+  
     print(f"ROIs pour ce patient: {list(rois_for_patient.keys())}")
     for roi, chans in rois_for_patient.items():
         print(f"{roi} -> {chans}")
@@ -1427,7 +1429,7 @@ for subject, info in results_psd.items():
     # for roi, signal in avg_per_roi_pre.items():
     #     print(f"ROI: {roi}, signal shape: {signal.shape}, first 5 samples: {signal[:5]}")
 
-# 3) inter-patients mean 1 calcul of the PSD  of the mean signal of the group
+# 3) inter-patients mean, calcul of the PSD of the mean signal of the group
 roi_group_psd_random = {}
 roi_group_psd_pre = {}
 
@@ -1548,7 +1550,7 @@ for roi in roi_list:
     plt.savefig(os.path.join(psd_output_dir, f"normalized_PSD_1-30Hz_{roi}_2s.png"))
     plt.savefig(os.path.join(psd_output_dir, f"normalized_PSD_1-30Hz_{roi}_2s.eps"), format='eps')
     plt.close("all")
-
+'''
 
 
 # Test 1 patient by 1 patient
