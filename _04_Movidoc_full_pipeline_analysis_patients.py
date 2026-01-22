@@ -43,6 +43,14 @@ import os
 import random
 
 
+# Base directory for this project
+base_dir = "/Users/Tysia/Desktop/movidoc/tictrack_eeg_analysis"
+patient_files_dir = os.path.join(base_dir, "PATIENT FILES")
+eeg_dir = os.path.join(patient_files_dir, "EEG PATIENT FILES")
+excel_dir = os.path.join(patient_files_dir, "EXCEL PATIENT FILES")
+
+
+
 
 # ============================================================
 # Disable all MNE interactive plots globally
@@ -51,7 +59,7 @@ import random
 # Save the original plot functions
 original_plot = mne.io.BaseRaw.plot
 original_plot_psd = mne.io.BaseRaw.plot_psd
-'''
+
 # Define new functions that force show=False
 def plot_no_show(self, *args, **kwargs):
     kwargs['show'] = False
@@ -1099,40 +1107,40 @@ results = {}
 patients = [
     {
         "montage": "standard_1020", # montage with 32 electrodes (from DS26 to BC29 : always 32 electrodes)
-        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000010.vhdr", #DS26
-        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EXCEL PATIENT FILES\\DS26_annotations_binary-table_cutted.xlsx",
+        "vhdr": os.path.join(eeg_dir, "MOVIDOCTicTrack000010.vhdr"),
+        "excel": os.path.join(excel_dir, "DS26_annotations_binary-table_cutted.xlsx"),
         "fps": 30,
         "min_absence_frames": 30,
         "excel_phase_times": [13.728, 50.028, 190.080, 349.272, 980.727, 1277.991]
     },
     {
         "montage": "standard_1020", # montage with 32 electrodes (from DS26 to BC29 : always 32 electrodes)
-        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack_BB28-bis.vhdr", #BB28
-        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EXCEL PATIENT FILES\\BB28_annotations_binary-table_cutted.xlsx",
+        "vhdr": os.path.join(eeg_dir, "MOVIDOCTicTrack_BB28-bis.vhdr"), #BB28
+        "excel": os.path.join(excel_dir, "BB28_annotations_binary-table_cutted.xlsx"),
         "fps": 25,
         "min_absence_frames": 25,
         "excel_phase_times": [9.840, 27.320, 156.880, 302.600, 929.960, 991.760]
     },
     {
         "montage": "standard_1020", # montage with 32 electrodes (from DS26 to BC29 : always 32 electrodes)
-        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000013.vhdr", # BC29
-        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EXCEL PATIENT FILES\\BC29_annotations_binary-table_cutted_xlsx_Lizbeth.xlsx",
+        "vhdr": os.path.join(eeg_dir, "MOVIDOCTicTrack000013.vhdr"), # BC29
+        "excel": os.path.join(excel_dir, "BC29_annotations_binary-table_cutted_xlsx_Lizbeth.xlsx"),
         "fps": 30,
         "min_absence_frames": 30,
         "excel_phase_times": [17.391, 65.670, 201.597, 358.215, 1088.670, 1204.038]
     },
     {
         "montage": "standard_1005", # montage with 64 electrodes (from MM30 : always 64 electrodes)
-        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000030.vhdr", # MM30
-        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EXCEL PATIENT FILES\\MM30_annotations_binary-table_cutted.xlsx",
+        "vhdr": os.path.join(eeg_dir, "MOVIDOCTicTrack000030.vhdr"), # MM30
+        "excel": os.path.join(excel_dir, "MM30_annotations_binary-table_cutted.xlsx"),
         "fps": 30,
         "min_absence_frames": 30,
         "excel_phase_times": [6.633, 68.277, 196.581, 323.994, 931.194, 995.049]
     },
     {
         "montage": "standard_1005", # montage with 64 electrodes (from MM30 : always 64 electrodes)
-        "vhdr": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EEG PATIENT FILES\\MOVIDOCTicTrack000031.vhdr", # SC31
-        "excel": "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\PATIENT FILES\\EXCEL PATIENT FILES\\SC31_annotations_binary-table_cutted.xlsx",
+        "vhdr": os.path.join(eeg_dir, "MOVIDOCTicTrack000031.vhdr"), # SC31
+        "excel": os.path.join(excel_dir, "SC31_annotations_binary-table_cutted.xlsx"),
         "fps": 30,
         "min_absence_frames": 30,
         "excel_phase_times": [12.243, 62.040, 191.664, 345.972, 970.200, 1074.546]
@@ -1484,14 +1492,15 @@ roi_list = [
     "midline_posterior"
 ]
 
-group_psd_dir = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis"
+group_psd_dir = base_dir
 
 path_pre = os.path.join(group_psd_dir, f"roi_group_psd_pre.npy")
 path_rand = os.path.join(group_psd_dir, f"roi_group_psd_random.npy")
 files_pre = np.load(path_pre, allow_pickle=True).item()
 files_rand = np.load(path_rand, allow_pickle=True).item()
 
-psd_output_dir = "C:\\Users\\indira.lavocat\\MOVIDOC\\tictrack_eeg_analysis\\final_5_PSD"
+
+psd_output_dir = os.path.join(base_dir, "final_5_PSD")
 os.makedirs(psd_output_dir, exist_ok=True)
 
 epsilon = 1e-14
