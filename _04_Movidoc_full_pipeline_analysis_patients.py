@@ -75,6 +75,7 @@ mne.io.BaseRaw.plot_psd = plot_psd_no_show
 
 
 
+
 # ============================================================
 # Define functions
 # ============================================================
@@ -199,7 +200,11 @@ def build_merged_ttl_tics(patient, phases_to_keep):
         'start_imit': 11,
         'end_imit': 12,
         'start_ret': 13,
-        'end_ret': 14
+        'end_ret': 14,
+        'start_close': 5,
+        'end_close': 6,
+        'start_open': 7,
+        'end_open': 8,
         }
     print(f"\n\n\nThis is the dictionnary : {filter_dict}\n\n\n")
     
@@ -315,9 +320,9 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
 
     # define the phases via TTLs
     phases_ttl = {
-        # "press_key": {"start": "Stimulus/S  3", "end": "Stimulus/S  4"},
-        # "eyes_closed": {"start": "Stimulus/S  5", "end": "Stimulus/S  6"},
-        # "eyes_open": {"start": "Stimulus/S  7", "end": "Stimulus/S  8"},
+        "press_key": {"start": "Stimulus/S  3", "end": "Stimulus/S  4"},
+        "eyes_closed": {"start": "Stimulus/S  5", "end": "Stimulus/S  6"},
+        "eyes_open": {"start": "Stimulus/S  7", "end": "Stimulus/S  8"},
         "spontaneous_tics": {"start": "Stimulus/S  9", "end": "Stimulus/S 10"},
         "imitated_tics": {"start": "Stimulus/S 11", "end": "Stimulus/S 12"},
         "retention_tics": {"start": "Stimulus/S 13", "end": "Stimulus/S 14"}
@@ -1098,7 +1103,7 @@ def save_group_psd(roi_psd_dict, out_dir, tag):
 
 
 ##############################################################
-
+'''
 
 
 # dictionnary to stock the results of all the patients
@@ -1480,7 +1485,7 @@ np.save("roi_group_psd_pre.npy", roi_group_psd_pre, allow_pickle=True)
 print("\n✅ Group PSDs computed and saved in", out_dir)
 
 #########################################################################
-'''
+
 
 # Generation of the 5 final graphs (PSDs)
 
@@ -1602,3 +1607,4 @@ for roi in roi_list:
 # plt.savefig(os.path.join(psd_output_dir, f"normalized_PSD_1-30Hz_{roi}_2s_ROI-5.png"))
 # plt.savefig(os.path.join(psd_output_dir, f"normalized_PSD_1-30Hz_{roi}_2s_ROI-5.eps"), format='eps')
 # plt.close("all")
+'''

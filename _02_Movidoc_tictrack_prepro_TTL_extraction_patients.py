@@ -105,15 +105,20 @@ def extract_stimuli(raw):
 # ===================================================================
 
 def preprocess_data(raw, subject_name, montage_name):
+    # plot the bad channnels and artifacts 
+    print('------ Bad Channels ------', raw.info['bads'])
+    eeg_channels = mne.pick_types(raw.info, meg=False, eeg=True)
+    #raw.plot(duration=60, n_channels=len(eeg_channels), title='Raw EEG with bad channels marked', show=True)
+
     # apply the montage defined by the user
     raw.set_montage(montage_name)
     # visualize the electrode placement
-    # # raw.plot_sensors(show_names=True, show=True)
+    raw.plot_sensors(show_names=True, show=True)
 
     # apply band-pass filter between 0.5 and 100 Hz
-    raw = raw.filter(l_freq=1, h_freq=40)
+    raw = raw.filter(l_freq=0.1, h_freq=45)
     # visualize the band-passed signal
-    # raw.plot(title="High/Low Pass Filter", show=True)
+    #raw.plot(title="High/Low Pass Filter", show=True)
 
     # apply Notch filter at 50 Hz to remove the powerline noise
     raw = raw.notch_filter(freqs=[50], picks="data", method="spectrum_fit")
@@ -121,7 +126,6 @@ def preprocess_data(raw, subject_name, montage_name):
     # raw.plot(title="Notch Filter", show=True)
 
     return raw
-
 
 # ==============================================================
 # Function : apply_rest_reference
@@ -142,9 +146,15 @@ def apply_rest_reference(raw, subject_name):
     raw_rest = raw.copy().set_eeg_reference('REST', forward=Forward)
 
     # # visualize the re-referenced signal
-    # raw_rest.plot(title="Signal REST", show=True)
+    raw_rest.plot(title="Signal REST", show=True)
     # # visualize the PSD of the re-referenced signal
     # raw_rest.plot_psd(fmin=0, fmax=100, show=True)
+
+
+    # ------- just to inspect -------- add average reference 
+    # raw_rest = raw.copy().set_eeg_reference(ref_channels="average")
+    # raw_rest.plot()
+
 
     return raw_rest
 

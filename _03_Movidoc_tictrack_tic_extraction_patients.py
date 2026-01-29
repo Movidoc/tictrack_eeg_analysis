@@ -99,9 +99,9 @@ def extract_tics_from_excel(excel_file, fps, min_absence_frames=30):
 
     # iterate through all frames until the end
     while i < n:
-        # print(f"Checkpoint : Processing frame {i}/{n}")
+        #print(f"Checkpoint : Processing frame {i}/{n}")
         
-        # to check the indices that seems to be a problem
+        #to check the indices that seems to be a problem
         # if i > 10140:
         #     print(i)
         
@@ -109,7 +109,7 @@ def extract_tics_from_excel(excel_file, fps, min_absence_frames=30):
         # -------------------- TIC CONDITION 1 : 30 frames of "Absence" before --------------------
         before_ok = False
         before_ok = np.all((absence[i-min_absence_frames:i] == 1) & (movement_sum[i-min_absence_frames:i] == 0)) & (i >= min_absence_frames)
-        # print(f"Checkpoint : i={i} before_ok={before_ok} absence[i]={absence[i]} movement_sum[i]={movement_sum[i]}")
+        #print(f"Checkpoint : i={i} before_ok={before_ok} absence[i]={absence[i]} movement_sum[i]={movement_sum[i]}")
 
 
         if before_ok and absence[i] == 0 and movement_sum[i] > 0:
@@ -137,7 +137,7 @@ def extract_tics_from_excel(excel_file, fps, min_absence_frames=30):
                 while k < n and (absence[k] == 1) and (movement_sum[k] == 0):
                     k += 1
                 after_len = k - j
-                # print(f"  j={j}, k={k}, after_len={after_len}")
+                #print(f"  j={j}, k={k}, after_len={after_len}")
 
                 # to check the indices that seems to be a problem
                 # if i > 10140:
@@ -156,7 +156,7 @@ def extract_tics_from_excel(excel_file, fps, min_absence_frames=30):
                     j = k
         else :
             i += 1
-            # print(f"Skipping frame {i}")
+            #print(f"Skipping frame {i}")
     
     # # filter tics inside phase
     # tics_in_phase = []
