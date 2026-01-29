@@ -19,3 +19,11 @@ __pycache__/
 final_5_PSD/
 group_psd/
 psd_images/
+# Do not track exploratory analysis outputs
+Exploratory_Analysis_MS/Description of the tics by patients
+Exploratory_Analysis_MS/TRF_results_all_patients/
+Exploratory_Analysis_MS/TRF_topomap_results_ (freq bands)/
+
+
+
+
