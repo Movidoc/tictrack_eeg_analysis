@@ -12,6 +12,8 @@
 
 import os
 import mne
+from autoreject import Ransac  # noqa
+from autoreject.utils import interpolate_bads  # noqa
 
 # Qt backend is required for interactive MNE visualizations
 from qtpy import QtWidgets
@@ -65,6 +67,17 @@ def load_data(FilePath):
     # display the PSD (Power Spectral Density) of the signal
     # # raw.plot_psd(show=True)
 
+    # plot the raw signal
+    # n_eeg = len(mne.pick_types(raw.info, eeg=True))
+
+    # if n_eeg <= 32:
+    #     fig = raw.plot(start = 600, duration = 300, title="Raw EEG Signal", show=True, scalings = 'auto', n_channels = 10, picks=["Cz", "C3", "C4", "Pz", "Fp1", "Fp2"])
+    # elif n_eeg <= 64:
+    #     fig = raw.plot(start = 600, duration = 300, title="Raw EEG Signal", show=True, scalings = 'auto', n_channels = 10, picks=["Cz", "FCz", "C3", "FC3", "CP3", "C4", "CP4", "FC4", "Pz", "CPz", "Fp1", "Fp2", "AF3", "AFz", "AF4"])
+
+    # fig = raw.plot( start = 100, duration = 300, title="Raw EEG Signal", show=True, scalings = 'auto', n_channels = 64)
+    # fig.set_size_inches(30,18)
+    # fig.suptitle("Figure 1 : Raw EEG Signal")
     # print the useful info
     raw.info
     print(raw.ch_names)
@@ -105,15 +118,33 @@ def extract_stimuli(raw):
 # ===================================================================
 
 def preprocess_data(raw, subject_name, montage_name):
-    # plot the bad channnels and artifacts 
-    print('------ Bad Channels ------', raw.info['bads'])
+
+
     eeg_channels = mne.pick_types(raw.info, meg=False, eeg=True)
     #raw.plot(duration=60, n_channels=len(eeg_channels), title='Raw EEG with bad channels marked', show=True)
 
     # apply the montage defined by the user
     raw.set_montage(montage_name)
     # visualize the electrode placement
-    raw.plot_sensors(show_names=True, show=True)
+    #raw.plot_sensors(show_names=True, show=True)
+
+    # Exclude bad channels using ransac method 
+    temporary_epochs = mne.make_fixed_length_epochs(raw, duration=10.0, overlap=2.0, preload=True)
+    ransac = Ransac( n_jobs=1)
+    ransac.fit_transform(temporary_epochs)
+    raw.info['bads'].extend(ransac.bad_chs_)
+    bad_channels = raw.info['bads']
+    print("Ransac detected bad channels:", ransac.bad_chs_)
+
+        # add bad channels 
+    if subject_name == '000030':
+        raw.info['bads'].append('FT9')
+        raw.info['bads'].append('AFz')
+
+    fig = raw.plot( start = 300, duration = 300, title="Raw EEG Signal", show=True, scalings = 'auto', n_channels = len(eeg_channels))
+    fig.set_size_inches(30,18)
+    fig.suptitle("Figure 1 : Raw EEG Signal")
+
 
     # apply band-pass filter between 0.5 and 100 Hz
     raw = raw.filter(l_freq=0.1, h_freq=45)
@@ -123,9 +154,12 @@ def preprocess_data(raw, subject_name, montage_name):
     # apply Notch filter at 50 Hz to remove the powerline noise
     raw = raw.notch_filter(freqs=[50], picks="data", method="spectrum_fit")
     # visualize the notched signal
-    # raw.plot(title="Notch Filter", show=True)
+    fig = raw.plot(start = 300, duration = 20, title="Filtered data", show=True, n_channels = 10)
+    fig.set_size_inches(30,18)
+    fig.suptitle("Figure 2 : EEG Signal after Band-pass & Notch Filtering")
 
-    return raw
+
+    return raw, bad_channels
 
 # ==============================================================
 # Function : apply_rest_reference
@@ -146,14 +180,15 @@ def apply_rest_reference(raw, subject_name):
     raw_rest = raw.copy().set_eeg_reference('REST', forward=Forward)
 
     # # visualize the re-referenced signal
-    raw_rest.plot(title="Signal REST", show=True)
     # # visualize the PSD of the re-referenced signal
     # raw_rest.plot_psd(fmin=0, fmax=100, show=True)
 
 
     # ------- just to inspect -------- add average reference 
     # raw_rest = raw.copy().set_eeg_reference(ref_channels="average")
-    # raw_rest.plot()
+    # fig = raw_rest.plot(start = 600, duration = 10, title="Signal REST", show=True, n_channels = 10)
+    # fig.set_size_inches(30,18)
+    # fig.suptitle("Figure 3 : EEG Signal after REST Re-referencing")
 
 
     return raw_rest
@@ -213,7 +248,7 @@ def recalibrate_from_first_event(raw, target_stim="Stimulus/S  2"):
     print("DEBUG after set_annotations:", raw_cropped.annotations.onset[:5])
 
     # visualize the cropped signal
-    raw_cropped.plot(title="Signal cropped", show=True)
+    #raw_cropped.plot(title="Signal cropped", show=True)
     return raw_cropped
 
 

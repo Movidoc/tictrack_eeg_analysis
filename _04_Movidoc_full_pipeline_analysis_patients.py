@@ -282,8 +282,9 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     
     # 1.a. Process EEG file (.vhdr)
     raw, subject_name = load_data(vhdr_path) # charge the EEG file & get the name of the subject
+    print(f"Subject name: {subject_name}")
     # events_times, _ = extract_stimuli(raw) # extract the TTL/events from the signal BEFORE the recalage
-    raw_pre = preprocess_data(raw, subject_name, montage_name=montage_name) # filter the signal & apply the montage
+    raw_pre, bad_channels = preprocess_data(raw, subject_name, montage_name=montage_name) # filter the signal & apply the montage
     raw_rest = apply_rest_reference(raw_pre, subject_name) # apply the REST reference
     print("Before crop:", raw_rest.annotations.onset[:5])
     # print("Checkpoint 1 : EEG preprocessing OK")
@@ -390,7 +391,8 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
         "tics_corrected": tics_corrected_with_phases,
         "phases_dict": phases_dict,
         "stim2_time_original": stim2_time_original,
-        "raw_cropped": raw_cropped
+        "raw_cropped": raw_cropped,
+        "bad_channels": bad_channels
     }
 
     # full_output["phases_dict"] = phases_dict
@@ -1103,8 +1105,8 @@ def save_group_psd(roi_psd_dict, out_dir, tag):
 
 
 ##############################################################
-'''
 
+'''
 
 # dictionnary to stock the results of all the patients
 results = {}
