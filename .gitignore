@@ -2,6 +2,7 @@
 *.eeg
 *.vhdr
 *.vmrk
+*.fif
 
 # --- FICHIERS IMAGES ---
 *.png
