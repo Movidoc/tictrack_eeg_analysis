@@ -1,0 +1,1 @@
+# Master event table, Sham generation, SUP logic
