@@ -1,6 +1,7 @@
 """
 ================================================================================
 PROJECT: TicTrack EEG - Premonitory Urge & Tic Suppression
+AUTHOR: Lizbeth Mondragon Gonzalez (@LizbethMG)
 MODULE:  config.py
 PHASE:   1 - Infrastructure & Experimental Mapping
 --------------------------------------------------------------------------------
@@ -9,26 +10,126 @@ DESCRIPTION:
     task.py to BrainVision decimal markers (Stimulus/S <num>).
 
 NOMENCLATURE / DICTIONARY FOR THE WHOLE PROJECT
+(BrainVision TTL / Trigger Reference)
 
-Phase Label	Description
-PHASE_EC	Eyes Closed
-PHASE_EO	Eyes Open
-PHASE_KP	Motor Sham (Keypress control)
-PHASE_FREE	Free Tic observation
-PHASE_SUP	Suppression Block
-PHASE_MIM	Mimicry Block
+====================================================================
+GLOBAL
+====================================================================
+system (can occur anytime)
+    100 system:t0                      Software time-zero anchor (first event only)
+    51  system:window_closed           Window closed unexpectedly
+start_experiment (instruction screen)
+    1   phase_start:start_experiment   Start screen displayed
+    25  key_press:right                Subject pressed ➡ to continue
 
-    - PHASE_: Block boundaries. Used to slice the continuous data.
-    - EVT_:   Motor/Behavioral events. These are the "onsets" for epoching.
-    - FB_:    Feedback triggers. Used to identify Visual Evoked Potentials (VEPs) 
-              or Auditory responses that could contaminate the signal.
-    - SYS_:   Technical markers for synchronization and data integrity.
+====================================================================
+PHASE_KP_INS  – Instruction screen (phase0)
+====================================================================
+    2   phase_start:phase0             Entered motor sham instruction screen
+    25  key_press:right                Subject pressed ➡ to continue
+====================================================================
+*PHASE_KP*  – Motor sham / keypress block (phase0a)
+====================================================================
+    3   phase_start:phase0a            Motor sham block begins
+    21  key_press:d                    Subject pressed D (motor control press)
+    31  visual_feedback:d              Visual confirmation displayed (may repeat)
+NOTE:
+    No behavioral tic markers expected in this phase, but in the video yes. 
+====================================================================
+PHASE_EC_INS  – Instruction screen (phase1a)
+====================================================================
+    4   phase_start:phase1a            Entered eyes-closed instruction screen
+    25  key_press:right                Subject pressed ➡ to continue
+====================================================================
+*PHASE_EC*  – Eyes Closed Resting State (phase1b)
+====================================================================
+    5   phase_start:phase1b            Eyes-closed resting block begins
+    41  tone_feedback:tone_start       Start beep played
+    42  tone_feedback:tone_end         End beep played
+NOTE:
+    No behavioral tic markers expected in this phase, but in the video yes. 
+====================================================================
+PHASE_EO_INS  – Instruction screen (phase1c)
+====================================================================
+    6   phase_start:phase1c            Entered eyes-open instruction screen
+    25  key_press:right                Subject pressed ➡ to continue
+====================================================================
+PHASE_EO  – Eyes Open + Fixation Cross (phase1d)
+====================================================================
+    7   phase_start:phase1d            Eyes-open resting block begins
+    41  tone_feedback:tone_start       Start beep played
+    42  tone_feedback:tone_end         End beep played
 
-IMPORTANCE OF ALL TTLs:
-    - S 31-34 (Visual Feedback): Crucial for "Cleaning". We must ensure 
-      pre-tic activity isn't confounded by the screen change.
-    - S 41-42 (Audio): Helps identify sensory processing blocks.
-    - S 100 (Sync): The anchor for aligning external video timestamps.
+NOTE:
+    No behavioral tic markers expected in this phase, but in the video yes.
+====================================================================
+PHASE_FREE_INS  – Instruction screen (phase2a)
+====================================================================
+    8   phase_start:phase2a            Entered free-tic instruction screen
+    25  key_press:right                Subject pressed ➡ to continue
+====================================================================
+PHASE_FREE  – Free Tic Observation (phase2b)
+====================================================================
+    9   phase_start:phase2b            Free tic observation block begins
+    21  key_press:d                    Subject marks tic/urge beginning
+    22  key_press:f                    Subject marks tic end
+    31  visual_feedback:d              Visual confirmation (may repeat)
+    32  visual_feedback:f              Visual confirmation (may repeat)
+====================================================================
+PHASE_MIM_INS  – Instruction screen (phase3a)
+====================================================================
+    10  phase_start:phase3a            Entered mimicry instruction screen
+    25  key_press:right                Subject pressed ➡ to continue
+====================================================================
+PHASE_MIM  – Mimicry Block (phase3b)
+====================================================================
+    11  phase_start:phase3b            Mimicry block begins
+    21  key_press:d                    Start voluntary mimic tic
+    22  key_press:f                    End voluntary mimic tic
+    24  key_press:t                    Spontaneous tic occurred
+    31  visual_feedback:d              Visual confirmation (may repeat)
+    32  visual_feedback:f              Visual confirmation (may repeat)
+    34  visual_feedback:t              Visual confirmation (may repeat)
+
+INTERPRETATION:
+    21 → 22 = one voluntary mimic tic.
+    24 = spontaneous tic intrusion during mimicry.
+====================================================================
+PHASE_SUP_INS  – Instruction screen (phase4a)
+====================================================================
+    12  phase_start:phase4a            Entered suppression instruction screen
+    25  key_press:right                Subject pressed ➡ to continue
+====================================================================
+PHASE_SUP  – Suppression Block (phase4b)
+====================================================================
+    13  phase_start:phase4b            Suppression block begins
+    23  key_press:s                    Intention to suppress tic
+    22  key_press:f                    End suppression attempt
+    24  key_press:t                    Tic occurred (failed suppression)
+    33  visual_feedback:s              Visual confirmation (may repeat)
+    32  visual_feedback:f              Visual confirmation (may repeat)
+    34  visual_feedback:t              Visual confirmation (may repeat)
+INTERPRETATION:
+    23 → 22 defines one suppression attempt.
+    24 indicates breakthrough tic.
+====================================================================
+end_experiment (end screen; ESC exits)
+====================================================================
+    14  phase_start:end_experiment     End screen displayed
+    26  key_press:esc                  Experiment terminated
+====================================================================
+PRIMARY ANALYSIS TTLs (recommended for EEG processing)
+====================================================================
+
+Block segmentation:
+    3   PHASE_KP
+    5   PHASE_EC
+    7   PHASE_EO
+    9   PHASE_FREE
+    11  PHASE_MIM
+    13  PHASE_SUP
+
+================================================================================
 
 INPUTS:
     - None (Static configuration)
@@ -41,6 +142,9 @@ OUTPUTS:
 
 from pathlib import Path
 import os
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Optional, List, Dict
 
 # --- PATH MANAGEMENT ---
 BASE_DIR = Path(os.getcwd())
@@ -53,43 +157,46 @@ for folder in [DERIVATIVES_DIR, REPORTS_DIR]:
     folder.mkdir(parents=True, exist_ok=True)
 
 # --- EXHAUSTIVE TRIGGER MAPPING (1:1 with task.py) ---
-TTL_MAP = {
-    # Phase Transitions (Structural context)
-    # PHASE_EC	Eyes Closed
-    'Stimulus/S  1': 'SYS_START_EXP',
-    'Stimulus/S  2': 'PHASE_0_MOTOR_BASE',
-    'Stimulus/S  3': 'PHASE_0A_INSTR',
-    'Stimulus/S  4': 'PHASE_1A_EC',        # Eyes Closed (Resting)
-    'Stimulus/S  5': 'PHASE_1B_EO',        # Eyes Open (Resting)
-    'Stimulus/S  6': 'PHASE_1C_FREE',      # Spontaneous Tic observation 1
-    'Stimulus/S  7': 'PHASE_1D_FREE',      # Spontaneous Tic observation 2
-    'Stimulus/S  8': 'PHASE_2A_FREE',      # Spontaneous Tic observation 3
-    'Stimulus/S  9': 'PHASE_2B_FREE',      # Spontaneous Tic observation 4
-    'Stimulus/S 10': 'PHASE_3A_MIMIC',     # Voluntary Mimicry
-    'Stimulus/S 11': 'PHASE_3B_MIMIC',
-    'Stimulus/S 12': 'PHASE_4A_SUPPRESS',  # Intentional Suppression
-    'Stimulus/S 13': 'PHASE_4B_SUPPRESS',
-    'Stimulus/S 14': 'SYS_END_EXP',
+# TTL HUMAN LABELS (numeric TTL -> readable label)
 
-    # Behavioral Events (Analysis targets)
-    'Stimulus/S 21': 'EVT_KEY_D_SUP_ON',   # Suppression attempt started
-    'Stimulus/S 22': 'EVT_KEY_F_SUP_OFF',  # Suppression attempt ended
-    'Stimulus/S 23': 'EVT_KEY_S_URGE',     # Moment of Urge awareness
-    'Stimulus/S 24': 'EVT_KEY_T_SPONT',    # Subject-perceived spontaneous tic
-    'Stimulus/S 25': 'EVT_KEY_RIGHT',
-    'Stimulus/S 26': 'EVT_KEY_ESC',
+TTL_LABELS = {
+    # --- Phase starts ---
+    1:  "START_EXPERIMENT",
+    2:  "PHASE_KP_INS",
+    3:  "PHASE_KP",
+    4:  "PHASE_EC_INS",
+    5:  "PHASE_EC",
+    6:  "PHASE_EO_INS",
+    7:  "PHASE_EO",
+    8:  "PHASE_FREE_INS",
+    9:  "PHASE_FREE",
+    10: "PHASE_MIM_INS",
+    11: "PHASE_MIM",
+    12: "PHASE_SUP_INS",
+    13: "PHASE_SUP",
+    14: "END_EXPERIMENT",
 
-    # Visual Feedback (Artifact identification)
-    'Stimulus/S 31': 'FB_VIS_D_TEXT',      # Screen displays "Fin de tic supprimé"
-    'Stimulus/S 32': 'FB_VIS_F_TEXT',
-    'Stimulus/S 33': 'FB_VIS_S_TEXT',      # Screen displays "Urge Awareness"
-    'Stimulus/S 34': 'FB_VIS_T_TEXT',
+    # --- Behavioral ---
+    21: "KEY_D",
+    22: "KEY_F",
+    23: "KEY_S",
+    24: "KEY_T",
+    25: "KEY_RIGHT",
+    26: "KEY_ESC",
 
-    # Audio/System
-    'Stimulus/S 41': 'FB_TONE_START',
-    'Stimulus/S 42': 'FB_TONE_END',
-    'Stimulus/S 51': 'SYS_WIN_CLOSED',
-    'Stimulus/S 100': 'SYS_T0_SYNC'        # Critical sync pulse
+    # --- Visual feedback ---
+    31: "FB_D",
+    32: "FB_F",
+    33: "FB_S",
+    34: "FB_T",
+
+    # --- Audio ---
+    41: "TONE_START",
+    42: "TONE_END",
+
+    # --- System ---
+    51:  "WINDOW_CLOSED",
+    100: "T0_SYNC",
 }
 
 # --- PIPELINE PARAMETERS ---
@@ -108,5 +215,24 @@ PIPE_PARAMS = {
     "baseline": (-1.5, -1.0),   # Baseline period for TFR
 }
 
+# --- PATIENTS INDIVIDUAL PARAMETERS ---
+PATIENTS = {
+    "sub-001": SubjectConfig(
+        sub_id="sub-001",
+        vhdr_path=Path(r"/mnt/c/.../sub-001/sub-001_task-tictrack.vhdr"),
+        montage="standard_1020",
+        eog_chs=["VEOG", "HEOG"],
+        ecg_ch="ECG",
+        rename_chs={"FP1": "Fp1"},   # example if needed
+        bads=[],
+        notes="",
+    ),
 
-print(f"[INFO] Config validated with {len(TTL_MAP)} TTL markers.")
+    "sub-002": SubjectConfig(
+        sub_id="sub-002",
+        vhdr_path=Path(r"/mnt/c/.../sub-002/sub-002_task-tictrack.vhdr"),
+        eog_chs=["VEOG"],
+        bads=["Fp1"],                # example manual QC
+        notes="No HEOG recorded",
+    ),
+}
