@@ -17,6 +17,7 @@ from _02_Movidoc_tictrack_prepro_TTL_extraction_patients import (
     load_data,
     extract_stimuli,
     preprocess_data, 
+    apply_ICA,
     apply_rest_reference,
     recalibrate_from_first_event,
     collect_ttl_with_phases
@@ -285,6 +286,7 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     print(f"Subject name: {subject_name}")
     # events_times, _ = extract_stimuli(raw) # extract the TTL/events from the signal BEFORE the recalage
     raw_pre, bad_channels = preprocess_data(raw, subject_name, montage_name=montage_name) # filter the signal & apply the montage
+    raw_pre = apply_ICA(raw_pre, subject_name) # apply ICA to clean the signal from eye/muscle artifacts
     raw_rest = apply_rest_reference(raw_pre, subject_name) # apply the REST reference
     print("Before crop:", raw_rest.annotations.onset[:5])
     # print("Checkpoint 1 : EEG preprocessing OK")
@@ -501,7 +503,7 @@ def plot_events_timeline(merged_ttl_tics, patient_name, phase_start_key=None, ph
 # Purpose  : analyse merged_ttl_tics to display all the beginning of urges by displaying all the 'D' and/or 'start_i' 
 # ===================================================================================================================
 
-def analyse_merged_ttl_tics(merged_ttl_tics, phase_start_key='start_spont', phase_end_key='end_spont'):
+def analyse_merged_ttl_tics_spontaneous(merged_ttl_tics, phase_start_key='start_spont', phase_end_key='end_spont'):
 
     # Extract the indices of the start & end of the selected phase
     t_start = next((list(d.values())[0] for d in merged_ttl_tics if list(d.keys())[0] == phase_start_key), None)
