@@ -12,8 +12,9 @@
 
 import os
 import mne
-from autoreject import Ransac  # noqa
-from autoreject.utils import interpolate_bads  # noqa
+from autoreject import Ransac  
+from autoreject.utils import interpolate_bads  
+from mne.preprocessing import ICA
 
 # Qt backend is required for interactive MNE visualizations
 from qtpy import QtWidgets
@@ -128,6 +129,27 @@ def preprocess_data(raw, subject_name, montage_name):
     # visualize the electrode placement
     #raw.plot_sensors(show_names=True, show=True)
 
+    # Plot raw data from eyes open and spontaneous phase 
+    fig = raw.plot(duration=10,start = 210, n_channels=len(eeg_channels), title='Raw EEG - eyes open phase (10s)', show=True)
+    fig.set_size_inches(30,18)
+    fig.suptitle("Figure 1 : Raw EEG Signal - eyes open phase (10s)")
+
+    fig = raw.plot(duration=10,start = 720, n_channels=len(eeg_channels), title='Raw EEG - spontaneous tics phase (10s)', show=True)
+    fig.set_size_inches(30,18)
+    fig.suptitle("Figure 1 : Raw EEG Signal - spontaneous tics phase (10s)")
+
+    # apply band-pass filter between 0.5 and 100 Hz
+    raw = raw.filter(l_freq=0.1, h_freq=45)
+    # visualize the band-passed signal
+    #raw.plot(title="High/Low Pass Filter", show=True)
+
+    # apply Notch filter at 50 Hz to remove the powerline noise
+    raw = raw.notch_filter(freqs=[50], picks="data", method="spectrum_fit")
+    # visualize the notched signal
+    # fig = raw.plot(start = 300, duration = 20, title="Filtered data", show=True, n_channels = 10)
+    # fig.set_size_inches(30,18)
+    # fig.suptitle("Figure 2 : EEG Signal after Band-pass & Notch Filtering")
+
     # Exclude bad channels using ransac method 
     temporary_epochs = mne.make_fixed_length_epochs(raw, duration=10.0, overlap=2.0, preload=True)
     ransac = Ransac( n_jobs=1)
@@ -141,25 +163,74 @@ def preprocess_data(raw, subject_name, montage_name):
         raw.info['bads'].append('FT9')
         raw.info['bads'].append('AFz')
 
-    fig = raw.plot( start = 300, duration = 300, title="Raw EEG Signal", show=True, scalings = 'auto', n_channels = len(eeg_channels))
+    # fig = raw.plot( start = 300, duration = 300, title="Raw EEG Signal", show=True, scalings = 'auto', n_channels = len(eeg_channels))
+    # fig.set_size_inches(30,18)
+    # fig.suptitle("Figure 1 : Raw EEG Signal")
+
+    # Plot after preprocessing
+    fig = raw.plot(duration=10,start = 210, n_channels=len(eeg_channels), title='Preprocessed EEG - eyes open phase (10s)', show=True)
     fig.set_size_inches(30,18)
-    fig.suptitle("Figure 1 : Raw EEG Signal")
-
-
-    # apply band-pass filter between 0.5 and 100 Hz
-    raw = raw.filter(l_freq=0.1, h_freq=45)
-    # visualize the band-passed signal
-    #raw.plot(title="High/Low Pass Filter", show=True)
-
-    # apply Notch filter at 50 Hz to remove the powerline noise
-    raw = raw.notch_filter(freqs=[50], picks="data", method="spectrum_fit")
-    # visualize the notched signal
-    fig = raw.plot(start = 300, duration = 20, title="Filtered data", show=True, n_channels = 10)
+    fig.suptitle("Figure 2 : Preprocessed EEG Signal - eyes open phase (10s)")
+    fig = raw.plot(duration=10,start = 720, n_channels=len(eeg_channels), title='Preprocessed EEG - spontaneous tics phase (10s)', show=True)
     fig.set_size_inches(30,18)
-    fig.suptitle("Figure 2 : EEG Signal after Band-pass & Notch Filtering")
+    fig.suptitle("Figure 2 : Preprocessed EEG Signal - spontaneous tics phase (10s)")
 
 
     return raw, bad_channels
+
+# ================================================================
+# Fuction : apply_ICA
+# Purpose : to apply ICA for artifact removal (eye blinks, muscle artifacts...)
+# ===============================================================
+
+def apply_ICA(raw, subject_name):
+    # filter data for ICA fitting 
+    filt_raw = raw.copy().filter(l_freq=1.0, h_freq = None)
+    # fit ICA
+    ica = ICA(n_components=15, max_iter="auto", random_state=97)
+    ica.fit(filt_raw)
+    # visualize the ICA components to identify artifacts
+    fig = ica.plot_components(show=True)
+    fig.suptitle(" ICA Components - to identify artifacts (eye blinks, muscle activity...)")
+
+    raw.load_data()
+    ica.plot_sources(raw)
+    # exclude components matching with the AF8 channels (eye blinks)
+    ica.exclude = []
+    # find which ICs match the EOG pattern
+    eog_indices, eog_scores = ica.find_bads_eog(raw, ch_name="FT10")
+    ica.exclude = eog_indices
+    print(f"ICA components matching EOG (eye blinks) : {eog_indices}")
+    # barplot of ICA component "EOG match" scores
+    ica.plot_scores(eog_scores)
+    # plot ICs applied to raw data, with EOG matches highlighted
+    ica.plot_sources(raw)
+
+    #manually exclude [0,1] components for patient DS26
+    if subject_name == '000010' :
+        ica.exclude = [0, 1]
+        raw = ica.apply(raw.copy())
+
+    if subject_name == '_BB28-bis':
+        raw = raw.copy()
+    
+    if subject_name == '000030' :
+        ica.exclude = [0]
+        raw = ica.apply(raw.copy())
+    
+    if subject_name == '000031' :
+        ica.exclude = [0]
+        raw = ica.apply(raw.copy())
+
+    # plot the corrected signal
+    fig = raw.plot(start = 210, duration = 10, title="ICA corrected data", show=True)
+    fig.set_size_inches(30,18)
+    fig.suptitle("Figure 3 : EEG Signal after ICA correction - open eyes phase (10s)")
+
+    fig = raw.plot(start = 720, duration = 10, title="ICA corrected data", show=True)
+    fig.set_size_inches(30,18)
+    fig.suptitle("Figure 3 : EEG Signal after ICA correction - spontaneous tics phase (10s)")
+    return raw
 
 # ==============================================================
 # Function : apply_rest_reference
