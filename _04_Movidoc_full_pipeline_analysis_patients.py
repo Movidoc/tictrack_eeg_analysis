@@ -24,7 +24,12 @@ from _02_Movidoc_tictrack_prepro_TTL_extraction_patients import (
 )
 
 from _03_Movidoc_tictrack_tic_extraction_patients import extract_tics_from_excel
-
+from _05_Movidoc_tictrack_urge_extraction_function import (
+    deduplicate_imitated_tics,
+    analyse_merged_ttl_tics_imitated,
+    deduplicate_suppressed_tics,
+    analyse_merged_ttl_tics_suppressed,
+)
 from pprint import pprint
 
 import mne
@@ -761,6 +766,88 @@ def extract_pre_tic_epochs(raw_cropped, urge_times, pre_seconds=2.0, post_second
     )
 
     return epochs
+
+
+# =========================================================================================
+# Function: full_pipeline_extract_pre_tic_epochs
+# Purpose: run the full pipeline to extract the pre-tic epochs for a given patient and phase
+# =========================================================================================
+def full_pipeline_extract_pre_tic_epochs(patient, phase, nb_random_epochs):
+    """Extract pre-tic epochs. Returns differ by phase:
+    - spontaneous: (pre_tic_epochs, random_epochs, bad_channels)
+    - imitated/suppressed: (pre_tic_category1, pre_tic_category2, random_epochs, bad_channels)
+    
+    Returns None for any epoch category that is empty.
+    """
+    results = run_full_pipeline_for_patient(
+        vhdr_path=patient["vhdr"], excel_path=patient["excel"],
+        fps=patient["fps"], min_absence_frames=patient["min_absence_frames"],
+        montage_name=patient["montage"], excel_phase_times=patient["excel_phase_times"]
+    )
+    
+    phase_map = {
+        "spontaneous_phase": ("start_spont", "end_spont", analyse_merged_ttl_tics_spontaneous),
+        "imitated_phase": ("start_imit", "end_imit", analyse_merged_ttl_tics_imitated),
+        "suppressed_phase": ("start_ret", "end_ret", analyse_merged_ttl_tics_suppressed),
+    }
+    
+    filter_dict = {
+        'start_spont': 9, 'end_spont': 10, 'start_imit': 11, 'end_imit': 12,
+        'start_ret': 13, 'end_ret': 14, 'start_open': 7, 'end_open': 8,
+    }
+    
+    phase_start, phase_end, analyse_func = phase_map[phase]
+    
+    def make_epochs(urge_list, pre_sec=3.0, post_sec=2):
+            if not urge_list:
+                return None
+            urges_shifted = shift_urges_times(urge_list, results["stim2_time_original"])
+            if not urges_shifted:
+                return None
+            return extract_pre_tic_epochs(results["raw_cropped"], urges_shifted, pre_sec, post_sec)
+
+    # Analyze tics
+    analysis_result = analyse_func(
+        merged_ttl_tics=results["merged_ttl_tics"],
+        phase_start_key=phase_start,
+        phase_end_key=phase_end
+    )
+    
+    # Extract random epochs (common for all phases)
+    ttl_info = results["ttl"]
+    start_open = next(t["time"] for t in ttl_info if int(t["ttl_name"].split()[-1]) == filter_dict["start_open"])
+    end_open = next(t["time"] for t in ttl_info if int(t["ttl_name"].split()[-1]) == filter_dict["end_open"])
+    
+    random_epochs = extract_random_epochs_in_phase(
+        results["raw_cropped"], start_open, end_open,
+        nb_random_epochs, epoch_duration=3,
+        event_id=999, seed=42
+    )
+    
+    # Phase-specific returns
+    if phase == "spontaneous_phase":
+        print("Processing spontaneous phase...")
+        pre_tic_epochs = make_epochs(analysis_result, 3.0, 2.0)
+        if pre_tic_epochs is None:
+            print("WARNING: No spontaneous epochs found")
+        return pre_tic_epochs, random_epochs, results["bad_channels"]
+    
+    else:
+        # Imitated or suppressed (both return two lists)
+        list1, list2 = analysis_result
+        
+        print(f"Processing {phase} - category 1...")
+        epochs1 = make_epochs(list1)
+        epochs2 = make_epochs(list2)
+        if epochs1 is None:
+            print(f"WARNING: No category 1 epochs found for {phase}")
+        
+        print(f"Processing {phase} - category 2 (real)...")
+        epochs2 = make_epochs(list2)
+        if epochs2 is None:
+            print(f"WARNING: No category 2 (real) epochs found for {phase}")
+        
+        return epochs1, epochs2, random_epochs, results["bad_channels"]
 
 
 # ===============================================================
