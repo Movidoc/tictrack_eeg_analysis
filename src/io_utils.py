@@ -1,14 +1,32 @@
 """
+================================================================================
 PROJECT: TicTrack EEG Analysis
 MODULE:  io_utils.py
 AUTHOR:  LizbethMG
 PURPOSE: Robust loading of BrainVision (.vhdr) data and integration 
          of external Video-TIC annotation files.
+--------------------------------------------------------------------------------
+DESCRIPTION:
+    Handles the transition from raw BrainVision files to MNE Raw objects. 
+    It applies the standardized nomenclature defined in config.py and 
+    injects subject-specific metadata (bad channels, EOG types).
+
+WHY THIS MATTERS:
+    By renaming triggers here, all subsequent scripts (preprocessing, 
+    plotting) will use labels like 'PHASE_SUP' instead of 'S 13'.
+
+INPUTS:
+    - subject_id (str): e.g., "sub-001"
+    - config.PATIENTS: Subject-specific metadata.
+
+OUTPUTS:
+    - raw (mne.io.Raw): Preloaded data with standardized annotations.
+================================================================================
 """
 
 import mne
-import pandas as pd
-from config import RAW_DATA_DIR
+import sys
+from config import PATIENTS, TTL_MAP, PIPE_PARAMS
 
 def load_raw_eeg(subject_id):
     """

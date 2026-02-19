@@ -23,12 +23,12 @@ start_experiment (instruction screen)
     25  key_press:right                Subject pressed ➡ to continue
 
 ====================================================================
-PHASE_KP_INS  – Instruction screen (phase0)
+PHASE_KP_INS  - Instruction screen (phase0)
 ====================================================================
     2   phase_start:phase0             Entered motor sham instruction screen
     25  key_press:right                Subject pressed ➡ to continue
 ====================================================================
-*PHASE_KP*  – Motor sham / keypress block (phase0a)
+*PHASE_KP*  - Motor sham / keypress block (phase0a)
 ====================================================================
     3   phase_start:phase0a            Motor sham block begins
     21  key_press:d                    Subject pressed D (motor control press)
@@ -36,12 +36,12 @@ PHASE_KP_INS  – Instruction screen (phase0)
 NOTE:
     No behavioral tic markers expected in this phase, but in the video yes. 
 ====================================================================
-PHASE_EC_INS  – Instruction screen (phase1a)
+PHASE_EC_INS  - Instruction screen (phase1a)
 ====================================================================
     4   phase_start:phase1a            Entered eyes-closed instruction screen
     25  key_press:right                Subject pressed ➡ to continue
 ====================================================================
-*PHASE_EC*  – Eyes Closed Resting State (phase1b)
+*PHASE_EC*  - Eyes Closed Resting State (phase1b)
 ====================================================================
     5   phase_start:phase1b            Eyes-closed resting block begins
     41  tone_feedback:tone_start       Start beep played
@@ -49,12 +49,12 @@ PHASE_EC_INS  – Instruction screen (phase1a)
 NOTE:
     No behavioral tic markers expected in this phase, but in the video yes. 
 ====================================================================
-PHASE_EO_INS  – Instruction screen (phase1c)
+PHASE_EO_INS  - Instruction screen (phase1c)
 ====================================================================
     6   phase_start:phase1c            Entered eyes-open instruction screen
     25  key_press:right                Subject pressed ➡ to continue
 ====================================================================
-PHASE_EO  – Eyes Open + Fixation Cross (phase1d)
+PHASE_EO  - Eyes Open + Fixation Cross (phase1d)
 ====================================================================
     7   phase_start:phase1d            Eyes-open resting block begins
     41  tone_feedback:tone_start       Start beep played
@@ -63,12 +63,12 @@ PHASE_EO  – Eyes Open + Fixation Cross (phase1d)
 NOTE:
     No behavioral tic markers expected in this phase, but in the video yes.
 ====================================================================
-PHASE_FREE_INS  – Instruction screen (phase2a)
+PHASE_FREE_INS  - Instruction screen (phase2a)
 ====================================================================
     8   phase_start:phase2a            Entered free-tic instruction screen
     25  key_press:right                Subject pressed ➡ to continue
 ====================================================================
-PHASE_FREE  – Free Tic Observation (phase2b)
+PHASE_FREE  - Free Tic Observation (phase2b)
 ====================================================================
     9   phase_start:phase2b            Free tic observation block begins
     21  key_press:d                    Subject marks tic/urge beginning
@@ -76,12 +76,12 @@ PHASE_FREE  – Free Tic Observation (phase2b)
     31  visual_feedback:d              Visual confirmation (may repeat)
     32  visual_feedback:f              Visual confirmation (may repeat)
 ====================================================================
-PHASE_MIM_INS  – Instruction screen (phase3a)
+PHASE_MIM_INS  - Instruction screen (phase3a)
 ====================================================================
     10  phase_start:phase3a            Entered mimicry instruction screen
     25  key_press:right                Subject pressed ➡ to continue
 ====================================================================
-PHASE_MIM  – Mimicry Block (phase3b)
+PHASE_MIM  - Mimicry Block (phase3b)
 ====================================================================
     11  phase_start:phase3b            Mimicry block begins
     21  key_press:d                    Start voluntary mimic tic
@@ -95,12 +95,12 @@ INTERPRETATION:
     21 → 22 = one voluntary mimic tic.
     24 = spontaneous tic intrusion during mimicry.
 ====================================================================
-PHASE_SUP_INS  – Instruction screen (phase4a)
+PHASE_SUP_INS  - Instruction screen (phase4a)
 ====================================================================
     12  phase_start:phase4a            Entered suppression instruction screen
     25  key_press:right                Subject pressed ➡ to continue
 ====================================================================
-PHASE_SUP  – Suppression Block (phase4b)
+PHASE_SUP  - Suppression Block (phase4b)
 ====================================================================
     13  phase_start:phase4b            Suppression block begins
     23  key_press:s                    Intention to suppress tic
@@ -146,7 +146,20 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, List, Dict
 
-# --- PATH MANAGEMENT ---
+# --- 1. DATA STRUCTURE DEFINITION ---
+@dataclass
+class SubjectConfig:
+    sub_id: str
+    vhdr_path: Path
+    montage: str = "standard_1020"
+    eog_chs: List[str] = field(default_factory=lambda: ["VEOG", "HEOG"])
+    ecg_ch: Optional[str] = "ECG"
+    rename_chs: Dict[str, str] = field(default_factory=dict)
+    bads: List[str] = field(default_factory=list)
+    notes: str = ""
+
+# --- 2. PATH MANAGEMENT ---
+
 BASE_DIR = Path(os.getcwd())
 RAW_DATA_DIR = Path("/mnt/c/Users/lizbe/Documents/EEG_Data")
 DERIVATIVES_DIR = BASE_DIR / "derivatives"
@@ -156,27 +169,20 @@ REPORTS_DIR = DERIVATIVES_DIR / "reports"
 for folder in [DERIVATIVES_DIR, REPORTS_DIR]:
     folder.mkdir(parents=True, exist_ok=True)
 
-# --- EXHAUSTIVE TRIGGER MAPPING (1:1 with task.py) ---
-# TTL HUMAN LABELS (numeric TTL -> readable label)
+# --- 3. TRIGGER DEFINITION (Integers) ---
 
 TTL_LABELS = {
-    # --- Phase starts ---
+    # Phases
     1:  "START_EXPERIMENT",
-    2:  "PHASE_KP_INS",
-    3:  "PHASE_KP",
-    4:  "PHASE_EC_INS",
-    5:  "PHASE_EC",
-    6:  "PHASE_EO_INS",
-    7:  "PHASE_EO",
-    8:  "PHASE_FREE_INS",
-    9:  "PHASE_FREE",
-    10: "PHASE_MIM_INS",
-    11: "PHASE_MIM",
-    12: "PHASE_SUP_INS",
-    13: "PHASE_SUP",
+    2:  "PHASE_KP_INS", 3:  "PHASE_KP",
+    4:  "PHASE_EC_INS", 5:  "PHASE_EC",
+    6:  "PHASE_EO_INS", 7:  "PHASE_EO",
+    8:  "PHASE_FREE_INS", 9:  "PHASE_FREE",
+    10: "PHASE_MIM_INS", 11: "PHASE_MIM",
+    12: "PHASE_SUP_INS", 13: "PHASE_SUP",
     14: "END_EXPERIMENT",
 
-    # --- Behavioral ---
+    # Keys
     21: "KEY_D",
     22: "KEY_F",
     23: "KEY_S",
@@ -184,38 +190,50 @@ TTL_LABELS = {
     25: "KEY_RIGHT",
     26: "KEY_ESC",
 
-    # --- Visual feedback ---
+    # Visual feedback
     31: "FB_D",
     32: "FB_F",
     33: "FB_S",
     34: "FB_T",
 
-    # --- Audio ---
+    # Audio feedback
     41: "TONE_START",
     42: "TONE_END",
 
-    # --- System ---
+    # System events
     51:  "WINDOW_CLOSED",
     100: "T0_SYNC",
 }
 
-# --- PIPELINE PARAMETERS ---
+# --- 4. BRAINVISION STRING MAPPING (The FIX for MNE) ---
+# This converts 1 into "Stimulus/S  1" and 21 into "Stimulus/S 21"
+
+def _format_bv_label(code: int) -> str:
+    if code < 10:
+        return f"Stimulus/S  {code}"  # Two spaces for single digits
+    else:
+        return f"Stimulus/S {code}"   # One space for double/triple digits
+
+TTL_MAP = {_format_bv_label(k): v for k, v in RAW_TRIGGERS.items()}
+
+# --- 5. PIPELINE PARAMETERS ---
+
 PIPE_PARAMS = {
     "sampling_rate": 1000,      # Hz
     "l_freq": 1.0,              # High-pass filter
     "h_freq": 100.0,            # Low-pass filter
     "notch_freq": 50.0,         # Line noise
-    
-    # Epoching windows (in seconds)
-    "t_tic": [-2.0, 1.0],       # 2s before tic, 1s after
-    "t_urge": [-3.0, 0.0],      # 3s before urge tag
-    "t_mimic": [-2.0, 1.0],     
-    "t_kp": [-1.0, 1.0],        # Keypress control
-    
+    "epoch_windows": {
+        "t_tic": [-2.0, 1.0],
+        "t_urge": [-3.0, 0.0],
+        "t_mimic": [-2.0, 1.0],
+        "t_kp": [-1.0, 1.0]
+    },
     "baseline": (-1.5, -1.0),   # Baseline period for TFR
 }
 
-# --- PATIENTS INDIVIDUAL PARAMETERS ---
+# --- 6. PATIENT REGISTRY ---
+
 PATIENTS = {
     "sub-001": SubjectConfig(
         sub_id="sub-001",
@@ -236,3 +254,8 @@ PATIENTS = {
         notes="No HEOG recorded",
     ),
 }
+
+if __name__ == "__main__":
+    print(f"[INFO] Configuration file loaded successfully.")
+    print(f"[INFO] Path: {RAW_DATA_DIR}")
+    print(f"[INFO] Mapped {len(TTL_LABELS)} distinct triggers.")
