@@ -12,6 +12,7 @@
 
 import os
 import mne
+import numpy as np
 from autoreject import Ransac  
 from autoreject.utils import interpolate_bads  
 from mne.preprocessing import ICA
@@ -184,19 +185,67 @@ def preprocess_data(raw, subject_name, montage_name):
 # ===============================================================
 
 def apply_ICA(raw, subject_name):
-    # filter data for ICA fitting 
-    filt_raw = raw.copy().filter(l_freq=1.0, h_freq = None)
-    # fit ICA
-    ica = ICA(n_components=5, max_iter="auto", random_state=97)
-    ica.fit(filt_raw)
-    # visualize the ICA components to identify artifacts
-    ica.plot_components(show=True)
-    # fig.suptitle(" ICA Components - to identify artifacts (eye blinks, muscle activity...)")
+    # ----- Autoreject global for ICA -----
 
-    raw.load_data()
-    #ica.plot_sources(raw)
-    # exclude components matching with the AF8 channels (eye blinks)
+    
+    # ------ ICA fitting -----
+    # Average before ICA 
+    # Find when the max value occurs
+    data = raw.get_data()
+    ch_idx = raw.ch_names.index('T7')
+    time_of_max = np.argmax(np.abs(data[ch_idx]))
+    print(f"Max occurs at: {raw.times[time_of_max]:.1f} seconds")
+
+    # Plot around that time
+    raw.plot(start=raw.times[time_of_max]-5, duration=10, scalings='auto')
+    
+    print("Channel units:", raw.info['chs'][0]['unit'])
+    print("Channel unit multiplier:", raw.info['chs'][0]['unit_mul'])
+    data = raw.get_data()
+    max_chan_idx = np.argmax(np.max(np.abs(data), axis=1))
+    print("Channel with max value:", raw.ch_names[max_chan_idx])
+    print("Its max value:", np.max(np.abs(data[max_chan_idx])))
+
+    fig = raw.plot(duration=10, start=100, scalings='auto', 
+         picks=['T7', 'FT9', 'FC5', 'F7'])
+    fig.set_size_inches(30,18)
+    fig.suptitle("Figure 6 : EEG Signal before ICA correction - example channels (10s)")
+
+    # Check if it's one channel or all
+    print("Per channel max values:")
+    for i, ch in enumerate(raw.ch_names):
+        print(f"{ch}: {np.max(np.abs(data[i])):.6f}")
+
+    # Plot the raw data and check the scale
+
+    raw_avg = raw.copy().set_eeg_reference('average')
+
+    # filter data for ICA fitting 
+    filt_raw = raw_avg.filter(l_freq=1.0, h_freq = None)
+    picks_eeg = mne.pick_types(filt_raw.info, meg=False, eeg=True, eog=False,
+                                exclude='bads')
+    data = filt_raw.get_data()
+
+    # Compare raw vs filtered
+    print("Raw data max:", np.max(np.abs(raw.get_data())))
+    print("Filtered data max:", np.max(np.abs(filt_raw.get_data())))
+
+    print("Data max:", np.max(np.abs(data)))
+    print("Data mean:", np.mean(np.abs(data)))
+    print("Any flat channels:", np.any(data.std(axis=1) < 1e-10))
+
+
+    # fit ICA
+    #ica = ICA(n_components=15, method = 'picard', max_iter="auto", random_state=97)
+    ica = mne.preprocessing.ICA(
+    n_components=10,  method="picard", max_iter="auto", random_state=97)
+    ica.fit(filt_raw, picks = picks_eeg)
+
+    ica.plot_components(show=True)
+
     ica.exclude = []
+
+    # ------------- Comparison to the baseline channel --------------
     # find which ICs match the EOG pattern
     # eog_indices, eog_scores = ica.find_bads_eog(raw, ch_name="FT10")
     # ica.exclude = eog_indices
@@ -206,35 +255,44 @@ def apply_ICA(raw, subject_name):
     # plot ICs applied to raw data, with EOG matches highlighted
     #ica.plot_sources(raw)
 
+    # -------------- Manual exclusion --------------
     #manually exclude [0,1] components for patient DS26
-    if subject_name == '000010' :
-        ica.exclude = [0, 1]
-        raw = ica.apply(raw.copy())
+    if subject_name == '000010' : # DS26
+        ica.exclude = [0, 2, 3, 4, 6]
 
-    if subject_name == '_BB28-bis':
-        raw = raw.copy()
+    if subject_name == '_BB28-bis': # BB28
+        ica.exclude = [0, 1, 2]
 
-    if subject_name == '000013' :
+    if subject_name == '000013' : # BC29
         ica.exclude = [0]
-        raw = ica.apply(raw.copy())
     
-    if subject_name == '000030' :
+    if subject_name == '000030' : # MM30
         ica.exclude = [0]
-        raw = ica.apply(raw.copy())
     
-    if subject_name == '000031' :
+    if subject_name == '000031' : # SC31
         ica.exclude = [0]
-        raw = ica.apply(raw.copy())
 
+    # 10 second segments gives ~160 segments instead of 800
+    epochs_viz = mne.make_fixed_length_epochs(raw, duration=20.0, preload=True)
+    ica.plot_properties(epochs_viz, picks=range(10))
+    #ica.plot_properties(raw)
+    ica.plot_sources(raw, picks = range(10) , show=True)
     # plot the ICA components after correction to verify the effect of the artifact removal
-    ica.plot_overlay(raw.average(), exclude=ica.exclude)
+    ica.plot_overlay(raw, exclude=ica.exclude)
+
+    # 4. Check ICA
+    print("N components fitted:", ica.n_components_)
+    print("Explained variance:", ica.pca_explained_variance_)
+
+    raw = ica.apply(raw.copy())
 
     # plot the corrected signal
-    fig = raw.plot(start = 210, duration = 10, title="ICA corrected data", show=True)
+    eeg_channels = mne.pick_types(raw.info, meg=False, eeg=True)
+    fig = raw.plot(start = 210, duration = 10, n_channels=len(eeg_channels), title="ICA corrected data", show=True)
     fig.set_size_inches(30,18)
     fig.suptitle("Figure 3 : EEG Signal after ICA correction - open eyes phase (10s)")
 
-    fig = raw.plot(start = 720, duration = 10, title="ICA corrected data", show=True)
+    fig = raw.plot(start = 720, duration = 10, n_channels=len(eeg_channels), title="ICA corrected data", show=True)
     fig.set_size_inches(30,18)
     fig.suptitle("Figure 3 : EEG Signal after ICA correction - spontaneous tics phase (10s)")
     return raw
@@ -279,14 +337,6 @@ def apply_rest_reference(raw, subject_name):
     # # visualize the re-referenced signal
     # # visualize the PSD of the re-referenced signal
     # raw_rest.plot_psd(fmin=0, fmax=100, show=True)
-
-
-    # ------- just to inspect -------- add average reference 
-    # raw_rest = raw.copy().set_eeg_reference(ref_channels="average")
-    # fig = raw_rest.plot(start = 600, duration = 10, title="Signal REST", show=True, n_channels = 10)
-    # fig.set_size_inches(30,18)
-    # fig.suptitle("Figure 3 : EEG Signal after REST Re-referencing")
-
 
     return raw_rest
 
