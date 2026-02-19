@@ -187,24 +187,24 @@ def apply_ICA(raw, subject_name):
     # filter data for ICA fitting 
     filt_raw = raw.copy().filter(l_freq=1.0, h_freq = None)
     # fit ICA
-    ica = ICA(n_components=15, max_iter="auto", random_state=97)
+    ica = ICA(n_components=5, max_iter="auto", random_state=97)
     ica.fit(filt_raw)
     # visualize the ICA components to identify artifacts
-    fig = ica.plot_components(show=True)
-    fig.suptitle(" ICA Components - to identify artifacts (eye blinks, muscle activity...)")
+    ica.plot_components(show=True)
+    # fig.suptitle(" ICA Components - to identify artifacts (eye blinks, muscle activity...)")
 
     raw.load_data()
-    ica.plot_sources(raw)
+    #ica.plot_sources(raw)
     # exclude components matching with the AF8 channels (eye blinks)
     ica.exclude = []
     # find which ICs match the EOG pattern
-    eog_indices, eog_scores = ica.find_bads_eog(raw, ch_name="FT10")
-    ica.exclude = eog_indices
-    print(f"ICA components matching EOG (eye blinks) : {eog_indices}")
+    # eog_indices, eog_scores = ica.find_bads_eog(raw, ch_name="FT10")
+    # ica.exclude = eog_indices
+    #print(f"ICA components matching EOG (eye blinks) : {eog_indices}")
     # barplot of ICA component "EOG match" scores
-    ica.plot_scores(eog_scores)
+    # ica.plot_scores(eog_scores)
     # plot ICs applied to raw data, with EOG matches highlighted
-    ica.plot_sources(raw)
+    #ica.plot_sources(raw)
 
     #manually exclude [0,1] components for patient DS26
     if subject_name == '000010' :
@@ -213,6 +213,10 @@ def apply_ICA(raw, subject_name):
 
     if subject_name == '_BB28-bis':
         raw = raw.copy()
+
+    if subject_name == '000013' :
+        ica.exclude = [0]
+        raw = ica.apply(raw.copy())
     
     if subject_name == '000030' :
         ica.exclude = [0]
@@ -221,6 +225,9 @@ def apply_ICA(raw, subject_name):
     if subject_name == '000031' :
         ica.exclude = [0]
         raw = ica.apply(raw.copy())
+
+    # plot the ICA components after correction to verify the effect of the artifact removal
+    ica.plot_overlay(raw.average(), exclude=ica.exclude)
 
     # plot the corrected signal
     fig = raw.plot(start = 210, duration = 10, title="ICA corrected data", show=True)
@@ -231,6 +238,25 @@ def apply_ICA(raw, subject_name):
     fig.set_size_inches(30,18)
     fig.suptitle("Figure 3 : EEG Signal after ICA correction - spontaneous tics phase (10s)")
     return raw
+
+# ==============================================================
+# Function : apply_Autoreject()
+# Purpose : to apply the Autoreject method for automatic detection & interpolation of bad channels and bad epochs 
+# ==============================================================
+
+def apply_Autoreject(epochs, subject_name):
+    ar = autoreject.AutoReject(n_interpolate=[1, 2, 3, 4], random_state=11,
+                           n_jobs=1, verbose=True)
+    ar.fit(epochs)  
+    epochs_clean, reject_log = ar.transform(epochs, return_log=True)
+    # See which epochs were rejected
+    reject_log.plot('horizontal')
+
+    # See the cleaned epochs
+    epochs_clean.plot(show=True)
+    return epochs_clean
+
+
 
 # ==============================================================
 # Function : apply_rest_reference

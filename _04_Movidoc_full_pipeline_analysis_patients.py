@@ -623,6 +623,10 @@ def shift_urges_times(urges_list, stim2_time):
             shifted_times.append(u['start_time'] + stim2_time)
         elif 'D_time' in u:
             shifted_times.append(u['D_time'] + stim2_time)
+        elif 'S_time' in u:
+            shifted_times.append(u['S_time'] + stim2_time)
+        elif 'T_time' in u:
+            shifted_times.append(u['T_time'] + stim2_time)
         else:
             raise ValueError(f"Unexpected dictionary structure: {u}")
 
