@@ -1,0 +1,5 @@
+{
+  "Name": "TicTrack EEG",
+  "BIDSVersion": "1.9.0",
+  "DatasetType": "raw"
+}

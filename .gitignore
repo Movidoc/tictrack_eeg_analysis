@@ -1,36 +1,74 @@
-# --- FICHIERS EEG ---
+# =========================
+# Python / cache
+# =========================
+*.pyc
+__pycache__/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# =========================
+# EEG / neuroimaging data (do not commit)
+# =========================
 *.eeg
 *.vhdr
 *.vmrk
 *.fif
 
-# --- FICHIERS IMAGES ---
-*.png
-*.eps
+# If you ever use other EEG formats:
+*.edf
+*.bdf
+*.set
+*.fdt
 
-# --- FICHIERS GÉNÉRÉS PYTHON ---
-*.pyc
-__pycache__/
-
-# --- FICHIERS NUMPY ---
+# =========================
+# Numpy / data blobs
+# =========================
 *.npy
 *.npz
 
-# --- DOSSIERS DE RÉSULTATS (à adapter selon tes besoins) ---
+# =========================
+# Generated figures (avoid global image ignore)
+# =========================
+# (Keep images in docs/README possible, ignore only generated outputs)
+psd_images/
 final_5_PSD/
 group_psd/
-psd_images/
 
-# ------ ANALYSIS OUTPUT ------
-Exploratory_Analysis_MS/Description of the tics by patients -- S.md
+# If you have a generic output folder for figures, add it here:
+# outputs/figures/
+
+# =========================
+# Legacy exploratory outputs (student work)
+# =========================
 Exploratory_Analysis_MS/TRF_results_all_patients/
 Exploratory_Analysis_MS/TRF_topomap_results_ (freq bands)/
 Exploratory_Analysis_MS/TRF_results_all_patients_boundary_effect/
 Exploratory_Analysis_MS/tfr_results/
 
-data
-derivatives
+# If that markdown file is truly generated and you don't want it tracked:
+Exploratory_Analysis_MS/Description of the tics by patients -- S.md
 
+# =========================
+# BIDS-like dataset: keep metadata, ignore subject data + derivatives outputs
+# =========================
 
+# Ignore all subject raw data (privacy + size)
+dataset/sub-*/
+
+# Ignore all derivatives outputs by default...
+dataset/derivatives/*
+
+# ...but keep derivative "identity" and structure for reproducibility
+!dataset/derivatives/preproc/
+!dataset/derivatives/preproc/dataset_description.json
+
+# Ignore actual subject-level derivative outputs
+dataset/derivatives/preproc/sub-*/
+
+# Optional: if you add sourcedata with videos etc, ignore it
+dataset/sourcedata/
 
 
