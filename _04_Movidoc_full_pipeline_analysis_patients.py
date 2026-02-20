@@ -20,7 +20,10 @@ from _02_Movidoc_tictrack_prepro_TTL_extraction_patients import (
     apply_ICA,
     apply_rest_reference,
     recalibrate_from_first_event,
-    collect_ttl_with_phases
+    collect_ttl_with_phases,
+    global_Autoreject,
+    rejection_threshold,
+    local_Autoreject,
 )
 
 from _03_Movidoc_tictrack_tic_extraction_patients import extract_tics_from_excel
@@ -47,6 +50,7 @@ import numpy as np
 import os
 
 import random
+import autoreject
 
 
 # Base directory for this project
@@ -291,7 +295,9 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     print(f"Subject name: {subject_name}")
     # events_times, _ = extract_stimuli(raw) # extract the TTL/events from the signal BEFORE the recalage
     raw_pre, bad_channels = preprocess_data(raw, subject_name, montage_name=montage_name) # filter the signal & apply the montage
-    raw_pre = apply_ICA(raw_pre, subject_name) # apply ICA to clean the signal from eye/muscle artifacts
+    reject = rejection_threshold(raw_pre, subject_name) # calculate the rejection threshold for autoreject
+    #epochs_ar, _ = global_Autoreject(raw_pre, subject_name) # apply autoreject to detect bad epochs and bad channels
+    raw_pre = apply_ICA(reject, raw_pre, subject_name) # apply ICA to clean the signal from eye/muscle artifacts
     raw_rest = apply_rest_reference(raw_pre, subject_name) # apply the REST reference
     print("Before crop:", raw_rest.annotations.onset[:5])
     # print("Checkpoint 1 : EEG preprocessing OK")
@@ -823,14 +829,16 @@ def full_pipeline_extract_pre_tic_epochs(patient, phase, nb_random_epochs):
         nb_random_epochs, epoch_duration=3,
         event_id=999, seed=42
     )
+    random_epochs_clean = local_Autoreject(random_epochs, results["subject"])
     
     # Phase-specific returns
     if phase == "spontaneous_phase":
         print("Processing spontaneous phase...")
         pre_tic_epochs = make_epochs(analysis_result, 3.0, 2.0)
+        pre_tic_epochs_clean = local_Autoreject(pre_tic_epochs, results["subject"])
         if pre_tic_epochs is None:
             print("WARNING: No spontaneous epochs found")
-        return pre_tic_epochs, random_epochs, results["bad_channels"]
+        return pre_tic_epochs_clean, random_epochs_clean, results["bad_channels"]
     
     else:
         # Imitated or suppressed (both return two lists)
@@ -847,7 +855,12 @@ def full_pipeline_extract_pre_tic_epochs(patient, phase, nb_random_epochs):
         if epochs2 is None:
             print(f"WARNING: No category 2 (real) epochs found for {phase}")
         
-        return epochs1, epochs2, random_epochs, results["bad_channels"]
+        # Clear the epochs with Autoreject
+        epochs1_clean = local_Autoreject(epochs1, results["subject"])
+        epochs2_clean = local_Autoreject(epochs2, results["subject"])
+        random_epochs_clean = local_Autoreject(random_epochs, results["subject"])
+        
+        return epochs1_clean, epochs2_clean, random_epochs_clean, results["bad_channels"]
 
 
 # ===============================================================
