@@ -16,6 +16,8 @@ import numpy as np
 from autoreject import Ransac  
 from autoreject.utils import interpolate_bads  
 from mne.preprocessing import ICA
+import autoreject
+from autoreject import get_rejection_threshold
 
 # Qt backend is required for interactive MNE visualizations
 from qtpy import QtWidgets
@@ -179,17 +181,47 @@ def preprocess_data(raw, subject_name, montage_name):
 
     return raw, bad_channels
 
+# ===============================================================================================================
+# Function : global_Autoreject
+# Purpose : to apply the Autoreject method for automatic detection & interpolation of bad channels and bad epochs, used for ICA fitting only 
+# ===============================================================================================================
+
+def global_Autoreject(raw, subject_name):
+    # create fixed-length epochs for the autoreject fitting
+    events = mne.make_fixed_length_events(raw, duration=2)
+    epochs_temp = mne.Epochs(raw, events, tmin=0.0, tmax=2, baseline=None, preload=True)
+    ar = autoreject.AutoReject(n_interpolate=[1, 2, 3, 4], random_state=11,
+                           n_jobs=1, verbose=True)
+    ar.fit(epochs_temp)
+    epochs_ar, reject_log = ar.transform(epochs_temp, return_log=True)
+
+    # visualize the dropped epochs
+    epochs_temp[reject_log.bad_epochs].plot(scalings=dict(eeg=100e-6))
+    reject_log.plot('horizontal')
+    return epochs_ar, reject_log
+
+# =================================================================
+# Function : rejection_threshold 
+# Purpose : to compute the rejection threshold for bad epochs based on the autoreject method, used for ICA fitting only
+# =================================================================
+def rejection_threshold(raw, subject_name):
+    events = mne.make_fixed_length_events(raw, duration=2)
+    epochs_temp = mne.Epochs(raw, events, tmin=0.0, tmax=2, baseline=None, preload=True)
+    reject = get_rejection_threshold(epochs_temp, decim=2)
+    epochs_temp.drop_bad(reject=reject)
+    epochs_temp.average().plot() 
+    return reject
+
+
+
 # ================================================================
 # Fuction : apply_ICA
 # Purpose : to apply ICA for artifact removal (eye blinks, muscle artifacts...)
 # ===============================================================
 
-def apply_ICA(raw, subject_name):
-    # ----- Autoreject global for ICA -----
+def apply_ICA( reject, raw, subject_name):
 
-    
-    # ------ ICA fitting -----
-    # Average before ICA 
+    '''Ddebugging : check the max value in the raw data to see if it's not an outlier that could cause problems for ICA (BB28)
     # Find when the max value occurs
     data = raw.get_data()
     ch_idx = raw.ch_names.index('T7')
@@ -198,7 +230,7 @@ def apply_ICA(raw, subject_name):
 
     # Plot around that time
     raw.plot(start=raw.times[time_of_max]-5, duration=10, scalings='auto')
-    
+
     print("Channel units:", raw.info['chs'][0]['unit'])
     print("Channel unit multiplier:", raw.info['chs'][0]['unit_mul'])
     data = raw.get_data()
@@ -217,29 +249,21 @@ def apply_ICA(raw, subject_name):
         print(f"{ch}: {np.max(np.abs(data[i])):.6f}")
 
     # Plot the raw data and check the scale
-
+    '''
+    # ------ Average reference before ICA fitting -----
     raw_avg = raw.copy().set_eeg_reference('average')
 
-    # filter data for ICA fitting 
+    # ------ Band-pass filter before ICA fitting -----
     filt_raw = raw_avg.filter(l_freq=1.0, h_freq = None)
     picks_eeg = mne.pick_types(filt_raw.info, meg=False, eeg=True, eog=False,
                                 exclude='bads')
     data = filt_raw.get_data()
 
-    # Compare raw vs filtered
-    print("Raw data max:", np.max(np.abs(raw.get_data())))
-    print("Filtered data max:", np.max(np.abs(filt_raw.get_data())))
-
-    print("Data max:", np.max(np.abs(data)))
-    print("Data mean:", np.mean(np.abs(data)))
-    print("Any flat channels:", np.any(data.std(axis=1) < 1e-10))
-
-
-    # fit ICA
+    # ------ ICA fitting -----
     #ica = ICA(n_components=15, method = 'picard', max_iter="auto", random_state=97)
     ica = mne.preprocessing.ICA(
     n_components=10,  method="picard", max_iter="auto", random_state=97)
-    ica.fit(filt_raw, picks = picks_eeg)
+    ica.fit(filt_raw, reject = reject,  picks = picks_eeg)
 
     ica.plot_components(show=True)
 
@@ -298,13 +322,21 @@ def apply_ICA(raw, subject_name):
     return raw
 
 # ==============================================================
-# Function : apply_Autoreject()
+# Function : local_Autoreject()
 # Purpose : to apply the Autoreject method for automatic detection & interpolation of bad channels and bad epochs 
 # ==============================================================
 
-def apply_Autoreject(epochs, subject_name):
+def local_Autoreject(epochs, subject_name):
+    n_epochs = len(epochs)
+    
+    if n_epochs < 5:
+        print(f"WARNING: Too few epochs ({n_epochs}) for autoreject, skipping")
+        return epochs
+    
+    # Set cv based on number of epochs
+    n_splits = min(10, n_epochs)
     ar = autoreject.AutoReject(n_interpolate=[1, 2, 3, 4], random_state=11,
-                           n_jobs=1, verbose=True)
+                           n_jobs=1, verbose=True, cv=n_splits)
     ar.fit(epochs)  
     epochs_clean, reject_log = ar.transform(epochs, return_log=True)
     # See which epochs were rejected
@@ -313,7 +345,6 @@ def apply_Autoreject(epochs, subject_name):
     # See the cleaned epochs
     epochs_clean.plot(show=True)
     return epochs_clean
-
 
 
 # ==============================================================
