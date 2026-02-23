@@ -153,22 +153,53 @@ def preprocess_data(raw, subject_name, montage_name):
     # fig.set_size_inches(30,18)
     # fig.suptitle("Figure 2 : EEG Signal after Band-pass & Notch Filtering")
 
-    # Exclude bad channels using ransac method 
+    return raw
+
+# ============================================================================
+# Function : Ransac_bad_channel_detection
+# Purpose : to apply the Ransac method for automatic detection of bad channels
+# ============================================================================
+def Ransac_bad_channel_detection(raw, subject_name):
+    eeg_channels = mne.pick_types(raw.info, meg=False, eeg=True)
+
     temporary_epochs = mne.make_fixed_length_epochs(raw, duration=10.0, overlap=2.0, preload=True)
-    ransac = Ransac( n_jobs=1)
+
+    # Plot butterfly to visually inspect channels
+    temporary_epochs.average().plot(spatial_colors=True, titles=f'Butterfly plot - {subject_name}')
+
+    # Check the max amplitude per channel to identify potential outliers
+    data, times = raw.get_data(return_times=True)
+    # Find channel with max absolute amplitude
+    max_amp = np.max(np.abs(data), axis=1)
+    bad_idx = np.argmax(max_amp)
+    print(f"Spiky channel: {raw.ch_names[bad_idx]}, max amplitude: {max_amp[bad_idx]*1e6:.1f} µV")
+
+    ransac = Ransac(n_jobs=1, verbose = True)
     ransac.fit_transform(temporary_epochs)
     raw.info['bads'].extend(ransac.bad_chs_)
     bad_channels = raw.info['bads']
     print("Ransac detected bad channels:", ransac.bad_chs_)
 
         # add bad channels 
+    if subject_name == '000010':
+        raw.info['bads'].append('Fp2')
+        raw.info['bads'].append('Fp1')
+
+    if subject_name == '_BB28-bis':
+        raw.info['bads'].append('Fp1')
+        raw.info['bads'].append('Fp2')
+        raw.info['bads'].append('T7')
+  
+
     if subject_name == '000030':
         raw.info['bads'].append('FT9')
         raw.info['bads'].append('AFz')
 
-    # fig = raw.plot( start = 300, duration = 300, title="Raw EEG Signal", show=True, scalings = 'auto', n_channels = len(eeg_channels))
-    # fig.set_size_inches(30,18)
-    # fig.suptitle("Figure 1 : Raw EEG Signal")
+
+    #plot the average signal across channels to visually inspect the effect of bad channels (after exclusion)
+    print(f"Bad channels marked for {subject_name} : {raw.info['bads']}")
+    temporary_epochs = mne.make_fixed_length_epochs(raw, duration=10.0, overlap=2.0, preload=True)
+    temporary_epochs.average().plot(spatial_colors=True, titles=f'Butterfly plot (after exclusion) - {subject_name}')
 
     # Plot after preprocessing
     fig = raw.plot(duration=10,start = 210, n_channels=len(eeg_channels), title='Preprocessed EEG - eyes open phase (10s)', show=True)
@@ -177,9 +208,8 @@ def preprocess_data(raw, subject_name, montage_name):
     fig = raw.plot(duration=10,start = 720, n_channels=len(eeg_channels), title='Preprocessed EEG - spontaneous tics phase (10s)', show=True)
     fig.set_size_inches(30,18)
     fig.suptitle("Figure 2 : Preprocessed EEG Signal - spontaneous tics phase (10s)")
-
-
     return raw, bad_channels
+
 
 # ===============================================================================================================
 # Function : global_Autoreject
@@ -190,6 +220,7 @@ def global_Autoreject(raw, subject_name):
     # create fixed-length epochs for the autoreject fitting
     events = mne.make_fixed_length_events(raw, duration=2)
     epochs_temp = mne.Epochs(raw, events, tmin=0.0, tmax=2, baseline=None, preload=True)
+    epochs_temp.average().plot(titles = f'Butterfly plot before autoreject (global) - {subject_name}') # plot with time vs amplitude for each channel
     ar = autoreject.AutoReject(n_interpolate=[1, 2, 3, 4], random_state=11,
                            n_jobs=1, verbose=True)
     ar.fit(epochs_temp)
@@ -198,6 +229,8 @@ def global_Autoreject(raw, subject_name):
     # visualize the dropped epochs
     epochs_temp[reject_log.bad_epochs].plot(scalings=dict(eeg=100e-6))
     reject_log.plot('horizontal')
+    print(epochs_ar.keys()) 
+    epochs.arverage().plot(titles = f'Butterfly plot after autoreject (global) - {subject_name}') # plot with time vs amplitude for each channel
     return epochs_ar, reject_log
 
 # =================================================================
@@ -209,8 +242,9 @@ def rejection_threshold(raw, subject_name):
     epochs_temp = mne.Epochs(raw, events, tmin=0.0, tmax=2, baseline=None, preload=True)
     reject = get_rejection_threshold(epochs_temp, decim=2)
     epochs_temp.drop_bad(reject=reject)
-    epochs_temp.average().plot() 
-    return reject
+    epochs_temp.average().plot(titles = f'Butterfly plot after epoch exclusion (rejection_threshold) - {subject_name}') # plot with time vs amplitude for each channel 
+    epochs_temp.plot_drop_log() #  bar plot showing which channels caused the most rejections
+    return reject # outputs a dict with the rejection threshold for each channel type 
 
 
 
@@ -219,7 +253,7 @@ def rejection_threshold(raw, subject_name):
 # Purpose : to apply ICA for artifact removal (eye blinks, muscle artifacts...)
 # ===============================================================
 
-def apply_ICA( reject, raw, subject_name):
+def apply_ICA(epochs_ar, raw, subject_name):
 
     '''Ddebugging : check the max value in the raw data to see if it's not an outlier that could cause problems for ICA (BB28)
     # Find when the max value occurs
@@ -251,10 +285,12 @@ def apply_ICA( reject, raw, subject_name):
     # Plot the raw data and check the scale
     '''
     # ------ Average reference before ICA fitting -----
-    raw_avg = raw.copy().set_eeg_reference('average')
+    raw_avg = epochs_ar.copy().set_eeg_reference('average', projection = True) 
+    
+
 
     # ------ Band-pass filter before ICA fitting -----
-    filt_raw = raw_avg.filter(l_freq=1.0, h_freq = None)
+    filt_raw = raw.filter(l_freq=1.0, h_freq = None)
     picks_eeg = mne.pick_types(filt_raw.info, meg=False, eeg=True, eog=False,
                                 exclude='bads')
     data = filt_raw.get_data()
@@ -263,9 +299,9 @@ def apply_ICA( reject, raw, subject_name):
     #ica = ICA(n_components=15, method = 'picard', max_iter="auto", random_state=97)
     ica = mne.preprocessing.ICA(
     n_components=10,  method="picard", max_iter="auto", random_state=97)
-    ica.fit(filt_raw, reject = reject,  picks = picks_eeg)
-
-    ica.plot_components(show=True)
+    ica.fit(filt_raw, picks = picks_eeg) # reject=reject epochs that exceed the threshold are not considered in ICA fitting  #reject = reject, 
+ 
+    ica.plot_components(show=True) # topomaps showing each ICA component and its spatial distribution
 
     ica.exclude = []
 
@@ -282,7 +318,7 @@ def apply_ICA( reject, raw, subject_name):
     # -------------- Manual exclusion --------------
     #manually exclude [0,1] components for patient DS26
     if subject_name == '000010' : # DS26
-        ica.exclude = [0, 2, 3, 4, 6]
+        ica.exclude = [0, 1, 4, 5]
 
     if subject_name == '_BB28-bis': # BB28
         ica.exclude = [0, 1, 2]
@@ -298,11 +334,11 @@ def apply_ICA( reject, raw, subject_name):
 
     # 10 second segments gives ~160 segments instead of 800
     epochs_viz = mne.make_fixed_length_epochs(raw, duration=20.0, preload=True)
-    ica.plot_properties(epochs_viz, picks=range(10))
+    ica.plot_properties(epochs_viz, picks=range(10)) # plot the properties of the ICA components to help identify which ones to exclude (topomap, time series, power spectrum)
     #ica.plot_properties(raw)
-    ica.plot_sources(raw, picks = range(10) , show=True)
+    ica.plot_sources(raw, picks = range(10) , show=True) # plot the time series of the ICA components 
     # plot the ICA components after correction to verify the effect of the artifact removal
-    ica.plot_overlay(raw, exclude=ica.exclude)
+    ica.plot_overlay(raw, exclude=ica.exclude) # plot the raw signal before and after ICA correction to visualize the effect of artifact removal (overlaid)
 
     # 4. Check ICA
     print("N components fitted:", ica.n_components_)
@@ -335,7 +371,7 @@ def local_Autoreject(epochs, subject_name):
     
     # Set cv based on number of epochs
     n_splits = min(10, n_epochs)
-    ar = autoreject.AutoReject(n_interpolate=[1, 2, 3, 4], random_state=11,
+    ar = autoreject.AutoReject(n_interpolate=[1, 2, 3, 4, 5], random_state=11,
                            n_jobs=1, verbose=True, cv=n_splits)
     ar.fit(epochs)  
     epochs_clean, reject_log = ar.transform(epochs, return_log=True)
@@ -344,6 +380,7 @@ def local_Autoreject(epochs, subject_name):
 
     # See the cleaned epochs
     epochs_clean.plot(show=True)
+   
     return epochs_clean
 
 
