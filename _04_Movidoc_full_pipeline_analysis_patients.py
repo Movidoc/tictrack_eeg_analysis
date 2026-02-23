@@ -24,6 +24,7 @@ from _02_Movidoc_tictrack_prepro_TTL_extraction_patients import (
     global_Autoreject,
     rejection_threshold,
     local_Autoreject,
+    Ransac_bad_channel_detection,
 )
 
 from _03_Movidoc_tictrack_tic_extraction_patients import extract_tics_from_excel
@@ -294,10 +295,11 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     raw, subject_name = load_data(vhdr_path) # charge the EEG file & get the name of the subject
     print(f"Subject name: {subject_name}")
     # events_times, _ = extract_stimuli(raw) # extract the TTL/events from the signal BEFORE the recalage
-    raw_pre, bad_channels = preprocess_data(raw, subject_name, montage_name=montage_name) # filter the signal & apply the montage
-    reject = rejection_threshold(raw_pre, subject_name) # calculate the rejection threshold for autoreject
-    #epochs_ar, _ = global_Autoreject(raw_pre, subject_name) # apply autoreject to detect bad epochs and bad channels
-    raw_pre = apply_ICA(reject, raw_pre, subject_name) # apply ICA to clean the signal from eye/muscle artifacts
+    raw_pre = preprocess_data(raw, subject_name, montage_name=montage_name) # filter the signal & apply the montage
+    raw_pre, bad_channels = Ransac_bad_channel_detection(raw_pre, subject_name) # apply RANSAC to detect bad channels
+    #reject = rejection_threshold(raw_pre, subject_name) # calculate the rejection threshold for autoreject
+    epochs_ar, _ = global_Autoreject(raw_pre, subject_name) # apply autoreject to detect bad epochs and bad channels
+    raw_pre = apply_ICA(epochs_ar, raw_pre, subject_name) # apply ICA to clean the signal from eye/muscle artifacts
     raw_rest = apply_rest_reference(raw_pre, subject_name) # apply the REST reference
     print("Before crop:", raw_rest.annotations.onset[:5])
     # print("Checkpoint 1 : EEG preprocessing OK")
