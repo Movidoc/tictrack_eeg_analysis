@@ -1,18 +1,31 @@
-# --- FICHIERS EEG ---
+# =========================
+# Python / cache
+# =========================
+*.pyc
+__pycache__/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# =========================
+# EEG / neuroimaging data (do not commit)
+# =========================
 *.eeg
 *.vhdr
 *.vmrk
 *.fif
 
-# --- FICHIERS IMAGES ---
-*.png
-*.eps
+# If you ever use other EEG formats:
+*.edf
+*.bdf
+*.set
+*.fdt
 
-# --- FICHIERS GÉNÉRÉS PYTHON ---
-*.pyc
-__pycache__/
-
-# --- FICHIERS NUMPY ---
+# =========================
+# Numpy / data blobs
+# =========================
 *.npy
 *.npz
 

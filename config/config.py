@@ -143,7 +143,6 @@ OUTPUTS:
 from pathlib import Path
 import os
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Optional, List, Dict
 
 # --- 1. DATA STRUCTURE DEFINITION ---
@@ -160,14 +159,10 @@ class SubjectConfig:
 
 # --- 2. PATH MANAGEMENT ---
 
-BASE_DIR = Path(os.getcwd())
-RAW_DATA_DIR = Path("/mnt/c/Users/lizbe/Documents/EEG_Data")
-DERIVATIVES_DIR = BASE_DIR / "derivatives"
-REPORTS_DIR = DERIVATIVES_DIR / "reports"
-
-# Create folders if they don't exist
-for folder in [DERIVATIVES_DIR, REPORTS_DIR]:
-    folder.mkdir(parents=True, exist_ok=True)
+BASE_DIR = Path(__file__).resolve().parents[1]
+DATASET_DIR = BASE_DIR / "dataset"
+DERIVATIVES_DIR = DATASET_DIR / "derivatives"
+PREPROC_DIR = DERIVATIVES_DIR / "preproc"
 
 # --- 3. TRIGGER DEFINITION (Integers) ---
 
@@ -214,7 +209,7 @@ def _format_bv_label(code: int) -> str:
     else:
         return f"Stimulus/S {code}"   # One space for double/triple digits
 
-TTL_MAP = {_format_bv_label(k): v for k, v in RAW_TRIGGERS.items()}
+TTL_MAP = {_format_bv_label(k): v for k, v in TTL_LABELS.items()}
 
 # --- 5. PIPELINE PARAMETERS ---
 
@@ -257,5 +252,5 @@ PATIENTS = {
 
 if __name__ == "__main__":
     print(f"[INFO] Configuration file loaded successfully.")
-    print(f"[INFO] Path: {RAW_DATA_DIR}")
+    print(f"[INFO] Dataset dir: {DATASET_DIR}")
     print(f"[INFO] Mapped {len(TTL_LABELS)} distinct triggers.")
