@@ -32,8 +32,8 @@ venv/
 # ------ WHOLE FOLDERS ------
 _indira/
 _martyna/
-data/
-derivatives/
+dataset/sub-*
+
 
 
 

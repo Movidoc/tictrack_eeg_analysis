@@ -1,3 +1,10 @@
+
+# ❀ ---------------------------------------------- ❀
+# Project : 01_extract_events_tsv.py
+# Author  : LizbethMG
+# Goal: Extract TTL events from BrainVision .vhdr files and save as BIDS-like events.tsv
+# ❀ ---------------------------------------------- ❀
+
 from __future__ import annotations
 
 import argparse
@@ -6,11 +13,16 @@ import re
 from collections import Counter
 import pandas as pd
 import mne
+import sys
+import os
+
+# This adds the parent directory to your Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Your config lives in config/config.py
 from config.config import TTL_MAP, DATASET_DIR
 
-# Dataset constants (you told me: 1 session, 1 run)
+# Dataset constants (1 session, 1 run)
 TASK = "tictrack"
 SES = "01"
 RUN = "01"
