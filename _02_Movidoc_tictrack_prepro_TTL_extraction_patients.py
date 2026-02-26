@@ -9,10 +9,9 @@
 # ============================================================
 # Libraries
 # ============================================================
-
+import numpy as np
 import os
 import mne
-import numpy as np
 from autoreject import Ransac  
 from autoreject.utils import interpolate_bads  
 from mne.preprocessing import ICA
@@ -168,7 +167,11 @@ def preprocess_data(raw, subject_name, montage_name):
 def Ransac_bad_channel_detection(raw, subject_name):
     eeg_channels = mne.pick_types(raw.info, meg=False, eeg=True)
 
-    temporary_epochs = mne.make_fixed_length_epochs(raw, duration=10.0, overlap=2.0, preload=True)
+    # average reference for Ransac
+    raw_avg = raw.copy().set_eeg_reference('average') 
+
+
+    temporary_epochs = mne.make_fixed_length_epochs(raw_avg, duration=3.0, overlap=0.0, preload=True)
 
     # Plot butterfly to visually inspect channels
     temporary_epochs.average().plot(spatial_colors=True, titles=f'Butterfly plot - {subject_name}')
@@ -188,9 +191,9 @@ def Ransac_bad_channel_detection(raw, subject_name):
     print("Ransac detected bad channels:", ransac.bad_chs_)
 
         # add bad channels 
-    if subject_name == '000010':
-        raw.info['bads'].append('Fp2')
-        raw.info['bads'].append('Fp1')
+    # if subject_name == '000010':
+    #     raw.info['bads'].append('Fp2')
+    #     raw.info['bads'].append('Fp1')
  
 
 
@@ -217,7 +220,8 @@ def Ransac_bad_channel_detection(raw, subject_name):
     return raw, bad_channels
 
 
-
+'''
+Global_Autoreject is too slow and too strict (almost all epochs are removed)
 
 # ===============================================================================================================
 # Function : global_Autoreject
@@ -226,9 +230,9 @@ def Ransac_bad_channel_detection(raw, subject_name):
 
 def global_Autoreject(raw, subject_name):
     # create fixed-length epochs for the autoreject fitting
-    raw.copy().crop(tmin=200, tmax=260) # use only the first 5 minutes of the signal for autoreject fitting to save time
-    events = mne.make_fixed_length_events(raw, duration=3)
-    epochs_temp = mne.Epochs(raw, events, tmin=0.0, tmax=3, baseline=None, preload=True)
+    raw_crop = raw.copy().crop(tmin=200, tmax=800) # use only the first 5 minutes of the signal for autoreject fitting to save time
+    events = mne.make_fixed_length_events(raw_crop, duration=3)
+    epochs_temp = mne.Epochs(raw_crop, events, tmin=0.0, tmax=3, baseline=None, preload=True)
     epochs_temp.average().plot(titles = f'Butterfly plot before autoreject (global) - {subject_name}') # plot with time vs amplitude for each channel
     ar = autoreject.AutoReject(n_interpolate=[1, 2, 3, 4], random_state=11,
                            n_jobs=1, verbose=True)
@@ -239,30 +243,83 @@ def global_Autoreject(raw, subject_name):
     epochs_temp[reject_log.bad_epochs].plot(scalings=dict(eeg=100e-6))
     reject_log.plot('horizontal')
     epochs_temp.average().plot(titles = f'Butterfly plot after autoreject (global) - {subject_name}') # plot with time vs amplitude for each channel
+    epochs_temp.plot_drop_log() # bar plot showing which channels caused the most rejections
     return epochs_ar, reject_log
+'''
 
 # =================================================================
 # Function : rejection_threshold 
 # Purpose : to compute the rejection threshold for bad epochs based on the autoreject method, used for ICA fitting only
 # =================================================================
 def rejection_threshold(raw, subject_name):
-    events = mne.make_fixed_length_events(raw, duration=2)
-    epochs_temp = mne.Epochs(raw, events, tmin=0.0, tmax=2, baseline=None, preload=True)
+    raw_avg = raw.copy().set_eeg_reference('average')
+    events = mne.make_fixed_length_events(raw_avg, duration=2)
+    epochs_temp = mne.Epochs(raw_avg, events, tmin=0.0, tmax=2, baseline=None, preload=True)
     reject = get_rejection_threshold(epochs_temp, decim=2)
     epochs_temp.drop_bad(reject=reject)
     epochs_temp.average().plot(titles = f'Butterfly plot after epoch exclusion (rejection_threshold) - {subject_name}') # plot with time vs amplitude for each channel 
     plt.show(block = True)
     epochs_temp.plot_drop_log() #  bar plot showing which channels caused the most rejections
-    return reject # outputs a dict with the rejection threshold for each channel type 
+    print(f"Rejection thresholds for ICA fitting: {reject}")
+    print(f"Number of epochs after rejection: {len(epochs_temp)}")
+    return reject, epochs_temp # outputs a dict with the rejection threshold for each channel type 
 
+# ==================================================================================================================
+# Function: std_threshold 
+# Purpose: to compute the rejection threshold for bad epochs based on a simple standard deviation method (z-score)
+# https://github.com/weiglszonja/meeg-tools/blob/master/tutorials/preprocessing_tutorial_with_triggers.ipynb
+# =================================================================================================================
+def rejection_threshold_std(raw, subject_name, threshold=3.0):
+    """
+    Computes rejection threshold for bad epochs based on the FASTER algorithm.
+    """
+    from mne.preprocessing.bads import _find_outliers
 
+    raw_avg = raw.copy().set_eeg_reference('average')
+    events = mne.make_fixed_length_events(raw_avg, duration=2)
+    epochs_temp = mne.Epochs(raw_avg, events, tmin=0.0, tmax=2, baseline=None, preload=True)
+
+    def _deviation(data):
+        """Computes the deviation from mean for each channel."""
+        channels_mean = np.mean(data, axis=2)
+        return channels_mean - np.mean(channels_mean, axis=0)
+
+    metrics = {
+        "amplitude": lambda x: np.mean(np.ptp(x, axis=2), axis=1),
+        "deviation": lambda x: np.mean(_deviation(x), axis=1),
+        "variance":  lambda x: np.mean(np.var(x, axis=2), axis=1),
+    }
+
+    epochs_data = epochs_temp.get_data()
+    bad_epochs = []
+
+    print(f"\nFASTER epoch rejection for {subject_name}:")
+    for metric_name, metric_func in metrics.items():
+        scores = metric_func(epochs_data)
+        outliers = _find_outliers(scores, threshold=threshold)
+        print(f"  Bad epochs by {metric_name}: {outliers}")
+        for idx in outliers:
+            print(f"Epoch {idx} (t={idx*2:.1f}s): score={scores[idx]:.4f}")
+        bad_epochs.extend(outliers)
+
+    bad_epochs = list(set(bad_epochs))
+    print(f"\n  Total bad epochs (union): {len(bad_epochs)} → {bad_epochs}")
+
+    epochs_temp.drop(bad_epochs, reason='FASTER')
+    print(f"  Remaining epochs: {len(epochs_temp)}")
+
+    epochs_temp.average().plot(titles=f'Butterfly plot after FASTER rejection - {subject_name}')
+    plt.show(block=True)
+    epochs_temp.plot_drop_log()
+
+    return epochs_temp
 
 # ================================================================
 # Fuction : apply_ICA
 # Purpose : to apply ICA for artifact removal (eye blinks, muscle artifacts...)
 # ===============================================================
 
-def apply_ICA(reject, raw, subject_name):
+def apply_ICA(epochs_ica, raw, subject_name):
 
     '''
     #Ddebugging : check the max value in the raw data to see if it's not an outlier that could cause problems for ICA (BB28)
@@ -296,12 +353,12 @@ def apply_ICA(reject, raw, subject_name):
     # Plot the raw data and check the scale
     
     # ------ Average reference before ICA fitting -----
-    raw_avg = raw.copy().set_eeg_reference('average') 
+    #raw_avg = epochs_temp.copy().set_eeg_reference('average') 
     
 
 
     # ------ Band-pass filter before ICA fitting -----
-    filt_raw = raw.filter(l_freq=1.0, h_freq = None)
+    filt_raw = epochs_ica.copy().filter(l_freq=1.0, h_freq = None)
     picks_eeg = mne.pick_types(filt_raw.info, meg=False, eeg=True, eog=False,
                                 exclude='bads')
     data = filt_raw.get_data()
@@ -309,13 +366,14 @@ def apply_ICA(reject, raw, subject_name):
     # ------ ICA fitting -----
     #ica = ICA(n_components=15, method = 'picard', max_iter="auto", random_state=97)
     ica = mne.preprocessing.ICA(
-    n_components=10,  method="picard", max_iter="auto", random_state=97)
-    ica.fit(filt_raw, picks = picks_eeg, reject=reject) # reject=reject epochs that exceed the threshold are not considered in ICA fitting 
+    n_components=20,  method="picard", max_iter="auto", random_state=97)
+    ica.fit(filt_raw, picks = picks_eeg) # reject=reject epochs that exceed the threshold are not considered in ICA fitting 
  
     ica.plot_components(show=True) # topomaps showing each ICA component and its spatial distribution
     plt.show(block = True)
 
     ica.exclude = []
+
 
     # ------------- Comparison to the baseline channel --------------
     # find which ICs match the EOG pattern
@@ -330,13 +388,13 @@ def apply_ICA(reject, raw, subject_name):
     # -------------- Manual exclusion --------------
     #manually exclude [0,1] components for patient DS26
     if subject_name == '000010' : # DS26
-        ica.exclude = [0, 1, 4, 5]
+        ica.exclude = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 15, 16, 17, 19]
 
     if subject_name == '_BB28-bis': # BB28
         ica.exclude = [0, 2, 7]
 
     if subject_name == '000013' : # BC29
-        ica.exclude = [0,1 2, 4, 6, 8 ]
+        ica.exclude = [0,1 , 2, 4, 6, 8 ]
     
     if subject_name == '000030' : # MM30
         ica.exclude = [0]
@@ -345,10 +403,9 @@ def apply_ICA(reject, raw, subject_name):
         ica.exclude = [0]
 
     # 10 second segments gives ~160 segments instead of 800
-    epochs_viz = mne.make_fixed_length_epochs(raw, duration=20.0, preload=True)
-    ica.plot_properties(epochs_viz, picks=range(10)) # plot the properties of the ICA components to help identify which ones to exclude (topomap, time series, power spectrum)
+    ica.plot_properties(epochs_ica[:100], picks=range(20), psd_args={'fmax': 45}) # plot the properties of the ICA components to help identify which ones to exclude (topomap, time series, power spectrum)
     #ica.plot_properties(raw)
-    ica.plot_sources(raw, picks = range(10) , show=True) # plot the time series of the ICA components 
+    ica.plot_sources(raw, picks = range(20) , show=True) # plot the time series of the ICA components 
     # plot the ICA components after correction to verify the effect of the artifact removal
     ica.plot_overlay(raw, exclude=ica.exclude) # plot the raw signal before and after ICA correction to visualize the effect of artifact removal (overlaid)
 
@@ -389,9 +446,13 @@ def local_Autoreject(epochs, subject_name):
     epochs_clean, reject_log = ar.transform(epochs, return_log=True)
     # See which epochs were rejected
     reject_log.plot('horizontal')
+    # plot the rejected epochs
+
+    epochs[reject_log.bad_epochs].plot( title=f"Rejected epochs - {subject_name}")
 
     # See the cleaned epochs
     epochs_clean.plot(show=True)
+
    
     return epochs_clean
 

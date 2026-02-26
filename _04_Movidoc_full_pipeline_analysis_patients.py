@@ -297,9 +297,9 @@ def run_full_pipeline_for_patient(vhdr_path, excel_path, fps, min_absence_frames
     # events_times, _ = extract_stimuli(raw) # extract the TTL/events from the signal BEFORE the recalage
     raw_pre = preprocess_data(raw, subject_name, montage_name=montage_name) # filter the signal & apply the montage
     raw_pre, bad_channels = Ransac_bad_channel_detection(raw_pre, subject_name) # apply RANSAC to detect bad channels
-    #reject = rejection_threshold(raw_pre, subject_name) # calculate the rejection threshold for autoreject
-    epochs_ar, _ = global_Autoreject(raw_pre, subject_name) # apply autoreject to detect bad epochs and bad channels
-    raw_pre = apply_ICA(epochs_ar, raw_pre, subject_name) # apply ICA to clean the signal from eye/muscle artifacts
+    reject = rejection_threshold(raw_pre, subject_name) # calculate the rejection threshold for autoreject
+    #epochs_ar, _ = global_Autoreject(raw_pre, subject_name) # apply autoreject to detect bad epochs and bad channels
+    raw_pre = apply_ICA(reject, raw_pre, subject_name) # apply ICA to clean the signal from eye/muscle artifacts
     raw_rest = apply_rest_reference(raw_pre, subject_name) # apply the REST reference
     print("Before crop:", raw_rest.annotations.onset[:5])
     # print("Checkpoint 1 : EEG preprocessing OK")
@@ -857,10 +857,12 @@ def full_pipeline_extract_pre_tic_epochs(patient, phase, nb_random_epochs):
         if epochs2 is None:
             print(f"WARNING: No category 2 (real) epochs found for {phase}")
         
+        
         # Clear the epochs with Autoreject
         epochs1_clean = local_Autoreject(epochs1, results["subject"])
         epochs2_clean = local_Autoreject(epochs2, results["subject"])
         random_epochs_clean = local_Autoreject(random_epochs, results["subject"])
+        
         
         return epochs1_clean, epochs2_clean, random_epochs_clean, results["bad_channels"]
 
