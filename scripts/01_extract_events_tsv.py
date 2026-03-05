@@ -1,0 +1,201 @@
+
+# ❀ ---------------------------------------------- ❀
+# Project : 01_extract_events_tsv.py
+# Author  : LizbethMG
+# Goal: Extract TTL events from BrainVision .vhdr files and save as BIDS-like events.tsv
+# ❀ ---------------------------------------------- ❀
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+import re
+from collections import Counter
+import pandas as pd
+import mne
+import sys
+import os
+
+# This adds the parent directory to your Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# Your config lives in config/config.py
+from config.config import TTL_MAP, DATASET_DIR, PREPROC_DIR, PHASES_TTL
+
+# Dataset constants (1 session, 1 run)
+TASK = "tictrack"
+SES = "01"
+RUN = "01"
+
+# BrainVision "Stimulus" marker strings look like: "Stimulus/S  3"
+BV_STIM_RE = re.compile(r"^Stimulus/S\s+\d+$")
+
+
+def bids_eeg_dir(sub: str) -> Path:
+    return DATASET_DIR / sub / f"ses-{SES}" / "excel"
+
+def bids_vhdr_path(sub: str) -> Path:
+    return DATASET_DIR / sub / f"ses-{SES}" / "eeg"/ f"{sub}_task-{TASK}.vhdr"
+
+
+
+def extract_ttl_events(raw: mne.io.BaseRaw) -> pd.DataFrame:
+    """
+    Convert MNE annotations to a tidy TTL events table.
+    Further add phase labels to each event 
+    Why annotations?
+    - BrainVision markers are loaded by MNE as raw.annotations (onset/duration/description).
+    We keep only Stimulus TTL-like descriptions and map them using TTL_MAP.
+    """
+    ann = raw.annotations
+    rows = []
+
+    # Build phase intervals from annotations
+    phase_intervals = {}
+    for phase_name, t in PHASES_TTL.items():
+        start = [onset for onset, desc in zip(ann.onset, ann.description) if desc == t["start"]]
+        end   = [onset for onset, desc in zip(ann.onset, ann.description) if desc == t["end"]]
+        if start and end:
+            phase_intervals[phase_name] = (start[0], end[0])
+        else:
+            phase_intervals[phase_name] = None
+
+    for onset, duration, desc in zip(ann.onset, ann.duration, ann.description):
+        if not BV_STIM_RE.match(desc):
+            continue
+
+        trial_type = TTL_MAP.get(desc, "UNKNOWN")
+
+        # find which phase this TTL belongs to
+        phase = None
+        for phase_name, interval in phase_intervals.items():
+            if interval is None:
+                continue
+            start_t, end_t = interval
+               # last phase includes end, all others exclude it
+            if phase_name == list(phase_intervals.keys())[-1]:
+                if start_t <= onset <= end_t:
+                    phase = phase_name
+                    break
+            else:
+                if start_t <= onset < end_t:
+                    phase = phase_name
+                    break
+
+        rows.append(
+            {
+                "onset": float(onset),
+                "duration": float(duration) if duration is not None else 0.0,
+                "trial_type": trial_type,  # interpreted label
+                "value": desc,             # raw BrainVision marker string
+                "phase": phase,           # new column with phase label
+            }
+        )
+
+    df = pd.DataFrame(rows).sort_values("onset").reset_index(drop=True)
+    return df
+
+
+def write_qc_summary(df: pd.DataFrame, out_path: Path) -> None:
+    """
+    Write a simple QC summary alongside events.tsv:
+    - counts per trial_type
+    - counts per raw value
+    """
+    counts_trial_type = Counter(df["trial_type"].tolist())
+    counts_value = Counter(df["value"].tolist())
+
+    qc_lines = []
+    qc_lines.append("=== QC SUMMARY: COUNTS BY trial_type ===")
+    for k, v in counts_trial_type.most_common():
+        qc_lines.append(f"{k}\t{v}")
+
+    qc_lines.append("\n=== QC SUMMARY: COUNTS BY raw value (BrainVision string) ===")
+    for k, v in counts_value.most_common():
+        qc_lines.append(f"{k}\t{v}")
+
+    out_path.write_text("\n".join(qc_lines), encoding="utf-8")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Extract BrainVision TTL markers to BIDS-like events.tsv"
+    )
+    parser.add_argument(
+        "--sub",
+        nargs="*",
+        default=None,
+        help="Subjects to process, e.g. --sub sub-028 sub-029. Default: all dataset/sub-*",
+    )
+    parser.add_argument(
+        "--recalibrated",
+        action="store_true",
+        help="If set, load recalibrated .fif instead of raw .vhdr",
+    )
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+
+    # Discover subjects from dataset folder
+    all_subjects = sorted([p.name for p in DATASET_DIR.glob("sub-*") if p.is_dir()])
+    if not all_subjects:
+        raise RuntimeError(
+            f"No subjects found in {DATASET_DIR}. Expected folders like dataset/sub-001/"
+        )
+
+    # Select subset if requested
+    subjects = args.sub if args.sub else all_subjects
+
+    # Validate selection
+    missing = [s for s in subjects if s not in all_subjects]
+    if missing:
+        raise RuntimeError(f"Requested subjects not found in dataset: {missing}")
+
+    for sub in subjects:
+        if args.recalibrated:
+            # load the recalibrated fif saved by 03_align.py
+            fif_path = PREPROC_DIR / sub /"realign" / f"{sub}_ses-01_task-tictrack_aligned_raw.fif"
+            print(f"[INFO] Loading recalibrated EEG: {fif_path}")
+            raw = mne.io.read_raw_fif(fif_path, preload=False, verbose="ERROR")
+        else:
+            vhdr = bids_vhdr_path(sub)
+            if not vhdr.exists():
+                print(f"[SKIP] Missing vhdr for {sub}: {vhdr}")
+                continue
+
+            # Load without preload (fast). We only need annotations.
+            raw = mne.io.read_raw_brainvision(vhdr, preload=False, verbose="ERROR")
+
+        df = extract_ttl_events(raw)
+
+        # Hard fail if UNKNOWN TTLs exist: prevents silent mislabeling
+        unknown = df[df["trial_type"] == "UNKNOWN"]
+        if len(unknown) > 0:
+            examples = unknown["value"].value_counts().head(10).to_dict()
+            raise RuntimeError(
+                f"{sub}: Found UNKNOWN TTLs (not in TTL_MAP).\n"
+                f"Examples (value:count): {examples}\n"
+                f"Fix: add the missing codes to TTL_LABELS in config/config.py."
+            )
+
+        if args.recalibrated:
+            out_events = bids_eeg_dir(sub) / f"{sub}_ses-{SES}_task-{TASK}_run-{RUN}_events_recalibrated.tsv"
+            df.to_csv(out_events, sep="\t", index=False)
+            out_qc = bids_eeg_dir(sub) / f"{sub}_ses-{SES}_task-{TASK}_run-{RUN}_events_recalibrated_qc.txt"
+        else:
+            out_events = bids_eeg_dir(sub) / f"{sub}_ses-{SES}_task-{TASK}_run-{RUN}_events.tsv"
+            df.to_csv(out_events, sep="\t", index=False)
+
+            out_qc = bids_eeg_dir(sub) / f"{sub}_ses-{SES}_task-{TASK}_run-{RUN}_events_qc.txt"
+        write_qc_summary(df, out_qc)
+
+        print(f"[OK] {sub}: wrote {out_events.name} ({len(df)} TTL events)")
+        print(f"[OK] {sub}: wrote {out_qc.name}")
+
+    print("[DONE] TTL extraction complete.")
+
+
+if __name__ == "__main__":
+    main()
