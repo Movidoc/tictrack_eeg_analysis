@@ -5,6 +5,11 @@
 # Goal: Extract TTL events from BrainVision .vhdr files and save as BIDS-like events.tsv
 # ❀ ---------------------------------------------- ❀
 
+"""
+Summary of TTLs and their times. 
+Used for visual inspection and sanity checks (raw data, and calibrated)
+
+"""
 from __future__ import annotations
 
 import argparse
