@@ -151,6 +151,7 @@ class SubjectConfig:
     sub_id: str
     vhdr_path: Path
     excel_path: Path
+    fps: int
     montage: str = "standard_1020"
     eog_chs: List[str] = field(default_factory=lambda: ["VEOG", "HEOG"])
     ecg_ch: Optional[str] = "ECG"
@@ -263,6 +264,7 @@ PATIENTS = {
         sub_id="sub-BB28",
         vhdr_path= DATASET_DIR / "sub-BB28" / "ses-01"/ "eeg"/ "sub-BB28_task-tictrack.vhdr",
         excel_path=DATASET_DIR / "sub-BB28" / "ses-01"/ "excel"/ "sub-BB28_task-tictrack.xlsx",
+        fps=25,
         montage="standard_1020",
         #eog_chs=["VEOG", "HEOG"],
         #ecg_ch="ECG",
@@ -275,6 +277,7 @@ PATIENTS = {
         sub_id="sub-BC29",
         vhdr_path= DATASET_DIR / "sub-BC29" / "ses-01"/ "eeg"/ "sub-BC29_task-tictrack.vhdr",
         excel_path=DATASET_DIR / "sub-BC29" / "ses-01"/ "excel"/ "sub-BC29_task-tictrack.xlsx",
+        fps=30,
         montage="standard_1020",
         #eog_chs=["VEOG", "HEOG"],
         #ecg_ch="ECG",
@@ -287,6 +290,7 @@ PATIENTS = {
     sub_id="sub-DS26",
     vhdr_path= DATASET_DIR / "sub-DS26" / "ses-01"/ "eeg"/ "sub-DS26_task-tictrack.vhdr",
     excel_path=DATASET_DIR / "sub-DS26" / "ses-01"/ "excel"/ "sub-DS26_task-tictrack.xlsx",
+    fps=30,
     montage="standard_1020",
     #eog_chs=["VEOG", "HEOG"],
     #ecg_ch="ECG",
@@ -299,6 +303,7 @@ PATIENTS = {
     sub_id="sub-MM30",
     vhdr_path= DATASET_DIR / "sub-MM30" / "ses-01"/ "eeg"/ "sub-MM30_task-tictrack.vhdr",
     excel_path=DATASET_DIR / "sub-MM30" / "ses-01"/ "excel"/ "sub-MM30_task-tictrack.xlsx",
+    fps=30,
     montage="standard_1020",
     #eog_chs=["VEOG", "HEOG"],
     #ecg_ch="ECG",
@@ -312,6 +317,7 @@ PATIENTS = {
     sub_id="sub-SC31",
     vhdr_path= DATASET_DIR / "sub-SC31" / "ses-01"/ "eeg"/ "sub-SC31_task-tictrack.vhdr",
     excel_path=DATASET_DIR / "sub-SC31" / "ses-01"/ "excel"/ "sub-SC31_task-tictrack.xlsx",
+    fps=30,
     montage="standard_1020",
     #eog_chs=["VEOG", "HEOG"],
     #ecg_ch="ECG",
@@ -321,13 +327,6 @@ PATIENTS = {
     ),
     
 }
-
-if __name__ == "__main__":
-    print(f"[INFO] Configuration file loaded successfully.")
-    print(f"[INFO] Dataset dir: {DATASET_DIR}")
-    print(f"[INFO] Mapped {len(TTL_LABELS)} distinct triggers.")
-
-
 # --- 8. ICA EXCLUSION --- 
 """
 Manually identified ICA components to exclude for each subject. This is based on visual inspection of the ICA decomposition and may be updated after further review.
@@ -339,3 +338,24 @@ ICA_EXCLUSIONS = {
     "sub-MM30": [0],
     "sub-SC31": [0],
 }
+
+# --- 9. PRE-TIC EXCTRACTION ---
+"""
+Parameters used for exctracting tics for each phase. 
+"""
+TIC_EXT_PARAMS = {
+    "max_t_after_end" : 1.0,
+    "max_t_after_F": 2.0,
+    "max_t_before_D": 2.0,
+    "max_t_before_start": 2.0,
+    "max_t_after_end": 2.0,
+    "max_t_after_F": 2.0,
+    "max_t_before_start": 3.0,
+    "max_t_before_S": 2.0,
+}
+
+if __name__ == "__main__":
+    print(f"[INFO] Configuration file loaded successfully.")
+    print(f"[INFO] Dataset dir: {DATASET_DIR}")
+    print(f"[INFO] Mapped {len(TTL_LABELS)} distinct triggers.")
+
