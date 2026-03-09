@@ -1,10 +1,8 @@
-# ❀ ---------------------------------------------- ❀
-# Project : TicTrack EEG - Premonitory Urge & Tic Suppression
+#  ---------------------------------------------- #
+# Function : Extract the beginning of the tic
 # Author  : Martyna
-# Module  : scripts/05_summarize_tics.py
-# Goal    : Summarize tics from merged events file
-#           using phase-specific analysis functions
-# ❀ ---------------------------------------------- ❀
+# Goal    : Exctract the beginning of the tics for each phase, later used for epoch creation 
+#  ---------------------------------------------- #
 
 from __future__ import annotations
 
@@ -23,6 +21,11 @@ from src.tic_exctraction import (
     analyse_merged_ttl_tics_suppressed,
 )
 
+""""
+First, convert merged events .tsv dataframe to the dictionary with event and time. Exclude FB_ events (visual feedback) from the dataframe. 
+Create one dataframe with all events for each phase. 
+"""
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -37,11 +40,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 def build_merged_ttl_tics_from_tsv(df: pd.DataFrame) -> list:
-    """
-    Convert merged events .tsv dataframe to list of dicts
-    format expected by the analysis functions.
-    Excludes FB_ events (visual feedback).
-    """
     merged_ttl_tics = []
     for _, row in df.iterrows():
         if str(row["event"]).startswith("FB_"):  # skip visual feedback events
@@ -51,9 +49,6 @@ def build_merged_ttl_tics_from_tsv(df: pd.DataFrame) -> list:
 
 
 def results_to_df(results: list, sub_id: str, phase: str) -> pd.DataFrame:
-    """
-    Convert results list to a tidy dataframe.
-    """
     rows = []
     for r in results:
         time = (
@@ -67,7 +62,7 @@ def results_to_df(results: list, sub_id: str, phase: str) -> pd.DataFrame:
             "subject": sub_id,
             "phase":   phase,
             "type":    r["type"],
-            "time":    round(float(time), 3) if time is not None else None,
+            "time":    time if time is not None else None,
         })
     return pd.DataFrame(rows)
 
@@ -95,20 +90,22 @@ def main():
 
         # --- 1. Load merged events tsv ---
         tsv_path = out_dir / f"{sub_id}_ses-01_task-tictrack_merged_events.tsv"
-        print(f"[1/4] Loading merged events: {tsv_path}")
+        print(f"\n{'='*60}")
+        print(f"[1/3] Loading merged events: {tsv_path}")
+        print(f"\n{'='*60}")
         df = pd.read_csv(tsv_path, sep="\t")
-
-        # --- 2. Convert to merged_ttl_tics format ---
-        print(f"[2/4] Converting to merged_ttl_tics format...")
         merged_ttl_tics = build_merged_ttl_tics_from_tsv(df)
-        print("merged_ttl_tics", merged_ttl_tics)
 
-        # --- 3. Analyse each phase ---
+        # --- 2. Analyse each phase ---
         all_results = []
 
         # Spontaneous phase
-        print(f"[3/4] Analysing phases...")
+        print(f"\n{'='*60}")
+        print(f"[2/4] Analysing phases...")
+        print(f"\n{'='*60}")
+        print(f"\n{'='*60}")
         print(f"  → Spontaneous tics...")
+        print(f"\n{'='*60}")
         spont_results = analyse_merged_ttl_tics_spontaneous(
             merged_ttl_tics,
             phase_start_key="start_PHASE_FREE",
@@ -118,7 +115,9 @@ def main():
         print("all_results:", all_results)
 
         # Imitated phase
+        print(f"\n{'='*60}")
         print(f"  → Imitated tics...")
+        print(f"\n{'='*60}")
         imitated_tics, real_tics_imitated = analyse_merged_ttl_tics_imitated(
             merged_ttl_tics,
             phase_start_key="start_PHASE_MIM",
@@ -128,7 +127,9 @@ def main():
         all_results.append(results_to_df(real_tics_imitated, sub_id, "imitated_real"))
 
         # Suppressed phase
+        print(f"\n{'='*60}")
         print(f"  → Suppressed tics...")
+        print(f"\n{'='*60}")
         suppressed_tics, real_tics_suppressed = analyse_merged_ttl_tics_suppressed(
             merged_ttl_tics,
             phase_start_key="start_PHASE_SUP",
@@ -138,7 +139,9 @@ def main():
         all_results.append(results_to_df(real_tics_suppressed, sub_id, "suppressed_real"))
 
         # --- 4. Save summary ---
-        print(f"[4/4] Saving summary...")
+        print(f"\n{'='*60}")
+        print(f"[3/3] Saving summary...")
+        print(f"\n{'='*60}")
         df_summary = pd.concat(all_results, ignore_index=True)
         out_path = out_dir / f"{sub_id}_ses-01_task-tictrack_tics_summary.tsv"
         df_summary.to_csv(out_path, sep="\t", index=False)
