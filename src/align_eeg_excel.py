@@ -15,6 +15,7 @@ import mne
 import sys
 import os
 
+
 def recalibrate_from_first_event(raw, target_stim="Stimulus/S  2"):
     """
     Stimulus/S 2 is the first TTL event that marks the start of the tic track task (green led)
@@ -35,7 +36,13 @@ def recalibrate_from_first_event(raw, target_stim="Stimulus/S  2"):
         return raw
     first_stimulus_time = target_onsets[0]
     print(f"Cropping EEG at stimulus '{target_stim}' = {first_stimulus_time:.3f} s")
-# First adjust annotations on the ORIGINAL raw
+
+    # First adjust annotations on the ORIGINAL raw
+    """
+    - Before: cropping and the adjustement of annotations [ERROR]
+    - After: adjustement of annotations on the original raw, then crop [CORRECT]
+
+    """
     new_onsets = raw.annotations.onset - first_stimulus_time
     new_durations = raw.annotations.duration
     new_descriptions = list(raw.annotations.description)
@@ -43,11 +50,12 @@ def recalibrate_from_first_event(raw, target_stim="Stimulus/S  2"):
     raw.set_annotations(
         mne.Annotations(onset=new_onsets, duration=new_durations, description=new_descriptions)
     )
-
     # Then crop
     raw_cropped = raw.copy().crop(tmin=0.0)
 
     print(f"[DEBUG] First 3 onsets: {raw_cropped.annotations.onset[:3]}")
     # Should show: [0.0, 9.886, ...]
     return raw_cropped
+
+
 
