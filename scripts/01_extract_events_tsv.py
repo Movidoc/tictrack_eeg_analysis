@@ -26,6 +26,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Your config lives in config/config.py
 from config.config import TTL_MAP, DATASET_DIR, PREPROC_DIR, PHASES_TTL
+from src.extract_ttl_events import extract_ttl_events
 
 # Dataset constants (1 session, 1 run)
 TASK = "tictrack"
@@ -37,68 +38,10 @@ BV_STIM_RE = re.compile(r"^Stimulus/S\s+\d+$")
 
 
 def bids_eeg_dir(sub: str) -> Path:
-    return DATASET_DIR / sub / f"ses-{SES}" / "excel"
+    return DATASET_DIR / sub / f"ses-{SES}" /"excel"
 
 def bids_vhdr_path(sub: str) -> Path:
     return DATASET_DIR / sub / f"ses-{SES}" / "eeg"/ f"{sub}_task-{TASK}.vhdr"
-
-
-
-def extract_ttl_events(raw: mne.io.BaseRaw) -> pd.DataFrame:
-    """
-    Convert MNE annotations to a tidy TTL events table.
-    Further add phase labels to each event 
-    Why annotations?
-    - BrainVision markers are loaded by MNE as raw.annotations (onset/duration/description).
-    We keep only Stimulus TTL-like descriptions and map them using TTL_MAP.
-    """
-    ann = raw.annotations
-    rows = []
-
-    # Build phase intervals from annotations
-    phase_intervals = {}
-    for phase_name, t in PHASES_TTL.items():
-        start = [onset for onset, desc in zip(ann.onset, ann.description) if desc == t["start"]]
-        end   = [onset for onset, desc in zip(ann.onset, ann.description) if desc == t["end"]]
-        if start and end:
-            phase_intervals[phase_name] = (start[0], end[0])
-        else:
-            phase_intervals[phase_name] = None
-
-    for onset, duration, desc in zip(ann.onset, ann.duration, ann.description):
-        if not BV_STIM_RE.match(desc):
-            continue
-
-        trial_type = TTL_MAP.get(desc, "UNKNOWN")
-
-        # find which phase this TTL belongs to
-        phase = None
-        for phase_name, interval in phase_intervals.items():
-            if interval is None:
-                continue
-            start_t, end_t = interval
-               # last phase includes end, all others exclude it
-            if phase_name == list(phase_intervals.keys())[-1]:
-                if start_t <= onset <= end_t:
-                    phase = phase_name
-                    break
-            else:
-                if start_t <= onset < end_t:
-                    phase = phase_name
-                    break
-
-        rows.append(
-            {
-                "onset": float(onset),
-                "duration": float(duration) if duration is not None else 0.0,
-                "trial_type": trial_type,  # interpreted label
-                "value": desc,             # raw BrainVision marker string
-                "phase": phase,           # new column with phase label
-            }
-        )
-
-    df = pd.DataFrame(rows).sort_values("onset").reset_index(drop=True)
-    return df
 
 
 def write_qc_summary(df: pd.DataFrame, out_path: Path) -> None:
@@ -132,11 +75,6 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Subjects to process, e.g. --sub sub-028 sub-029. Default: all dataset/sub-*",
     )
-    parser.add_argument(
-        "--recalibrated",
-        action="store_true",
-        help="If set, load recalibrated .fif instead of raw .vhdr",
-    )
     return parser.parse_args()
 
 
@@ -159,19 +97,14 @@ def main():
         raise RuntimeError(f"Requested subjects not found in dataset: {missing}")
 
     for sub in subjects:
-        if args.recalibrated:
-            # load the recalibrated fif saved by 03_align.py
-            fif_path = PREPROC_DIR / sub /"realign" / f"{sub}_ses-01_task-tictrack_aligned_raw.fif"
-            print(f"[INFO] Loading recalibrated EEG: {fif_path}")
-            raw = mne.io.read_raw_fif(fif_path, preload=False, verbose="ERROR")
-        else:
-            vhdr = bids_vhdr_path(sub)
-            if not vhdr.exists():
-                print(f"[SKIP] Missing vhdr for {sub}: {vhdr}")
-                continue
 
-            # Load without preload (fast). We only need annotations.
-            raw = mne.io.read_raw_brainvision(vhdr, preload=False, verbose="ERROR")
+        vhdr = bids_vhdr_path(sub)
+        if not vhdr.exists():
+            print(f"[SKIP] Missing vhdr for {sub}: {vhdr}")
+            continue
+
+        # Load without preload (fast). We only need annotations.
+        raw = mne.io.read_raw_brainvision(vhdr, preload=False, verbose="ERROR")
 
         df = extract_ttl_events(raw)
 
@@ -185,19 +118,17 @@ def main():
                 f"Fix: add the missing codes to TTL_LABELS in config/config.py."
             )
 
-        if args.recalibrated:
-            out_events = bids_eeg_dir(sub) / f"{sub}_ses-{SES}_task-{TASK}_run-{RUN}_events_recalibrated.tsv"
-            df.to_csv(out_events, sep="\t", index=False)
-            out_qc = bids_eeg_dir(sub) / f"{sub}_ses-{SES}_task-{TASK}_run-{RUN}_events_recalibrated_qc.txt"
-        else:
-            out_events = bids_eeg_dir(sub) / f"{sub}_ses-{SES}_task-{TASK}_run-{RUN}_events.tsv"
-            df.to_csv(out_events, sep="\t", index=False)
+        # --- Output folder ---
+        out_dir = PREPROC_DIR / sub / "raw"
+        out_dir.mkdir(parents=True, exist_ok=True)
 
-            out_qc = bids_eeg_dir(sub) / f"{sub}_ses-{SES}_task-{TASK}_run-{RUN}_events_qc.txt"
+        out_path = out_dir/ f"{sub}_ses-{SES}_task-{TASK}_run-{RUN}_events.tsv"
+        df.to_csv(out_path, sep="\t", index=False)
+
+        out_qc = out_dir / f"{sub}_ses-{SES}_task-{TASK}_run-{RUN}_events_qc.txt"
         write_qc_summary(df, out_qc)
 
-        print(f"[OK] {sub}: wrote {out_events.name} ({len(df)} TTL events)")
-        print(f"[OK] {sub}: wrote {out_qc.name}")
+        print(f"[OK] Saved: {out_path}")
 
     print("[DONE] TTL extraction complete.")
 
