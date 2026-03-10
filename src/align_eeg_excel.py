@@ -58,4 +58,3 @@ def recalibrate_from_first_event(raw, target_stim="Stimulus/S  2"):
     return raw_cropped
 
 
-
