@@ -1,6 +1,5 @@
-
 #  ---------------------------------------------- 
-# Project : 02_preprocess.py
+# Project : 04_preprocess.py
 # Author  : Martyna
 # Goal    : Run full preprocessing pipeline for all patients
 #  ---------------------------------------------- 
@@ -23,6 +22,7 @@ from src.preproc import (
     apply_ICA,
     apply_rest_reference
 )
+from src.extract_ttl_events import plot_raw, build_phases_dict
 # Dataset constants (1 session, 1 run)
 TASK = "tictrack"
 SES = "01"
@@ -62,20 +62,20 @@ def main():
         subjects = PATIENTS
 
 
-    for sub_id, cfg in subjects.items():
+    for sub, cfg in subjects.items():
         print(f"\n{'='*60}")
-        print(f"[START] Processing {sub_id}")
+        print(f"[START] Processing {sub}")
         print(f"{'='*60}")
 
         # --- Output folders ---
-        out_dir = PREPROC_DIR / sub_id
+        out_dir = PREPROC_DIR / sub
         out_dir.mkdir(parents=True, exist_ok=True)
 
         plots_dir = out_dir / "preprocessing"
         plots_dir.mkdir(parents=True, exist_ok=True)
 
         # --- 1. Load recalibrated raw EEG ---
-        fif_path = PREPROC_DIR / sub_id / "realign" / f"{sub_id}_ses-01_task-tictrack_aligned_raw.fif"
+        fif_path = PREPROC_DIR / sub / "realign" / f"{sub}_ses-01_task-tictrack_aligned_annotated_raw.fif"
         print(f"\n{'='*60}")
         print(f"[1/6] Loading EEG: {fif_path}")
         print(f"\n{'='*60}")
@@ -86,37 +86,58 @@ def main():
         print(f"\n{'='*60}")
         print(f"[2/6] Filtering and applying montage...")
         print(f"\n{'='*60}")
-        raw = preprocess_raw(raw, sub_id, cfg.montage, plots_dir)
+        raw = preprocess_raw(raw, sub, cfg.montage, plots_dir)
 
         # --- 3. RANSAC bad channel detection ---
         print(f"\n{'='*60}")
         print(f"[3/6] Detecting bad channels with RANSAC...")
         print(f"\n{'='*60}")
-        raw, bad_channels =  Ransac_bad_channel_detection(raw, sub_id, plots_dir)
+        raw, bad_channels =  Ransac_bad_channel_detection(raw, sub, plots_dir)
 
         # --- 4. Epoch rejection (FASTER) ---
         print(f"\n{'='*60}")
         print(f"[4/6] Rejecting bad epochs (FASTER)...")
         print(f"\n{'='*60}")
-        epochs_temp = rejection_threshold_std(raw, sub_id, plots_dir)
+        epochs_temp = rejection_threshold_std(raw, sub, plots_dir)
 
         # --- 5. ICA ---
         print(f"\n{'='*60}")
         print(f"[5/6] Applying ICA...")
         print(f"\n{'='*60}")
-        raw = apply_ICA(epochs_temp, raw, sub_id, ICA_EXCLUSIONS, plots_dir)
+        raw = apply_ICA(epochs_temp, raw, sub, ICA_EXCLUSIONS, plots_dir)
 
         # --- 6. Re-reference to REST ---
         print(f"\n{'='*60}")
         print(f"[6/6] Re-referencing to REST...")
         print(f"\n{'='*60}")
-        raw = apply_rest_reference(raw, sub_id, plots_dir)
+        raw = apply_rest_reference(raw, sub, plots_dir)
 
         # --- Save preprocessed raw ---
-        out_path = out_dir / f"{sub_id}_ses-01_task-tictrack_preprocessed-raw.fif"
+        out_path = out_dir /"preprocessing" / f"{sub}_ses-01_task-tictrack_preprocessed_raw.fif"
         raw.save(out_path, overwrite=True)
         print(f"[OK] Saved preprocessed data: {out_path}")
         print(f"[OK] Saved plots to: {plots_dir}")
+
+        # --- 7. Plot raw data ---
+        # --- Output folder ---
+        plot_dir = PREPROC_DIR / sub / "preprocessing"/"plots"
+        plot_dir.mkdir(parents=True, exist_ok=True)
+        print(f"\n{'='*60}")
+        print(f"[5/5] Plotting annotated raw by phase...")
+        print(f"\n{'='*60}")
+        fif_path = PREPROC_DIR / sub / "preprocessing" / f"{sub}_ses-01_task-tictrack_preprocessed_raw.fif"
+        raw_proc = mne.io.read_raw_fif(fif_path, preload=True, verbose="ERROR")
+
+        phases_dict = build_phases_dict(raw)
+        plot_raw(
+            raw         = raw_proc,
+            phases_dict = phases_dict,
+            sub_id      = sub,
+            plot_dir    = plot_dir,
+            window_sec    = 30.0,
+            n_channels  = 20,
+        )
+        print(f"[OK] Saved raw data plots: {plot_dir.name}")
 
     print("\n[DONE] Preprocessing complete.")
 

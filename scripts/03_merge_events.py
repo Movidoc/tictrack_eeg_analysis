@@ -14,10 +14,13 @@ import argparse
 import pandas as pd
 import mne
 from pathlib import Path
+import numpy as np
+import matplotlib.pyplot as plt
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from config.config import PATIENTS, PREPROC_DIR, PIPE_PARAMS, PHASES_TTL, TTL_MAP
+from src.extract_ttl_events import plot_raw
 from src.excel_tic_extraction import extract_tics_from_excel
 
 
@@ -68,6 +71,31 @@ def get_phase(time: float, phases_dict: dict) -> str | None:
                 return phase_name
     return None
 
+def add_annotations(raw: mne.io.BaseRaw, df: pd.DataFrame):
+    """
+    Add annotations from merged events (TTL & EXCEL) to the raw recalibrated data.
+    Visual feedback was added as a control and will not be needed in the analysis. That is why, for cleaner data we will ommit it in the annotations in the raw data.
+    """
+    # --- Remove FB_ events ---
+    df_clean = df[~df["event"].str.startswith("FB_")].copy()
+    print(f"[INFO] Annotations after removing FB_: {len(df_clean)} (removed {len(df) - len(df_clean)})")
+
+    # TTLs already in the raw data -- remove them 
+    print(f"[INFO] Clearing {len(raw.annotations)} existing raw annotations (Stimulus/S markers)")
+    raw.set_annotations(mne.Annotations([], [], []))
+
+    # --- Build and merge annotations ---
+    new_annotations = mne.Annotations(
+        onset       = df_clean["time"].values,
+        duration    = np.zeros(len(df_clean)),
+        description = df_clean["event"].values.astype(str),
+    )
+    raw.set_annotations(raw.annotations + new_annotations)
+    print(f"[INFO] Total annotations on raw: {len(raw.annotations)}")
+
+    return raw
+
+
 
 def main():
     args = parse_args()
@@ -81,22 +109,26 @@ def main():
     else:
         subjects = PATIENTS
 
-    for sub_id, cfg in subjects.items():
+    for sub, cfg in subjects.items():
         print(f"\n{'='*60}")
-        print(f"[START] Merging events for {sub_id}")
+        print(f"[START] Merging events for {sub}")
         print(f"{'='*60}")
 
         # --- Output folder ---
-        out_dir = PREPROC_DIR / sub_id / "tics"
+        out_dir = PREPROC_DIR / sub / "tics"
         out_dir.mkdir(parents=True, exist_ok=True)
 
         # --- 1. Load recalibrated EEG ---
-        fif_path = PREPROC_DIR / sub_id / "realign" / f"{sub_id}_ses-01_task-tictrack_aligned_raw.fif"
+        fif_path = PREPROC_DIR / sub / "realign" / f"{sub}_ses-01_task-tictrack_aligned_raw.fif"
+        print(f"\n{'='*60}")
         print(f"[1/4] Loading recalibrated EEG: {fif_path}")
+        print(f"\n{'='*60}")
         raw = mne.io.read_raw_fif(fif_path, preload=False, verbose="ERROR")
 
         # --- 2. Build phases dict ---
+        print(f"\n{'='*60}")
         print(f"[2/4] Building phases dictionary...")
+        print(f"\n{'='*60}")
         phases_dict = build_phases_dict(raw)
 
         # Add phase boundary events for later usage 
@@ -116,7 +148,9 @@ def main():
 
 
         # --- 3. Extract TTL events from EEG ---
+        print(f"\n{'='*60}")
         print(f"[3/4] Extracting TTL events...")
+        print(f"\n{'='*60}")
         for onset, desc in zip(raw.annotations.onset, raw.annotations.description):
             trial_type = TTL_MAP.get(desc, None)
             if trial_type is None:
@@ -130,13 +164,15 @@ def main():
             })
 
         # --- 4. Extract tics from Excel ---
+        print(f"\n{'='*60}")
         print(f"[4/4] Extracting tics from Excel: {cfg.excel_path}")
+        print(f"\n{'='*60}")
         tics = extract_tics_from_excel(
             excel_file=cfg.excel_path,
             fps=cfg.fps,
             min_absence_frames=30,
         )
-        print(f"[INFO] Found {len(tics)} tics for {sub_id}")
+        print(f"[INFO] Found {len(tics)} tics for {sub}")
 
         for i, (start_time, end_time) in enumerate(tics, start=1):
             phase = get_phase(start_time, phases_dict)
@@ -155,10 +191,35 @@ def main():
 
         # --- Sort by time and save ---
         df = pd.DataFrame(rows).sort_values("time").reset_index(drop=True)
-        out_path = out_dir / f"{sub_id}_ses-01_task-tictrack_merged_events.tsv"
+        out_path = out_dir / f"{sub}_ses-01_task-tictrack_merged_events.tsv"
         df.to_csv(out_path, sep="\t", index=False)
         print(f"[OK] Saved: {out_path}")
         print(f"[OK] Total rows: {len(df)} ({len(tics)} tics + {len(rows) - len(tics)*2} TTLs)")
+
+
+        # --- 5. Add annotations to realigned raw data ---
+        raw = add_annotations(raw, df)
+        out_fif = PREPROC_DIR / sub / "realign" / f"{sub}_ses-01_task-tictrack_aligned_annotated_raw.fif"
+        raw.save(out_fif, overwrite=True)
+        print(f"[OK] Saved annotated raw: {out_fif.name}")
+
+
+
+        # --- 6. Plot the realigned raw data ---
+        print(f"\n{'='*60}")
+        print(f"[5/5] Plotting annotated raw by phase...")
+        print(f"\n{'='*60}")
+        plot_dir = PREPROC_DIR / sub/"realign" / "plots"
+        plot_dir.mkdir(parents=True, exist_ok=True)
+
+        plot_raw(
+            raw         = raw,
+            phases_dict = phases_dict,
+            sub_id      = sub,
+            plot_dir    = plot_dir,
+            window_sec    = 30.0,
+            n_channels  = 20,
+        )
 
     print("\n[DONE] Merge complete.")
 

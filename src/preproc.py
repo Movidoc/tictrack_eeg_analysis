@@ -37,6 +37,9 @@ def preprocess_raw(raw: mne.io.BaseRaw, subject_name:str, montage_name:str, plot
     raw.set_montage(montage_name)
 
     if subject_name == 'sub-BB28':
+        """
+        Based on the visual inspection of the data the last 10s of the recording of patient BB28 was incorrect. Probable reason is EEG stopped woking. That is why, we crop the last second (meanigless for the analysis).
+        """
         raw.crop(tmax=1646)
     
     fig = raw.plot(n_channels=64, title=f"Raw data - {subject_name}", show=True)

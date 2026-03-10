@@ -48,7 +48,7 @@ def bids_vhdr_path(sub: str) -> Path:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Extract BrainVision TTL markers to BIDS-like events.tsv"
+        description="Realign the EEG data to the green led and collect all the TTLs"
     )
     parser.add_argument(
         "--sub",
