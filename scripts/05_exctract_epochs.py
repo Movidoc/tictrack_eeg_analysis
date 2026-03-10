@@ -15,7 +15,7 @@ from pathlib import Path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from config.config import PATIENTS, PREPROC_DIR
-from src.tic_exctraction import (
+from src.epoch_extraction_rules import (
     analyse_merged_ttl_tics_spontaneous,
     analyse_merged_ttl_tics_imitated,
     analyse_merged_ttl_tics_suppressed,
