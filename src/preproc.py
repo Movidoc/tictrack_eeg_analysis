@@ -21,7 +21,7 @@ from mne.preprocessing import ICA
 import autoreject
 from autoreject import get_rejection_threshold
 import matplotlib.pyplot as plt
-from config.config import PATIENTS, PIPE_PARAMS,  PREPROC_DIR, ICA_EXCLUSIONS
+from config.config import PATIENTS, PIPE_PARAMS,  PREPROC_DIR, ICA_EXCLUSIONS, PREPROC_PARAMS
 
 
 def preprocess_raw(raw: mne.io.BaseRaw, subject_name:str, montage_name:str, plots_dir:Path ):
@@ -46,8 +46,8 @@ def preprocess_raw(raw: mne.io.BaseRaw, subject_name:str, montage_name:str, plot
     fig.savefig(plots_dir / f"{subject_name}_raw.png")
     plt.close(fig)
 
-    raw = raw.filter(l_freq=0.1, h_freq=45)
-    raw = raw.notch_filter(freqs=[50], picks="data", method="spectrum_fit")
+    raw = raw.filter(l_freq=PREPROC_PARAMS["low_freq"] , h_freq=PREPROC_PARAMS["high_freq"])
+    raw = raw.notch_filter(freqs= PREPROC_PARAMS["notch_filt"], picks="data", method="spectrum_fit")
     return raw
 
 
@@ -62,6 +62,7 @@ def Ransac_bad_channel_detection(raw, subject_name, plots_dir: Path):
 
     raw_avg = raw.copy().set_eeg_reference('average') 
 
+    # epochs needed to fit the Ransac method - only used for this purpose
     temporary_epochs = mne.make_fixed_length_epochs(raw_avg, duration=3.0, overlap=0.0, preload=True)
 
     # Plot butterfly to visually inspect channels
@@ -78,7 +79,7 @@ def Ransac_bad_channel_detection(raw, subject_name, plots_dir: Path):
     return raw, bad_channels
 
 
-def rejection_threshold_std(raw, subject_name, plots_dir: Path, threshold=3.0,):
+def rejection_threshold_std(raw, subject_name, plots_dir: Path, threshold=PREPROC_PARAMS["threshold"],):
     """
     Computes rejection threshold for bad epochs based on the FASTER algorithm.
     - The raw data is first re-referenced to the average reference.
@@ -137,14 +138,14 @@ def apply_ICA(epochs_ica, raw, subject_name:str, ica_exclusions: dict, plots_dir
     - Band-pass filter is applied to the raw data before ICA fitting. Removes slow drifts. 
     - Fitted on averaged and filtered data by applied on raw data 
     """
-
+    # filtering needed to remove slow drifts 
     filt_raw = epochs_ica.copy().filter(l_freq=1.0, h_freq = None)
     picks_eeg = mne.pick_types(filt_raw.info, meg=False, eeg=True, eog=False,
                                 exclude='bads')
     data = filt_raw.get_data()
 
     ica = mne.preprocessing.ICA(
-    n_components=20,  method="picard", max_iter="auto", random_state=97)
+    n_components=PREPROC_PARAMS["n_components"],  method="picard", max_iter="auto", random_state=97)
     ica.fit(filt_raw, picks = picks_eeg) # reject=reject epochs that exceed the threshold are not considered in ICA fitting 
  
     fig = ica.plot_components(show=False) # topomaps showing each ICA component and its spatial distribution
@@ -189,7 +190,7 @@ def local_Autoreject(epochs, subject_name, plots_dir: Path):
         return epochs
     
     n_splits = min(10, n_epochs)
-    ar = autoreject.AutoReject(n_interpolate=[1, 2, 3, 4, 5], random_state=11,
+    ar = autoreject.AutoReject(n_interpolate=PREPROC_PARAMS["n_interpolate"], random_state=11,
                            n_jobs=1, verbose=True, cv=n_splits)
     ar.fit(epochs)  
     epochs_clean, reject_log = ar.transform(epochs, return_log=True)
@@ -219,7 +220,7 @@ def apply_rest_reference(raw, subject_name, plots_dir: Path):
     Source = mne.setup_volume_source_space(sphere=Sphere, exclude=30.0, pos=5.0, verbose=False)
     Forward = mne.make_forward_solution(raw.info, trans=None, src=Source, bem=Sphere, verbose=False)
 
-    raw = raw.copy().set_eeg_reference('REST', forward=Forward)
+    # raw = raw.copy().set_eeg_reference('REST', forward=Forward)
     fig = raw.plot(n_channels=64, title=f"Raw data with REST reference - {subject_name}", show=True)
     fig.savefig(plots_dir / f"{subject_name}_raw_rest_reference.png")
     plt.close(fig)
