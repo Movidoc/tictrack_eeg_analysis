@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from config.config import PATIENTS, PREPROC_DIR, PIPE_PARAMS, PHASES_TTL, TTL_MAP
-from src.extract_ttl_events import plot_raw
+from src.helper_functions import plot_raw
 from src.excel_tic_extraction import extract_tics_from_excel
 
 
@@ -94,7 +94,6 @@ def add_annotations(raw: mne.io.BaseRaw, df: pd.DataFrame):
     print(f"[INFO] Total annotations on raw: {len(raw.annotations)}")
 
     return raw
-
 
 
 def main():

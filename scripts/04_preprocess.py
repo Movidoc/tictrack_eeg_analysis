@@ -22,7 +22,7 @@ from src.preproc import (
     apply_ICA,
     apply_rest_reference
 )
-from src.extract_ttl_events import plot_raw, build_phases_dict
+from src.helper_functions import plot_raw, build_phases_dict
 # Dataset constants (1 session, 1 run)
 TASK = "tictrack"
 SES = "01"
@@ -129,13 +129,14 @@ def main():
         raw_proc = mne.io.read_raw_fif(fif_path, preload=True, verbose="ERROR")
 
         phases_dict = build_phases_dict(raw)
+        n_channels = len( mne.pick_types(raw.info, meg=False, eeg=True))
         plot_raw(
             raw         = raw_proc,
             phases_dict = phases_dict,
             sub_id      = sub,
             plot_dir    = plot_dir,
             window_sec    = 30.0,
-            n_channels  = 20,
+            n_channels  = n_channels,
         )
         print(f"[OK] Saved raw data plots: {plot_dir.name}")
 
