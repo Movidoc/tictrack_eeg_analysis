@@ -21,7 +21,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import mne
-from config.config import PATIENTS, PREPROC_DIR, EPOCH_EXT_PARAMS, EPOCH_EXT_PARAMS, CHANNELS_32, CHANNELS_64, ROI_LIST_32, ROI_LIST_64, ROI_COLORS
+from config.config import PATIENTS, PREPROC_DIR, EPOCH_EXT_PARAMS, EPOCH_EXT_PARAMS, CHANNELS_32, CHANNELS_64, ROI_LIST_32, ROI_LIST_64, ROI_COLORS, ANNOTATION_COLORS, ANNOTATION_COLORS_DEFAULT
 from src.epoch_creation import extract_random_epochs_in_phase, extract_pre_tic_epochs
 
 PHASES = ["spontaneous", "imitated", "imitated_real", "suppressed", "suppressed_real"]
@@ -44,14 +44,35 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def add_annotations(raw: mne.io.BaseRaw, df: pd.DataFrame):
+    # --- Remove FB_ events ---
+    df_clean = df[~df["event"].str.startswith("FB_")].copy()
+    print(f"[INFO] Annotations after removing FB_: {len(df_clean)} (removed {len(df) - len(df_clean)})")
+
+    # TTLs already in the raw data -- remove them 
+    print(f"[INFO] Clearing {len(raw.annotations)} existing raw annotations (Stimulus/S markers)")
+    raw.set_annotations(mne.Annotations([], [], []))
+
+    # --- Build and merge annotations ---
+    new_annotations = mne.Annotations(
+        onset       = df_clean["time"].values,
+        duration    = np.zeros(len(df_clean)),
+        description = df_clean["event"].values.astype(str),
+    )
+    raw.set_annotations(raw.annotations + new_annotations)
+    print(f"[INFO] Total annotations on raw: {len(raw.annotations)}")
+
+    return raw
+
+
     
 def plot_raw_epochs_with_roi(raw, epochs, patient, patient_id, phase_name, label,
                                   out_dir: 'Path', 
-                                  scalings ='auto', ):
+                                  scalings =dict(eeg=40e-6) ):
 
     n_epochs = len(epochs)
     if n_epochs == 0:
-        print(f"    [SKIP] No epochs to plot for {label}")
+        print(f"[SKIP] No epochs to plot for {label}")
         return
     
     # Select channels and ROIs based on montage
@@ -78,7 +99,20 @@ def plot_raw_epochs_with_roi(raw, epochs, patient, patient_id, phase_name, label
         for ch in roi_channels:
             if ch in available_channels:
                 channel_colors[ch] = ROI_COLORS[roi_name]
-    
+
+    # add colors for annotations
+    events_from_annot, event_id_from_annot = mne.events_from_annotations(raw)
+    annotation_colors = {}
+    for desc, int_id in event_id_from_annot.items():
+        if desc in ANNOTATION_COLORS:
+            annotation_colors[int_id] = ANNOTATION_COLORS[desc]
+        elif desc.startswith("start_"):
+            annotation_colors[int_id] = "red"
+        elif desc.startswith("end_"):
+            annotation_colors[int_id] = "green"
+        else:
+            annotation_colors[int_id] = ANNOTATION_COLORS_DEFAULT
+
     
     # Plot each epoch
     for idx in range(len(epochs_roi)):
@@ -86,19 +120,21 @@ def plot_raw_epochs_with_roi(raw, epochs, patient, patient_id, phase_name, label
         # Create the plot
         fig = epochs_roi[idx].plot(
             n_epochs=1,
-            scalings=scalings,
+            scalings=20e-6,
             n_channels=len(available_channels),
             title=f"{patient_id}  |  {phase_name}  |  {label}  |  epoch {idx + 1}/{n_epochs}",
             show=False, 
             events = events_from_annot,
             event_id = event_id_from_annot,
+            event_color = annotation_colors, 
+
 
         )
         
         # Color the channel labels by ROI
         # Get the axes with channel labels
         ax = fig.axes[0]
-        
+    
         # Iterate through y-tick labels (channel names) and color them
         for tick_label in ax.get_yticklabels():
             ch_name = tick_label.get_text()
