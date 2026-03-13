@@ -166,6 +166,21 @@ DATASET_DIR = BASE_DIR / "dataset"
 DERIVATIVES_DIR = DATASET_DIR / "derivatives"
 PREPROC_DIR = DERIVATIVES_DIR / "preproc"
 
+# --- 4. PIPELINE PARAMETERS ---
+PIPE_PARAMS = {
+    "sampling_rate": 1000,      # Hz
+    "l_freq": 1.0,              # High-pass filter
+    "h_freq": 100.0,            # Low-pass filter
+    "notch_freq": 50.0,         # Line noise
+    "epoch_windows": {
+        "t_tic": [-2.0, 1.0],
+        "t_urge": [-3.0, 0.0],
+        "t_mimic": [-2.0, 1.0],
+        "t_kp": [-1.0, 1.0]
+    },
+    "baseline": (-1.5, -1.0),   # Baseline period for TFR
+}
+
 # --- 3. TRIGGER DEFINITION (Integers) ---
 
 TTL_LABELS = {
@@ -241,23 +256,7 @@ def build_phases_ttl(ttl_labels: dict) -> dict:
 
 PHASES_TTL = build_phases_ttl(TTL_LABELS)
 
-# --- 6. PIPELINE PARAMETERS ---
-
-PIPE_PARAMS = {
-    "sampling_rate": 1000,      # Hz
-    "l_freq": 1.0,              # High-pass filter
-    "h_freq": 100.0,            # Low-pass filter
-    "notch_freq": 50.0,         # Line noise
-    "epoch_windows": {
-        "t_tic": [-2.0, 1.0],
-        "t_urge": [-3.0, 0.0],
-        "t_mimic": [-2.0, 1.0],
-        "t_kp": [-1.0, 1.0]
-    },
-    "baseline": (-1.5, -1.0),   # Baseline period for TFR
-}
-
-# --- 7. PATIENT REGISTRY ---
+# --- 6. PATIENT REGISTRY ---
 
 PATIENTS = {
     "sub-BB28": SubjectConfig(
@@ -304,7 +303,7 @@ PATIENTS = {
     vhdr_path= DATASET_DIR / "sub-MM30" / "ses-01"/ "eeg"/ "sub-MM30_task-tictrack.vhdr",
     excel_path=DATASET_DIR / "sub-MM30" / "ses-01"/ "excel"/ "sub-MM30_task-tictrack.xlsx",
     fps=30,
-    montage="standard_1020",
+    montage="standard_1005", # 64 electrodes
     #eog_chs=["VEOG", "HEOG"],
     #ecg_ch="ECG",
     #rename_chs={"FP1": "Fp1"},   # example if needed
@@ -318,7 +317,7 @@ PATIENTS = {
     vhdr_path= DATASET_DIR / "sub-SC31" / "ses-01"/ "eeg"/ "sub-SC31_task-tictrack.vhdr",
     excel_path=DATASET_DIR / "sub-SC31" / "ses-01"/ "excel"/ "sub-SC31_task-tictrack.xlsx",
     fps=30,
-    montage="standard_1020",
+    montage="standard_1005", # 64 electrodes
     #eog_chs=["VEOG", "HEOG"],
     #ecg_ch="ECG",
     #rename_chs={"FP1": "Fp1"},   # example if needed
@@ -327,35 +326,104 @@ PATIENTS = {
     ),
     
 }
-# --- 8. ICA EXCLUSION --- 
+
+# --- 7. ROI --- #
+"""
+For data analysis we use region of interest defined based on the previous literature. depending on the EEG montage electrodes are considered as ROI.
+"""
+CHANNELS_32 = ["Cz", "C3", "C4", "Pz", "Fp1", "Fp2"]
+CHANNELS_64 = ["Cz", "FCz", "C3", "FC3", "CP3", "C4", "CP4", "FC4", "Pz", "CPz", "Fp1", "Fp2", "AF3", "AF4"]
+
+ROI_LIST_32 = {
+    "midline_premotor": ["Cz"],
+    "left_sensorimotor": ["C3"],
+    "right_sensorimotor": ["C4"],
+    "midline_posterior": ["Pz"],
+    "midline_prefrontal": ["Fp1", "Fp2"]
+}
+ROI_LIST_64 = {
+    "midline_premotor": ["Cz", "FCz"],
+    "left_sensorimotor": ["C3", "FC3", "CP3"],
+    "right_sensorimotor": ["C4", "CP4", "FC4"],
+    "midline_posterior": ["Pz", "CPz"],
+    "midline_prefrontal": ["Fp1", "Fp2", "AF3", "AF4"]
+}
+ROI_COLORS = {
+    "midline_premotor": "red",
+    "left_sensorimotor": "blue",
+    "right_sensorimotor": "green",
+    "midline_posterior": "purple",
+    "midline_prefrontal": "orange"
+}
+
+# -- 8. COLORS FOR ANNOTATIONS ---
+ANNOTATION_COLORS = {
+    "start_PHASE_FREE":  "blue",
+    "end_PHASE_FREE":    "blue",
+    "start_PHASE_MIM":   "blue",
+    "end_PHASE_MIM":     "blue",
+    "start_PHASE_SUP":   "blue",
+    "end_PHASE_SUP":     "blue",
+    "KEY_D":             "orange",
+    "KEY_F":             "purple",
+    "KEY_T":             "yellow",
+    "KEY_S":              "orange",
+    
+}
+ANNOTATION_COLORS_DEFAULT = "gray"  
+
+# --- 9. PREPROCESSING PARAMETERS ---
+
+PREPROC_PARAMS = {
+    "low_freq": 0.1,
+    "high_freq": 45,
+    "notch_filt": 50,
+    "n_components": 20,
+    "n_interpolate": [1, 2, 3, 4, 5],
+    "threshold": 3.0,
+
+}
+
+
+
+# --- 10. ICA EXCLUSION --- 
 """
 Manually identified ICA components to exclude for each subject. This is based on visual inspection of the ICA decomposition and may be updated after further review.
 """
 ICA_EXCLUSIONS = {
-    "sub-DS26": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 15, 16, 17, 19],
-    "sub-BB28": [0, 2, 7],
-    "sub-BC29": [0, 1, 2, 4, 6, 8],
-    "sub-MM30": [0],
-    "sub-SC31": [0],
+    "sub-BB28": [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 13, 14, 15, 16, 17, 18, 19],
+    "sub-BC29": [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19],
+    "sub-DS26": [0,1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19],
+    "sub-MM30": [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 14, 15, 16, 17, 18, 19 ],
+    "sub-SC31": [0, 1, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 , 18, 19 ],
 }
 
-# --- 9. PRE-TIC EXCTRACTION ---
+# --- 11. PRE-TIC EXCTRACTION ---
 """
 Parameters used for exctracting tics for each phase. 
 """
 TIC_EXT_PARAMS = {
     "max_t_after_end" : 1.0,
     "max_t_after_F": 2.0,
-    "max_t_before_D": 2.0,
-    "max_t_before_start": 2.0,
+    "max_t_before_D": 3.0,
+    "max_t_before_start": 0.5,
     "max_t_after_end": 2.0,
     "max_t_after_F": 2.0,
-    "max_t_before_start": 3.0,
     "max_t_before_S": 2.0,
+}
+
+# --- 12. EPOCH EXTRACTION ---
+
+EPOCH_EXT_PARAMS = {
+    "random_n_epochs" : 50,
+    "random_epoch_duration" : 2.5,
+    "pre_seconds" : 3.0,
+    "post_seconds" : 3.0
 }
 
 if __name__ == "__main__":
     print(f"[INFO] Configuration file loaded successfully.")
     print(f"[INFO] Dataset dir: {DATASET_DIR}")
     print(f"[INFO] Mapped {len(TTL_LABELS)} distinct triggers.")
+
 
