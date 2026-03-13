@@ -59,7 +59,6 @@ def Ransac_bad_channel_detection(raw, subject_name, plots_dir: Path):
         - Finally, RANSAC is applied to identify bad channels, which are added to the raw.info['bads'] list.
         '''
     eeg_channels = mne.pick_types(raw.info, meg=False, eeg=True)
-
     raw_avg = raw.copy().set_eeg_reference('average') 
 
     # epochs needed to fit the Ransac method - only used for this purpose
@@ -73,8 +72,15 @@ def Ransac_bad_channel_detection(raw, subject_name, plots_dir: Path):
     ransac = Ransac(n_jobs=1, verbose = True)
     ransac.fit_transform(temporary_epochs)
     raw.info['bads'].extend(ransac.bad_chs_)
+    if subject_name == 'sub-MM30':
+        """
+        Based on the visual inspection 1 bad channels were identified for the patient MM30.
+        """
+        raw.info['bads'].append('AFz')
+    
     bad_channels = raw.info['bads']
     print("Ransac detected bad channels:", ransac.bad_chs_)
+    print("All bad channels detected:", bad_channels)
 
     return raw, bad_channels
 
