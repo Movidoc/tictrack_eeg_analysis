@@ -25,6 +25,13 @@ from config.config import PATIENTS, PREPROC_DIR, EPOCH_EXT_PARAMS, EPOCH_EXT_PAR
 from src.epoch_creation import extract_random_epochs_in_phase, extract_pre_tic_epochs
 
 PHASES = ["spontaneous", "imitated", "imitated_real", "suppressed", "suppressed_real"]
+PHASE_NAME_MAP = {
+    "spontaneous":     "PHASE_FREE",
+    "imitated":        "PHASE_MIM",
+    "imitated_real":   "PHASE_MIM",
+    "suppressed":      "PHASE_SUP",
+    "suppressed_real": "PHASE_SUP",
+}
 
 # Dataset constants (1 session, 1 run)
 TASK = "tictrack"
@@ -127,8 +134,6 @@ def plot_raw_epochs_with_roi(raw, epochs, patient, patient_id, phase_name, label
             events = events_from_annot,
             event_id = event_id_from_annot,
             event_color = annotation_colors, 
-
-
         )
         
         # Color the channel labels by ROI
@@ -195,6 +200,12 @@ def main():
             continue
         df_summary = pd.read_csv(tsv_path, sep="\t")
 
+        merged_path = PREPROC_DIR / sub / "tics" / f"{sub}_ses-{SES}_task-{TASK}_merged_events.tsv"
+        if not merged_path.exists():
+            print(f"[SKIP] Missing merged events: {merged_path}")
+            continue
+        df_merged = pd.read_csv(merged_path, sep="\t")
+
         # --- 3. Create epochs and plot each one ---
         print(f"\n{'='*60}")
         print(f"[3/3] Creating and plotting the epochs ... ")
@@ -204,6 +215,10 @@ def main():
             # --- Output folder ----
             epochs_dir = PREPROC_DIR / sub / "epochs"/ phase
             epochs_dir.mkdir(parents=True, exist_ok=True)
+
+            # --- Output folder for random epochs ---
+            rand_epochs_dir = PREPROC_DIR / sub / "epochs"/ "random"/phase
+            rand_epochs_dir.mkdir(parents=True, exist_ok=True)
 
             print(f"\n  → Phase: {phase}")
             df_phase = df_summary[df_summary["phase"] == phase].dropna(subset=["time"])
@@ -231,8 +246,48 @@ def main():
                 label = 'pre-tic',
                 out_dir = epochs_dir,
                 scalings = 'auto')
+            
+            # --- random epochs --- #
+            phase_key = PHASE_NAME_MAP.get(phase)
+            if phase_key is None:
+                print(f"  [SKIP] No phase mapping for: {phase}")
+                continue
+
+            phase_start_vals = df_merged[df_merged["event"] == f"start_{phase_key}"]["time"].values
+            phase_end_vals   = df_merged[df_merged["event"] == f"end_{phase_key}"]["time"].values
+
+            phase_start = phase_start_vals[0]   # ← scalar not array
+            phase_end   = phase_end_vals[0]      # ← scalar not array
+            print(f"  Phase boundaries: {phase_start:.2f}s → {phase_end:.2f}s")
+            random_epochs = extract_random_epochs_in_phase(
+                raw_cropped    = raw,
+                start_time     = phase_start,   
+                end_time       = phase_end,    
+                n_epochs       = EPOCH_EXT_PARAMS["random_n_epochs"],
+                epoch_duration = EPOCH_EXT_PARAMS["random_epoch_duration"],
+                event_id       = 1,
+                seed           = None,
+            )
+
+            print(f"Random epochs: {len(random_epochs)} valid")
+
+            out_rand = rand_epochs_dir / f"{sub}_ses-{SES}_task-{TASK}_{phase}_random_epo.fif"
+            random_epochs.save(out_rand, overwrite=True)
+            print(f"[OK] Saved → {out_rand.name}")
+            plot_raw_epochs_with_roi(
+                raw        = raw,
+                epochs     = random_epochs,
+                patient    = cfg,
+                patient_id = sub,
+                phase_name = phase,
+                label      = "random",
+                out_dir    = rand_epochs_dir,
+            )
+
+
 
         print("\n[DONE] Epoch creation complete.")
+
 
 if __name__ == "__main__":
     main()
