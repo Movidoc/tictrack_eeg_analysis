@@ -26,7 +26,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Your config lives in config/config.py
 from config.config import TTL_MAP, DATASET_DIR, PREPROC_DIR, PHASES_TTL
-from src.extract_ttl_events import extract_ttl_events
+from src.helper_functions import extract_ttl_events
 
 # Dataset constants (1 session, 1 run)
 TASK = "tictrack"
