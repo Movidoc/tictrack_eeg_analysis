@@ -196,9 +196,9 @@ def analyse_merged_ttl_tics_imitated(merged_ttl_tics,
                                     phase_start_key='start_spont',
                                     phase_end_key='end_spont',
                                     max_t_after_end=1.0,
-                                    max_t_after_F=2.0,
+                                    max_t_after_F=3.0,
                                     max_t_before_D=2.0,
-                                    max_t_before_start=2.0):
+                                    max_t_before_start=0.5):
                             
     """
     We devide tics into real and imitated. For real tics we check if the T occured. For imitated we check D and F keys if they occured. 
