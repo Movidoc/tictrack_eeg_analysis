@@ -85,7 +85,7 @@ def Ransac_bad_channel_detection(raw, subject_name, plots_dir: Path):
     return raw, bad_channels
 
 
-def rejection_threshold_std(raw, subject_name, plots_dir: Path, threshold=PREPROC_PARAMS["threshold"],):
+def rejection_threshold_std(raw, subject_name, plots_dir: Path, threshold=PREPROC_PARAMS["threshold"],epochs=None):
     """
     Computes rejection threshold for bad epochs based on the FASTER algorithm.
     - The raw data is first re-referenced to the average reference.
@@ -94,8 +94,12 @@ def rejection_threshold_std(raw, subject_name, plots_dir: Path, threshold=PREPRO
     from mne.preprocessing.bads import _find_outliers
 
     raw_avg = raw.copy().set_eeg_reference('average')
-    events = mne.make_fixed_length_events(raw_avg, duration=2)
-    epochs_temp = mne.Epochs(raw_avg, events, tmin=0.0, tmax=2, baseline=None, preload=True)
+
+    if epochs==None:
+        events = mne.make_fixed_length_events(raw_avg, duration=2)
+        epochs_temp = mne.Epochs(raw_avg, events, tmin=0.0, tmax=2, baseline=None, preload=True)
+    else:
+        epochs_temp = epochs
 
     def _deviation(data):
         """Computes the deviation from mean for each channel."""
@@ -168,7 +172,7 @@ def apply_ICA(epochs_ica, raw, subject_name:str, ica_exclusions: dict, plots_dir
         f.savefig(plots_dir / f"{subject_name}_ica_property_{i}.png")
         plt.close(f)
         
-    fig = ica.plot_sources(raw, picks = range(20) , show=True) # plot the time series of the ICA components 
+    fig = ica.plot_sources(epochs_ica, picks = range(20) , show=True) # plot the time series of the ICA components 
     fig.savefig(plots_dir / f"{subject_name}_ica_sources.png")
     plt.close(fig)
 
