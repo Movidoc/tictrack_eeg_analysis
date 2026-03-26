@@ -114,9 +114,9 @@ def plot_raw_epochs_with_roi(raw, epochs, patient, patient_id, phase_name, label
         if desc in ANNOTATION_COLORS:
             annotation_colors[int_id] = ANNOTATION_COLORS[desc]
         elif desc.startswith("start_"):
-            annotation_colors[int_id] = "red"
-        elif desc.startswith("end_"):
             annotation_colors[int_id] = "green"
+        elif desc.startswith("end_"):
+            annotation_colors[int_id] = "red"
         else:
             annotation_colors[int_id] = ANNOTATION_COLORS_DEFAULT
 
