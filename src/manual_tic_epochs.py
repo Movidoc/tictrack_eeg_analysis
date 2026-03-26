@@ -27,13 +27,13 @@ def no_tic_gaps(raw, tics_df, phase_boundaries  = None, epoch_duration = 2.0, mi
         print(f"  phase_boundaries keys: {list(phase_boundaries.keys())}")
         print(f"  used_phases: {used_phases}")
 
-        phase_start = phase_boundaries[phase]["start"]
-        phase_end = phase_boundaries[phase]["end"]
+        phase_start = phase_boundaries[phase]["start"].astype(float)
+        phase_end = phase_boundaries[phase]["end"].astype(float)
 
         # get tics within this phase, sorted by start time
         phase_tics = tics_df[tics_df["phase"] == phase]
     
-        tic_intervals = list(zip(phase_tics["start"], phase_tics["end"])) # (start, end)
+        tic_intervals = list(zip(phase_tics["start"].astype(float), phase_tics["end"].astype(float))) # (start, end)
 
         boundaries = [(phase_start, phase_start)] + tic_intervals + [(phase_end, phase_end)] 
 
@@ -115,7 +115,7 @@ def create_tic_epochs(raw, tics_df, phase_boundaries  = None):
         raw,
         events, 
         event_id={"tic":1},
-        tmin = EPOCH_EXT_PARAMS["pre_seconds"],
+        tmin = -EPOCH_EXT_PARAMS["pre_seconds"],
         tmax = EPOCH_EXT_PARAMS["post_seconds"],
         baseline = None, 
         preload = True
