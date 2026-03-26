@@ -165,7 +165,7 @@ def main():
             phases_dict = phases_dict,
             sub_id      = sub,
             plot_dir    = plot_dir,
-            window_sec    = 30.0,
+            #window_sec    = 30.0,
             n_channels  = n_channels,
         )
         print(f"[OK] Saved raw data plots: {plot_dir.name}")
