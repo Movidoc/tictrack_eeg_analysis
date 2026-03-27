@@ -100,7 +100,7 @@ def main():
         }
 
         # -------------------- NO TIC ------------------- #
-        no_tic_epochs = no_tic_gaps(raw, tics_df, phase_boundaries  = phase_boundaries,epoch_duration = EPOCH_EXT_PARAMS["epoch_duration"] , min_gap = EPOCH_EXT_PARAMS["min_gap"])
+        no_tic_epochs, phases_nt= no_tic_gaps(raw, tics_df, phase_boundaries  = phase_boundaries,epoch_duration = EPOCH_EXT_PARAMS["epoch_duration"] , min_gap = EPOCH_EXT_PARAMS["min_gap"])
 
         # --- 3. Build DataFrame from the epochs in between tics ---
         print(f"\n{'='*60}")
@@ -109,6 +109,8 @@ def main():
         no_tic_metadata = pd.DataFrame({
             "onset":    no_tic_epochs.events[:, 0] / raw.info["sfreq"],  # convert samples back to seconds
             "duration": EPOCH_EXT_PARAMS["epoch_duration"],   
+            "phase": phases_nt,
+
             })
 
         # --- Output folder ---
