@@ -222,6 +222,13 @@ def main():
         tic_epochs, epochs_phase, epochs_type, epochs_annot_type = create_tic_epochs(
             raw, tics_df, phase_boundaries=phase_boundaries
         )
+        metadata = pd.DataFrame({
+            "phase": epochs_phase,
+            "tic_type": epochs_type,
+            "annot_type": epochs_annot_type
+        })
+
+        tic_epochs.metadata = metadata
 
         for phase in phases_dict:
             epochs_dir = PREPROC_DIR / sub / "epochs" / phase
@@ -239,7 +246,7 @@ def main():
         
         # --- 4. Save the epochs as fif file 
 
-        epochs_fif_path = PREPROC_DIR / sub / "tics_manual"/ "tic" / f"{sub}_ses-01_task-tictrack_tic_epoch.fif"
+        epochs_fif_path = PREPROC_DIR / sub / "tics_manual"/ "tic" / f"{sub}_ses-01_task-tictrack_tic_epo.fif"
         tic_epochs.save(epochs_fif_path, overwrite=True)
         print(f"[4/5] Saving raw data for each epoch {epochs_fif_path}...")
 
@@ -264,9 +271,14 @@ def main():
             for phase_name, interval in phases_dict.items()
             if interval is not None
         }
-        no_tic_epochs = no_tic_gaps(raw, tics_df, phase_boundaries  = phase_boundaries,epoch_duration = EPOCH_EXT_PARAMS["epoch_duration"] , min_gap = EPOCH_EXT_PARAMS["min_gap"])
+        no_tic_epochs, phase_nt  = no_tic_gaps(raw, tics_df, phase_boundaries  = phase_boundaries,epoch_duration = EPOCH_EXT_PARAMS["epoch_duration"] , min_gap = EPOCH_EXT_PARAMS["min_gap"])
+
+        metadata_nt = pd.DataFrame({
+            "phase": phase_nt
+        })
+        no_tic_epochs.metadata = metadata_nt
          
-        no_epochs_fif = PREPROC_DIR / sub / "tics_manual" /"no_tic" / f"{sub}_ses-01_task-tictrack_no_tic_epoch.fif"
+        no_epochs_fif = PREPROC_DIR / sub / "tics_manual" /"no_tic" / f"{sub}_ses-01_task-tictrack_no_tic_epo.fif"
         no_tic_epochs.save(no_epochs_fif, overwrite=True)
 
     print("\n[DONE] All epochs saved.")
