@@ -144,6 +144,7 @@ from pathlib import Path
 import os
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict
+import numpy as np
 
 # --- 1. DATA STRUCTURE DEFINITION ---
 @dataclass
@@ -231,7 +232,7 @@ TTL_MAP = {_format_bv_label(k): v for k, v in TTL_LABELS.items()}
 # --- 5. PHASE INTERVALS (Automatically built from TTL_LABELS) ---
 def build_phases_ttl(ttl_labels: dict) -> dict:
     phase_labels = {k: v for k, v in ttl_labels.items() if v.startswith("PHASE_")}
-    
+
     # get only non-INS phases sorted by code
     main_phases = sorted(
         [(code, name) for code, name in phase_labels.items() if not name.endswith("_INS")]
@@ -243,13 +244,21 @@ def build_phases_ttl(ttl_labels: dict) -> dict:
     phases_ttl = {}
     for i, (code, name) in enumerate(main_phases):
         if i + 1 < len(main_phases):
-            next_code = main_phases[i + 1][0]  # start of next phase
+            next_phase_name = main_phases[i + 1][1]        # e.g. "PHASE_EC"
+            next_ins_name   = next_phase_name + "_INS"     # e.g. "PHASE_EC_INS"
+            # find the code for that _INS label
+            next_ins_code = next(
+                (k for k, v in ttl_labels.items() if v == next_ins_name), None
+            )
+            if next_ins_code is None:
+                raise ValueError(f"No _INS label found for {next_ins_name}")
+            end_code = next_ins_code
         else:
-            next_code = end_experiment_code     # last phase ends at END_EXPERIMENT
+            end_code = end_experiment_code  # last phase ends at END_EXPERIMENT
 
         phases_ttl[name] = {
             "start": _format_bv_label(code),
-            "end":   _format_bv_label(next_code)
+            "end":   _format_bv_label(end_code)
         }
 
     return phases_ttl
@@ -391,11 +400,11 @@ PREPROC_PARAMS = {
 Manually identified ICA components to exclude for each subject. This is based on visual inspection of the ICA decomposition and may be updated after further review.
 """
 ICA_EXCLUSIONS = {
-    "sub-BB28": [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 13, 14, 15, 16, 17, 18, 19],
-    "sub-BC29": [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19],
-    "sub-DS26": [0,1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19],
-    "sub-MM30": [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 14, 15, 16, 17, 18, 19 ],
-    "sub-SC31": [0, 1, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 , 18, 19 ],
+    "sub-BB28": [0, 1, 2, 4, 5, 7, 9, 11, 13, 15, 16, 18, 19],
+    "sub-BC29": [0, 1, 3, 7, 8, 9, 10, 11, 12, 16, 17, 18],
+    "sub-DS26": [0, 1, 3, 6, 7, 8, 9, 11, 15, 16, 17, 18],
+    "sub-MM30": [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 15, 17 ],
+    "sub-SC31": [0, 1, 4, 5, 7, 9, 10, 11, 12, 13, 14, 15, 19],
 }
 
 # --- 11. PRE-TIC EXCTRACTION ---
@@ -418,8 +427,19 @@ EPOCH_EXT_PARAMS = {
     "random_n_epochs" : 50,
     "random_epoch_duration" : 2.5,
     "pre_seconds" : 3.0,
-    "post_seconds" : 3.0
+    "post_seconds" : 3.0,
+    "epoch_duration" : 2.0,
+    "min_gap" : 2.0,
 }
+# --- 13. TIME-FREQUENCY ANALYSIS
+TFR_PARAMS = {
+    "freqs":np.arange(1.0, 40.0, 1.0),
+    "normalization": "zscore",
+    "vmin": -2.0,
+    "vmax": 2.0,
+
+}
+
 
 if __name__ == "__main__":
     print(f"[INFO] Configuration file loaded successfully.")
