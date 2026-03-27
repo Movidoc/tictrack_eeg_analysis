@@ -127,7 +127,7 @@ def main():
             if interval is not None
         }
 
-        no_tic_epochs = no_tic_gaps(raw, tics_df, phase_boundaries  = phase_boundaries,epoch_duration = EPOCH_EXT_PARAMS["epoch_duration"] , min_gap = EPOCH_EXT_PARAMS["min_gap"])
+        no_tic_epochs, _ = no_tic_gaps(raw, tics_df, phase_boundaries  = phase_boundaries,epoch_duration = EPOCH_EXT_PARAMS["epoch_duration"] , min_gap = EPOCH_EXT_PARAMS["min_gap"])
         epochs_temp = rejection_threshold_std(raw, sub, plots_dir, epochs = no_tic_epochs)
 
         # --- 5. ICA ---
