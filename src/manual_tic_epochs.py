@@ -18,6 +18,7 @@ def no_tic_gaps(raw, tics_df, phase_boundaries  = None, epoch_duration = 2.0, mi
     """
     used_phases = ["PHASE_EC","PHASE_EO","PHASE_FREE"]
     epochs_onsets = []
+    epochs_phase = []
     for phase in used_phases:
         if phase not in PHASES_TTL:
             print(f"Phase {phase} not found in phases_ttl, skipping.")
@@ -51,11 +52,13 @@ def no_tic_gaps(raw, tics_df, phase_boundaries  = None, epoch_duration = 2.0, mi
             n_epochs = int(gap_duration // epoch_duration) 
             
             if n_epochs==0:
-                epoch_onsets.append(gap_start)
+                epochs_onsets.append(gap_start)
+                epochs_phase.append(phase)
             else:
                 for j in range(n_epochs):
                     epoch_onset = gap_start +j*epoch_duration
                     epochs_onsets.append(epoch_onset)
+                    epochs_phase.append(phase)
                     
     # build an events array
     events = []
@@ -74,7 +77,7 @@ def no_tic_gaps(raw, tics_df, phase_boundaries  = None, epoch_duration = 2.0, mi
     baseline=None, 
     preload=True
     )
-    return epochs 
+    return epochs, epochs_phase
 
 def create_tic_epochs(raw, tics_df, phase_boundaries  = None):
     """

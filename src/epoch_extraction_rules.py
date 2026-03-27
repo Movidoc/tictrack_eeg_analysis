@@ -451,7 +451,7 @@ def analyse_merged_ttl_tics_imitated(merged_ttl_tics,
                 i += 1
                 continue 
 
-            # ---- T before real tic ----
+            # ---- T before real tic ---- shouldnt be!!
             if (found_forward is not None and 
             found_forward[0] == 'start_i'):
                 if found_forward[1] - value <= max_t_before_start:

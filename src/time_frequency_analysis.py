@@ -29,7 +29,7 @@ def trf_analysis_normalized(epochs, random_epochs, freqs=np.arange(1, 40, 1), ep
     )
 
     # Crop to a stable window within the random epochs
-    power_random_baseline = power_random.copy().crop(tmin=0.5, tmax=2.0)
+    power_random_baseline = power_random.copy().crop(tmin=0.5, tmax=1.5)
 
     # Shape: (1, n_channels, n_freqs, 1) — broadcasts over any n_times 
     baseline_mean = power_random_baseline.data.mean(axis=(0, 3), keepdims=True) # check with the closed eyes phase as well 
@@ -83,10 +83,10 @@ def tfr_per_ROI_normalized(patient, pre_tic_epochs, random_epochs, epoch_type='p
     }
 
     # Choose ROI and channels based on montage
-    if patient["montage"] == "standard_1020":
+    if patient.montage == "standard_1020":
         channels_to_use = channels_to_use_32
         roi_lists = roi_lists_32
-    elif patient["montage"] == "standard_1005":
+    elif patient.montage == "standard_1005":
         channels_to_use = channels_to_use_64
         roi_lists = roi_lists_64
     else:
@@ -199,7 +199,7 @@ def plot_trf_roi(tfr_results, freqs, times, n, epoch_type='pre_tic', vmin=-2, vm
         if epoch_type == 'pre_tic':
             extent = [-2, 1.5, 1, 40]
         else:
-            extent = [0.5, 1,5, 1, 40]
+            extent = [0.5, 1.5, 1, 40]
 
         im = ax.imshow(
             data,
