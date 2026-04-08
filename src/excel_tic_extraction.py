@@ -17,8 +17,6 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from config.config import PIPE_PARAMS
-
 
 def extract_tics_from_excel(excel_file: Path, fps: int, min_absence_frames: int = 30,) -> list[tuple[float, float]]:
     """

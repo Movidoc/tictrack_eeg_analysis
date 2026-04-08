@@ -21,7 +21,7 @@ from mne.preprocessing import ICA
 import autoreject
 from autoreject import get_rejection_threshold
 import matplotlib.pyplot as plt
-from config.config import PATIENTS, PIPE_PARAMS,  PREPROC_DIR, ICA_EXCLUSIONS, PREPROC_PARAMS
+from config.config import PATIENTS,  PREPROC_DIR, ICA_EXCLUSIONS, PREPROC_PARAMS
 
 
 def preprocess_raw(raw: mne.io.BaseRaw, subject_name:str, montage_name:str, plots_dir:Path ):

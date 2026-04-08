@@ -8,54 +8,6 @@ import numpy as np
 import mne 
 import matplotlib.pyplot as plt
 
-def trf_analysis_normalized(epochs, random_epochs, freqs=np.arange(1, 40, 1), epoch_type='pre_tic'):
-    """
-    Time frequency analysis with morlet technique. 
-    Paramrters:
-    frequency: 1-40Hz
-    n_cycles: freqs/2
-    normalization: z-score
-    """
-    
-    n_cycles = freqs / 2.
-
-    # -- 1. compute baseline mean/std from random epochs                
-    power_random = random_epochs.compute_tfr(
-        method="morlet",
-        freqs=freqs,
-        n_cycles=n_cycles,
-        return_itc=False,
-        average=False
-    )
-
-    # Crop to a stable window within the random epochs
-    power_random_baseline = power_random.copy().crop(tmin=0.5, tmax=1.5)
-
-    # Shape: (1, n_channels, n_freqs, 1) — broadcasts over any n_times 
-    baseline_mean = power_random_baseline.data.mean(axis=(0, 3), keepdims=True) # check with the closed eyes phase as well 
-    baseline_std  = power_random_baseline.data.std(axis=(0, 3), keepdims=True)
-    baseline_std  = np.where(baseline_std == 0, 1e-10, baseline_std)
-
-    # --- 2. compute TFR on epochs, normalize per epoch then average     
-    power = epochs.compute_tfr(
-        method="morlet",
-        freqs=freqs,
-        n_cycles=n_cycles,
-        return_itc=False,
-        average=False  # (n_epochs, n_channels, n_freqs, n_times)
-    )
-
-    # Z-score each epoch against the random baseline
-    power_normalized = (power.data - baseline_mean) / baseline_std
-
-    # Average across epochs
-    power_avg = power_normalized.mean(axis=0)  # (n_channels, n_freqs, n_times)
-
-    # --- 3. put data back into MNE object to keep metadata              
-    power_mne = power.average()
-    power_mne.data = power_avg
-
-    return power_mne
 
 
 def tfr_per_ROI_normalized(patient, pre_tic_epochs, random_epochs, epoch_type='pre_tic', freqs=np.arange(1.0, 40.0, 2.0), bad_channels=[], normalization = 'zscore'):
@@ -109,10 +61,16 @@ def tfr_per_ROI_normalized(patient, pre_tic_epochs, random_epochs, epoch_type='p
         return_itc=False,
         average=False
     )
+
     if normalization == 'zscore' :
         # log-transform to stabilize variance, add small value to avoid log(0)
         power_random.data = 10 * np.log(power_random.data + 1e-12)  # log-transform to stabilize variance, add small value to avoid log(0)
-    power_random_baseline = power_random.copy().crop(tmin=0.5, tmax=1.5) # check with the closed eyes phase as well
+    
+    power_random_baseline = power_random.copy().crop(tmin=0.5, tmax=3.5) 
+    """
+    There will be high power in the low frequencies because if the 1/f noise
+    That is the property of the EEG, it is correct, that is why the normalization is applied
+    """
 
     # Average over epochs (axis=0) and time (axis=3)
     baseline_mean = power_random_baseline.data.mean(axis=(0, 3), keepdims=True)
@@ -131,19 +89,28 @@ def tfr_per_ROI_normalized(patient, pre_tic_epochs, random_epochs, epoch_type='p
     )
     if normalization == 'zscore' :
         power.data = 10 * np.log(power.data + 1e-12)  # log-transform to stabilize variance, add small value to avoid log(0)
-    power = power.crop(tmin=-2.0, tmax=1.5) #extend to see the entire tic time window 
+    if epoch_type == 'pre_tic':
+        power = power.crop(tmin=-2.0, tmax=1) #extend to see the entire tic time window 
+    else:
+        power = power.crop(tmin = 0.5, tmax = 3.5)
+
     # Z-score normalize each epoch against the random baseline
     # (n_epochs, n_channels, n_freqs, n_times) - (1, n_channels, n_freqs, 1)
-    power_normalized = (power.data - baseline_mean) / baseline_std
+    if epoch_type == "pre_tic":
+        power_normalized = (power.data - baseline_mean) / baseline_std
+    else: 
+        power_normalized = power.data
+
+        
     # try other log ratio normalization 
-    if normalization == 'logratio' :
-        power_normalized = np.log((power.data + 1e-12) / (baseline_mean + 1e-12))
-    if normalization == 'percent':
-        power_normalized = 100 * (power.data - baseline_mean) / baseline_mean
-    if normalization == 'substraction':
-        power_normalized = power.data - baseline_mean
-    if normalization == 'division':
-        power_normalized = power.data / baseline_mean
+    # if normalization == 'logratio' :
+    #     power_normalized = np.log((power.data + 1e-12) / (baseline_mean + 1e-12))
+    # if normalization == 'percent':
+    #     power_normalized = 100 * (power.data - baseline_mean) / baseline_mean
+    # if normalization == 'substraction':
+    #     power_normalized = power.data - baseline_mean
+    # if normalization == 'division':
+    #     power_normalized = power.data / baseline_mean
 
     # Average across epochs → shape (n_channels, n_freqs, n_times)
     power_avg = power_normalized.mean(axis=0)
@@ -154,12 +121,6 @@ def tfr_per_ROI_normalized(patient, pre_tic_epochs, random_epochs, epoch_type='p
 
     # Print min and max power after normalization for debugging
     print(f"Power after normalization: min={power_mne.data.min():.2f}, max={power_mne.data.max():.2f}")
-
-    # Crop to time window of interest
-    # if epoch_type == 'pre_tic':
-    #     power_mne = power_mne.crop(tmin=-1.0, tmax=0.0)
-    # else:
-    #     power_mne = power_mne.crop(tmin=0.6, tmax=2.0)
 
     # average over channels within each ROI                       
     roi_tfr = {}
@@ -175,7 +136,7 @@ def tfr_per_ROI_normalized(patient, pre_tic_epochs, random_epochs, epoch_type='p
 
 
 
-def plot_trf_roi(tfr_results, freqs, times, n, epoch_type='pre_tic', vmin=-2, vmax=2):
+def plot_trf_roi(tfr_results, freqs, times, n, epoch_type='pre_tic', vmin=None, vmax=None):
 
     # if vmin is None or vmax is None:
 
@@ -197,9 +158,16 @@ def plot_trf_roi(tfr_results, freqs, times, n, epoch_type='pre_tic', vmin=-2, vm
 
         data = tfr_results[roi_name]
         if epoch_type == 'pre_tic':
-            extent = [-2, 1.5, 1, 40]
+            extent = [-2, 1, 1, 40]
         else:
-            extent = [0.5, 1.5, 1, 40]
+            extent = [0.5, 3.5, 1, 40]
+
+        all_data = np.concatenate([data.flatten() for data in tfr_results.values()])
+    
+        if vmin is None:
+            vmin = all_data.min()
+        if vmax is None:
+            vmax = all_data.max()
 
         im = ax.imshow(
             data,

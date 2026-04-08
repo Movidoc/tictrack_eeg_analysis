@@ -12,11 +12,15 @@ from config.config import PHASES_TTL, EPOCH_EXT_PARAMS
 
 
 
-def no_tic_gaps(raw, tics_df, phase_boundaries  = None, epoch_duration = 2.0, min_gap = 2.0):
+def no_tic_gaps(raw, tics_df, phase_boundaries  = None, epoch_duration = 2.0, min_gap = 2.0, urge_dur = 2.0, used_phases = None):
     """
     We only extract the in-between tics gaps from EYES_OPEN, EYES_CLOSED, and PHASE_SUP phases.That way we will be able to capture eye blink artefacts and muscle artefacts.  
     """
-    used_phases = ["PHASE_EC","PHASE_EO","PHASE_FREE"]
+    if used_phases ==None:
+        used_phases = ["PHASE_EC","PHASE_EO","PHASE_FREE", "PHASE_MIM", "PHASE_SUP"]
+    else:
+        used_phases = used_phases
+
     epochs_onsets = []
     epochs_phase = []
     for phase in used_phases:
@@ -33,8 +37,10 @@ def no_tic_gaps(raw, tics_df, phase_boundaries  = None, epoch_duration = 2.0, mi
 
         # get tics within this phase, sorted by start time
         phase_tics = tics_df[tics_df["phase"] == phase]
+        start_tic = phase_tics["start"].astype(float) - urge_dur
+        end_tic = phase_tics["end"].astype(float)   
+        tic_intervals = list(zip(start_tic,end_tic)) # (start - urge_dur, end)
     
-        tic_intervals = list(zip(phase_tics["start"].astype(float), phase_tics["end"].astype(float))) # (start, end)
 
         boundaries = [(phase_start, phase_start)] + tic_intervals + [(phase_end, phase_end)] 
 
