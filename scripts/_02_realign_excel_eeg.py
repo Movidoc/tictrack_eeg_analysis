@@ -25,7 +25,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import mne
-from config.config import PATIENTS, PIPE_PARAMS, PREPROC_DIR, DATASET_DIR, ICA_EXCLUSIONS
+from config.config import PATIENTS, PREPROC_DIR, DATASET_DIR, ICA_EXCLUSIONS
 from src.align_eeg_excel import recalibrate_from_first_event
 from src.helper_functions import extract_ttl_events
 
