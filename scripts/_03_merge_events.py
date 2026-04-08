@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from config.config import PATIENTS, PREPROC_DIR, PIPE_PARAMS, PHASES_TTL, TTL_MAP
+from config.config import PATIENTS, PREPROC_DIR, PHASES_TTL, TTL_MAP
 from src.helper_functions import plot_raw
 from src.excel_tic_extraction import extract_tics_from_excel
 

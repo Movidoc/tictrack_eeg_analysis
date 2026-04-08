@@ -15,7 +15,7 @@ import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import mne
-from config.config import PATIENTS, PIPE_PARAMS, PREPROC_DIR, DATASET_DIR, ICA_EXCLUSIONS, EPOCH_EXT_PARAMS, PHASES_TTL
+from config.config import PATIENTS, PREPROC_DIR, DATASET_DIR, ICA_EXCLUSIONS, EPOCH_EXT_PARAMS, PHASES_TTL
 from src.preproc import (
     preprocess_raw,
     Ransac_bad_channel_detection,
@@ -126,8 +126,9 @@ def main():
             for phase_name, interval in phases_dict.items()
             if interval is not None
         }
+        used_phases = ["PHASE_EC", "PHASE_EO", "PHASE_FREE"]
 
-        no_tic_epochs, _ = no_tic_gaps(raw, tics_df, phase_boundaries  = phase_boundaries,epoch_duration = EPOCH_EXT_PARAMS["epoch_duration"] , min_gap = EPOCH_EXT_PARAMS["min_gap"])
+        no_tic_epochs, _ = no_tic_gaps(raw, tics_df, phase_boundaries  = phase_boundaries,epoch_duration = EPOCH_EXT_PARAMS["random_epoch_duration"] , min_gap = EPOCH_EXT_PARAMS["min_gap"], used_phases = used_phases)
         epochs_temp = rejection_threshold_std(raw, sub, plots_dir, epochs = no_tic_epochs)
 
         # --- 5. ICA ---
