@@ -16,6 +16,8 @@ def tfr_per_ROI_normalized(patient, pre_tic_epochs, random_epochs, epoch_type='p
     Normalizes pre_tic epochs against random epochs baseline to avoid
     one strong epoch polluting the average.
     """
+    X = {}
+
     channels_to_use_32 = ["Cz",  "Pz", "Fp1", "Fp2","C3","C4"] 
     channels_to_use_64 = ["Cz", "FCz",  "FC3", "CP3", "Pz", "Fp1", "AF3", "AF4", "FC4","Fp2","C3","C4","AFz","CPz","CP4"] 
 
@@ -100,7 +102,7 @@ def tfr_per_ROI_normalized(patient, pre_tic_epochs, random_epochs, epoch_type='p
         power_normalized = (power.data - baseline_mean) / baseline_std
     else: 
         power_normalized = power.data
-
+    
         
     # try other log ratio normalization 
     # if normalization == 'logratio' :
@@ -129,10 +131,14 @@ def tfr_per_ROI_normalized(patient, pre_tic_epochs, random_epochs, epoch_type='p
         if len(picks) == 0:
             print(f"Warning: no valid channels for ROI '{roi_name}', skipping.")
             continue
+        # --- ROI average PER EPOCH (for stats) ---
+        X[roi_name] = power_normalized[:, picks, :, :].mean(axis=1)
+        # (n_epochs, n_freqs, n_times)
+        print(f"Shape of the input matrix X: {X[roi_name].shape}")
         roi_power = power_mne.data[picks].mean(axis=0)
         roi_tfr[roi_name] = roi_power
 
-    return roi_tfr, power_mne.freqs, power_mne.times, n_pre_tic_epochs
+    return roi_tfr, power_mne.freqs, power_mne.times, n_pre_tic_epochs, X
 
 
 
