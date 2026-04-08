@@ -30,7 +30,7 @@ PHASES = ["PHASE_FREE", "PHASE_MIM", "PHASE_SUP"]
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Extract BrainVision TTL markers to BIDS-like events.tsv"
+        description="Time-frequency analysis for each subject, phase, and condition"
     )
     parser.add_argument(
         "--sub",
@@ -56,7 +56,7 @@ def main():
 
         # --- 1. Load preprocessed epochs data 
         print(f"\n{'='*60}")
-        print(f"[1/5] Loading epochs data ...")
+        print(f"[1/4] Loading epochs data ...")
         print(f"{'='*60}")
         # -------------- Pre-tic epochs -----------
         epochs_fif_path = PREPROC_DIR / sub / "tics_manual"/ "tic" / f"{sub}_ses-01_task-tictrack_tic_epo.fif"
@@ -79,7 +79,7 @@ def main():
 
         # -- 2. Time-Frequency Analysis 
         print(f"\n{'='*60}")
-        print(f"[2/5] Time-Frequency Analysis ...")
+        print(f"[2/4] Time-Frequency Analysis ...")
         print(f"{'='*60}")
 
         # # choose the phase for no_tic epochs 
@@ -96,7 +96,7 @@ def main():
         #     print(f"[INFO] Baseline: {baseline_phase} ({len(random_epochs)} epochs)")
 
         print(f"\n{'='*60}")
-        print(f"[2/2] Plotting TFR Analysis results...")
+        print(f"[3/4] Plotting TFR Analysis results...")
         print(f"{'='*60}")
 
         for phase in phases:
@@ -137,7 +137,7 @@ def main():
 
                 # --- 4. Plot each epochs seperately 
                 print(f"\n{'='*60}")
-                print(f"[4/5] Plotting each epoch separately  ...")
+                print(f"[4/4] Plotting each epoch separately  ...")
                 print(f"{'='*60}")
                 for i in range(len(tic_epochs_sel)):
 

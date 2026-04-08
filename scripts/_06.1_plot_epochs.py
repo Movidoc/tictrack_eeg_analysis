@@ -152,7 +152,7 @@ def plot_raw_epochs_with_roi(raw, epochs, epochs_phase, epochs_type, epochs_anno
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Extract BrainVision TTL markers to BIDS-like events.tsv"
+        description="Plot the epochs extracted manually"
     )
     parser.add_argument(
         "--sub",
@@ -179,7 +179,7 @@ def main():
         fif_path = (PREPROC_DIR / sub / "preprocessing" /
                     f"{sub}_ses-01_task-tictrack_preprocessed_raw.fif")
         print(f"\n{'='*60}")
-        print(f"[1/3] Loading preprocessed raw: {fif_path}")
+        print(f"[1/4] Loading preprocessed raw: {fif_path}")
         print(f"{'='*60}")
         raw = mne.io.read_raw_fif(fif_path, preload=True, verbose="ERROR")
 
@@ -207,7 +207,7 @@ def main():
         # --- 2. Load manual tic annotation Excel ---
         tsv_path = (PREPROC_DIR / sub / "tics_manual" /
                     f"{sub}_ses-01_task-tictrack_tic_epoch_manual.xlsx")
-        print(f"[2/3] Loading manual annotations: {tsv_path}")
+        print(f"[2/4] Loading manual annotations: {tsv_path}")
         tics_df = pd.read_excel(tsv_path)
 
         phases_dict = build_phases_dict(raw)
@@ -218,7 +218,7 @@ def main():
         }
 
         # --- 3. Create epochs from preprocessed raw & plot ---
-        print(f"[3/3] Creating and plotting epochs for {sub}...")
+        print(f"[3/4] Creating and plotting epochs for {sub}...")
         tic_epochs, epochs_phase, epochs_type, epochs_annot_type = create_tic_epochs(
             raw, tics_df, phase_boundaries=phase_boundaries
         )
@@ -254,7 +254,7 @@ def main():
 
         print("\n[DONE] All epochs plotted.")
         print(f"\n{'='*60}")
-        print(f"[5/5] Creating random epochs ...")
+        print(f"[4/4] Creating random epochs ...")
         print(f"{'='*60}")
 
 

@@ -45,7 +45,7 @@ def build_phases_dict(raw: mne.io.BaseRaw) -> dict:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Extract BrainVision TTL markers to BIDS-like events.tsv"
+        description="Extract manually annotated epochs"
     )
     parser.add_argument(
         "--sub",
@@ -78,7 +78,7 @@ def main():
         # --- 1. Load recalibrated EEG ---
         fif_path = PREPROC_DIR / sub / "realign" / f"{sub}_ses-01_task-tictrack_aligned_raw.fif"
         print(f"\n{'='*60}")
-        print(f"[1/6] Loading recalibrated EEG: {fif_path}")
+        print(f"[1/5] Loading recalibrated EEG: {fif_path}")
         print(f"\n{'='*60}")
         raw = mne.io.read_raw_fif(fif_path, preload=True, verbose="ERROR")
 
@@ -88,7 +88,7 @@ def main():
         out_dir.mkdir(parents=True, exist_ok=True)
         tsv_path = out_dir / f"{sub}_ses-01_task-tictrack_tic_epoch_manual.xlsx"
         print(f"\n{'='*60}")
-        print(f"[2/6] Loading manual tic annotations : {tsv_path}")
+        print(f"[2/5] Loading manual tic annotations : {tsv_path}")
         print(f"\n{'='*60}")
         tics_df = pd.read_excel(tsv_path)
 
@@ -105,7 +105,7 @@ def main():
 
         # --- 3. Build DataFrame from the epochs in between tics ---
         print(f"\n{'='*60}")
-        print(f"[3/6] Creating summary for the no_tic epochs : {tsv_path}")
+        print(f"[3/5] Creating summary for the no_tic epochs : {tsv_path}")
         print(f"\n{'='*60}")
         no_tic_metadata = pd.DataFrame({
             "onset":    no_tic_epochs.events[:, 0] / raw.info["sfreq"],  # convert samples back to seconds
@@ -127,7 +127,7 @@ def main():
 
         # --- Plot raw epochs ---
         print(f"\n{'='*60}")
-        print(f"[4/6] Plotting no-tic epochs for {sub}...")
+        print(f"[4/5] Plotting no-tic epochs for {sub}...")
         print(f"{'='*60}")
         fig = no_tic_epochs.plot(
             n_epochs   = 5,
@@ -145,7 +145,7 @@ def main():
         tsv_path = out_dir / f"{sub}_ses-{SES}_task-{TASK}_run-{RUN}_tic_epochs.tsv"
 
         print(f"\n{'='*60}")
-        print(f"[5/6] Creating summary for the tic epochs : {tsv_path}")
+        print(f"[5/5] Creating summary for the tic epochs : {tsv_path}")
         print(f"\n{'='*60}")
 
         tic_epochs, epochs_phase, epochs_type,  epochs_annot_type = create_tic_epochs(raw, tics_df, phase_boundaries  = phase_boundaries)

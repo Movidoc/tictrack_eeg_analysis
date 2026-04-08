@@ -92,26 +92,26 @@ def main():
         # --- 1. Load recalibrated raw EEG ---
         fif_path = PREPROC_DIR / sub / "realign" / f"{sub}_ses-01_task-tictrack_aligned_annotated_raw.fif"
         print(f"\n{'='*60}")
-        print(f"[1/6] Loading EEG: {fif_path}")
+        print(f"[1/7] Loading EEG: {fif_path}")
         print(f"\n{'='*60}")
         raw = mne.io.read_raw_fif(fif_path, preload=True, verbose="ERROR")
     
 
         # --- 2. Preprocess (filter + montage) ---
         print(f"\n{'='*60}")
-        print(f"[2/6] Filtering and applying montage...")
+        print(f"[2/7] Filtering and applying montage...")
         print(f"\n{'='*60}")
         raw = preprocess_raw(raw, sub, cfg.montage, plots_dir)
 
         # --- 3. RANSAC bad channel detection ---
         print(f"\n{'='*60}")
-        print(f"[3/6] Detecting bad channels with RANSAC...")
+        print(f"[3/7] Detecting bad channels with RANSAC...")
         print(f"\n{'='*60}")
         raw, bad_channels =  Ransac_bad_channel_detection(raw, sub, plots_dir)
 
         # --- 4. Epoch rejection (FASTER) ---
         print(f"\n{'='*60}")
-        print(f"[4/6] Rejecting bad epochs (FASTER)...")
+        print(f"[4/7] Rejecting bad epochs (FASTER)...")
         print(f"\n{'='*60}")
         # load epochs for ICA
         # --- Output folder ---
@@ -133,13 +133,13 @@ def main():
 
         # --- 5. ICA ---
         print(f"\n{'='*60}")
-        print(f"[5/6] Applying ICA...")
+        print(f"[5/7] Applying ICA...")
         print(f"\n{'='*60}")
         raw = apply_ICA(epochs_temp, raw, sub, ICA_EXCLUSIONS, plots_dir)
 
         # --- 6. Re-reference to REST ---
         print(f"\n{'='*60}")
-        print(f"[6/6] Re-referencing to REST...")
+        print(f"[6/7] Re-referencing to REST...")
         print(f"\n{'='*60}")
         raw = apply_rest_reference(raw, sub, plots_dir)
 
@@ -154,7 +154,7 @@ def main():
         plot_dir = PREPROC_DIR / sub / "preprocessing"/"plots"
         plot_dir.mkdir(parents=True, exist_ok=True)
         print(f"\n{'='*60}")
-        print(f"[5/5] Plotting annotated raw by phase...")
+        print(f"[7/7] Plotting annotated raw by phase...")
         print(f"\n{'='*60}")
         fif_path = PREPROC_DIR / sub / "preprocessing" / f"{sub}_ses-01_task-tictrack_preprocessed_raw.fif"
         raw_proc = mne.io.read_raw_fif(fif_path, preload=True, verbose="ERROR")
