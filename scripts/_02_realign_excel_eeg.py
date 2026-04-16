@@ -21,6 +21,8 @@ import pandas as pd
 import mne
 import sys
 import os
+import matplotlib.pyplot as plt
+import numpy as np
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -128,26 +130,66 @@ def main():
         print(f"\n{'='*60}")
         print(f"[2/3] Recalibrating EEG to Stimulus/S  2...")
         print(f"\n{'='*60}")
-        raw_cropped = recalibrate_from_first_event(raw, target_stim="Stimulus/S  2")
-        # --- Save recalibrated raw ---
-        recal_path = realign_dir / f"{sub}_ses-01_task-tictrack_aligned_raw.fif"
-        raw_cropped.save(recal_path, overwrite=True)
-        print(f"[OK] Saved recalibrated raw: {recal_path}")
+        #raw = mne.io.read_raw_fif(raw_fif_path, preload=True)
+        raw_realigned = recalibrate_from_first_event(raw, target_stim="Stimulus/S  2")
 
         # ---- 3. TTL extraction ---
         print(f"\n{'='*60}")
         print(f"[3/3] TTL extraction of recalibrated data")
         print(f"\n{'='*60}")
-        df = extract_ttl_events(raw_cropped)
+        df = extract_ttl_events(raw_realigned)
 
         # --- 4. Add EXCEL phase times ---
         df_phases = phases_from_excel(excel_file = cfg.excel_path, fps = cfg.fps)
         df_combined = pd.concat([df, df_phases], ignore_index=True)
         df_combined = df_combined.sort_values("onset").reset_index(drop=True)
 
+        print(f"df_combined:{df_combined}")
+
         out_path_combined = realign_dir / f"{sub}_ses-{SES}_task-{TASK}_run-{RUN}_events_recalibrated_with_phases.tsv"
         df_combined.to_csv(out_path_combined, sep="\t", index=False)
         print(f"[OK] Saved combined TTL + phases: {out_path_combined}")
+
+        recal_path = realign_dir / f"{sub}_ses-01_task-tictrack_aligned_raw.fif"
+        raw_realigned.save(recal_path, overwrite = True)
+        print(f"[OK] Saved recalibrated raw: {recal_path}")
+
+        
+
+        # ======== [DEBUG] ==========
+        # In a test script
+        raw_orig = mne.io.read_raw_brainvision(vdhr, preload=True)
+        raw_realigned_2 = mne.io.read_raw_fif(recal_path, preload=True)
+        # Pick one channel and compare a window
+        ch = "F7"
+        ch_idx = raw_orig.ch_names.index(ch)
+
+        t_start = 19.538  # where green LED was in original
+        sfreq = raw_orig.info["sfreq"]
+        n_samples = int(50 * sfreq)  # 5 seconds
+
+        orig_data = raw_orig.get_data(picks=ch_idx)[0]
+        realigned_data = raw_realigned_2.get_data(picks=ch_idx)[0]
+
+        # These two windows should look identical
+        orig_window = orig_data[int(t_start * sfreq): int(t_start * sfreq) + n_samples]
+        realigned_window = realigned_data[:n_samples]
+        orig_window_dc      = orig_window - orig_window.mean()
+        realigned_window_dc = realigned_window - realigned_window.mean()
+
+        print("All annotations in aligned raw:")
+        for onset, desc in zip(raw_realigned.annotations.onset[:20], raw_realigned.annotations.description[:20]):
+            print(f"  {onset:.3f} s  —  '{desc}'")
+
+
+        time = np.arange(n_samples) / sfreq
+        plt.plot(time, orig_window_dc, label="raw data from green LED")
+        plt.plot(time, realigned_window_dc, label="realigned from t=0", linestyle="--")
+        plt.xlabel("Time (seconds)")
+        plt.ylabel("Amplitude (V)")
+        plt.title("EEG Cz channel: Original vs Realigned segment")
+        plt.legend()
+        plt.savefig("compare.png")
 
         print(f"[OK] Saved: {out_path_combined}")
     print("[DONE] TTL extraction complete.")
