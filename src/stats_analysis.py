@@ -41,6 +41,10 @@ def cluster_stats(X, threshold = None, n_permutations=1024, tail=0, correction =
                 reject, pvals_corrected = fdr_correction(cluster_pv, alpha = alpha, method = 'indep')
             else:
                 reject, pvals_corrected = [], []
+
+        if correction == None:
+            reject = cluster_pv < alpha
+            pvals_corrected = cluster_pv
                 
         cluster_results[roi_name] = {
             "T_obs": T_obs,
@@ -128,11 +132,15 @@ def between_cluster_stats(X1, X2, n_permutations=1024, threshold = None, tail=0,
         F_obs, clusters, cluster_pv, H0 = permutation_cluster_test(X = [X1_roi, X2_roi], threshold = threshold, n_permutations = n_permutations, tail = tail)
 
         # ------ Correcting for multiple comparisons -----
+        
         if correction == 'FDR':
             if len(cluster_pv) > 0:
                 reject, pvals_corrected = fdr_correction(cluster_pv, alpha = alpha, method = 'indep')
             else:
                 reject, pvals_corrected = [], []
+        if correction == None:
+            reject = cluster_pv < alpha
+            pvals_corrected = cluster_pv
                 
         cluster_results[roi] = {
             "T_obs": F_obs,

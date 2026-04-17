@@ -92,9 +92,10 @@ def tfr_per_ROI_normalized(patient, pre_tic_epochs, random_epochs, epoch_type='p
     if normalization == 'zscore' :
         power.data = 10 * np.log(power.data + 1e-12)  # log-transform to stabilize variance, add small value to avoid log(0)
     if epoch_type == 'pre_tic':
-        power = power.crop(tmin=-2.0, tmax=1) #extend to see the entire tic time window 
+        # =========== CHANGE FOR EPOCH CROPPING ======= #
+        power = power.crop(tmin=-1.5, tmax=0) 
     else:
-        power = power.crop(tmin = 0.5, tmax = 3.5)
+        power = power.crop(tmin = 0.5, tmax = 2.0)
 
     # Z-score normalize each epoch against the random baseline
     # (n_epochs, n_channels, n_freqs, n_times) - (1, n_channels, n_freqs, 1)
@@ -163,10 +164,11 @@ def plot_trf_roi(tfr_results, freqs, times, n, epoch_type='pre_tic', vmin=None, 
         ax = axs[row, col]
 
         data = tfr_results[roi_name]
+        # =========== CHANGE FOR EPOCH CROPPING ======= #
         if epoch_type == 'pre_tic':
-            extent = [-2, 1, 1, 40]
+            extent = [-1.5, 0, 1, 40]
         else:
-            extent = [0.5, 3.5, 1, 40]
+            extent = [0.5, 2, 1, 40]
 
         all_data = np.concatenate([data.flatten() for data in tfr_results.values()])
     
