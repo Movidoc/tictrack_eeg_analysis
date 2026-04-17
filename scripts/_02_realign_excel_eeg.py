@@ -164,7 +164,7 @@ def main():
         ch = "F7"
         ch_idx = raw_orig.ch_names.index(ch)
 
-        t_start = 19.538  # where green LED was in original
+        t_start = 151.738  # where green LED was in original
         sfreq = raw_orig.info["sfreq"]
         n_samples = int(50 * sfreq)  # 5 seconds
 
@@ -176,11 +176,6 @@ def main():
         realigned_window = realigned_data[:n_samples]
         orig_window_dc      = orig_window - orig_window.mean()
         realigned_window_dc = realigned_window - realigned_window.mean()
-
-        print("All annotations in aligned raw:")
-        for onset, desc in zip(raw_realigned.annotations.onset[:20], raw_realigned.annotations.description[:20]):
-            print(f"  {onset:.3f} s  —  '{desc}'")
-
 
         time = np.arange(n_samples) / sfreq
         plt.plot(time, orig_window_dc, label="raw data from green LED")

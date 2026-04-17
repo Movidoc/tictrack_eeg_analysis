@@ -118,6 +118,7 @@ def main():
 
         # --- 1. Load recalibrated EEG ---
         fif_path = PREPROC_DIR / sub / "realign" / f"{sub}_ses-01_task-tictrack_aligned_raw.fif"
+        
         print(f"\n{'='*60}")
         print(f"[1/4] Loading recalibrated EEG: {fif_path}")
         print(f"\n{'='*60}")

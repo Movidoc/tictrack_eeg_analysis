@@ -28,17 +28,30 @@ RUN = "01"
 
 def build_phases_dict(raw: mne.io.BaseRaw) -> dict:
     """
-    Build phases_dict from recalibrated EEG annotations.
+    Build phases_dict from decoded annotations in aligned_annotated_raw.fif.
+    Uses 'start_PHASE_X' / 'end_PHASE_X' annotations written by 04_merge_events.py.
     """
+    phase_names = ["PHASE_KP", "PHASE_EC", "PHASE_EO", "PHASE_FREE", "PHASE_MIM", "PHASE_SUP"]
+
+    ann_dict = {}
+    for onset, desc in zip(raw.annotations.onset, raw.annotations.description):
+        ann_dict.setdefault(desc, []).append(onset)
+
     phases_dict = {}
-    for phase_name, t in PHASES_TTL.items():
-        start = [onset for onset, desc in zip(raw.annotations.onset, raw.annotations.description) if desc == t["start"]]
-        end   = [onset for onset, desc in zip(raw.annotations.onset, raw.annotations.description) if desc == t["end"]]
+    for phase in phase_names:
+        start_key = f"start_{phase}"  # e.g. 'start_PHASE_EC'
+        end_key   = f"end_{phase}"    # e.g. 'end_PHASE_EC'
+
+        start = ann_dict.get(start_key, [])
+        end   = ann_dict.get(end_key,   [])
+
         if start and end:
-            phases_dict[phase_name] = (start[0], end[0])
+            phases_dict[phase] = (start[0], end[0])
         else:
-            print(f"[WARN] Missing TTL for phase '{phase_name}'")
-            phases_dict[phase_name] = None
+            print(f"[WARN] Missing annotation for '{phase}': "
+                  f"start('{start_key}')={start}, end('{end_key}')={end}")
+            phases_dict[phase] = None
+
     return phases_dict
 
 
@@ -76,11 +89,15 @@ def main():
     for sub in subjects:
 
         # --- 1. Load recalibrated EEG ---
-        fif_path = PREPROC_DIR / sub / "realign" / f"{sub}_ses-01_task-tictrack_aligned_raw.fif"
+        fif_path = PREPROC_DIR / sub / "realign" / f"{sub}_ses-01_task-tictrack_aligned_annotated_raw.fif"
         print(f"\n{'='*60}")
         print(f"[1/5] Loading recalibrated EEG: {fif_path}")
         print(f"\n{'='*60}")
         raw = mne.io.read_raw_fif(fif_path, preload=True, verbose="ERROR")
+        
+        print("[DEBUG] Annotations found in raw:")
+        for desc in sorted(set(raw.annotations.description)):
+            print(f"  '{desc}'")
 
         # --- 2. Load manual tic annotation ---
         # --- Output folder ---
@@ -115,6 +132,11 @@ def main():
             })
         no_tic_epochs.metadata = no_tic_metadata
         print(f"[DEBUG] no_tic_epochs tmax = {no_tic_epochs.tmax}")
+
+        # # --- Print epoch counts per phase ---
+        print("\n[INFO] No-tic epoch counts per phase:")
+        print(no_tic_metadata["phase"].value_counts().to_string())
+        print(f"       Total: {len(no_tic_metadata)}\n")
 
         # --- Output folder ---
         tsv_dir = PREPROC_DIR / sub / "tics_manual"/"no_tic"
@@ -156,8 +178,24 @@ def main():
             "annot_type": epochs_annot_type,
 
         })
+
+        # # --- Print epoch counts per phase ---
+        print("\n[INFO] Tic epoch counts per phase:")
+        print(tic_metadata["phase"].value_counts().to_string())
+        print(f"       Total: {len(tic_metadata)}\n")
+
         tic_metadata.to_csv(tsv_path, sep="\t", index=False)
         print(f"OK] Saved TSV: {tsv_path}")
+
+        # for i in range(len(tic_epochs)):
+        #     fig = tic_epochs[i].plot(
+        #         n_epochs   = 1,
+        #         n_channels = 20,
+        #         title      = f"Pre-Tic gap epochs — {sub}",
+        #         show = False
+        #     )
+        #     fig.savefig(out_dir / f"{sub}_ses-{SES}_task-{TASK}_pre_tic_epochs_{i}.png", dpi=150)
+        #     print(f"[OK] Plot saved: {out_dir / f'{sub}_ses-{SES}_task-{TASK}_pre_tic_epochs.png'}")
 
 
     print("\n[DONE] Epoch creation complete.")

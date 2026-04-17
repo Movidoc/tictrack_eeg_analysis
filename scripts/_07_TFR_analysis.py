@@ -120,7 +120,7 @@ def main():
                 print(f"  random  tmin={random_epochs.tmin},  tmax={random_epochs.tmax}")
 
                 # Compute TFR
-                roi_tfr, freqs, times, n  = tfr_per_ROI_normalized(
+                roi_tfr, freqs, times, n , _ = tfr_per_ROI_normalized(
                     patient = cfg, pre_tic_epochs = tic_epochs_sel, 
                     random_epochs = random_epochs, epoch_type='pre_tic', freqs=TFR_PARAMS["freqs"], normalization =TFR_PARAMS["normalization"] )
 
@@ -142,7 +142,7 @@ def main():
                 for i in range(len(tic_epochs_sel)):
 
                     # -- Time-Frequency--
-                    sin_tfr, sin_freqs, sin_times, sin_n  = tfr_per_ROI_normalized(
+                    sin_tfr, sin_freqs, sin_times, sin_n, _  = tfr_per_ROI_normalized(
                     patient = cfg, pre_tic_epochs = tic_epochs_sel[i], 
                     random_epochs = random_epochs, epoch_type='pre_tic', freqs=TFR_PARAMS["freqs"], normalization =TFR_PARAMS["normalization"] )
 
@@ -159,7 +159,7 @@ def main():
 
 
         # -- 4. Analysis for no_tic epochs ---
-        roi_tfr_nt, freqs_nt, times_nt, n_nt  = tfr_per_ROI_normalized(
+        roi_tfr_nt, freqs_nt, times_nt, n_nt, _  = tfr_per_ROI_normalized(
             patient = cfg, pre_tic_epochs = random_epochs, 
             random_epochs = random_epochs, epoch_type='random', freqs=TFR_PARAMS["freqs"], normalization =TFR_PARAMS["normalization"] )
         fig_nt = plot_trf_roi(roi_tfr_nt, freqs_nt, times_nt, n_nt, epoch_type='random', vmin=None, vmax=None)

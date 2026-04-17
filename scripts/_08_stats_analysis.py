@@ -94,6 +94,12 @@ def main():
             sel = no_tic_epochs.metadata["phase"] == phase
             random_epochs = no_tic_epochs[sel]
             print(f"[INFO] Baseline: {phase} ({len(random_epochs)} no-tic epochs)")
+            # if len(random_epochs) < 5:
+            #     print(f"[WARN] Only {len(random_epochs)} no-tic epochs for {phase}, "
+            #         f"falling back to PHASE_FREE baseline.")
+            #     sel = no_tic_epochs.metadata["phase"] == "PHASE_FREE"
+            #     random_epochs = no_tic_epochs[sel]
+            #     print(f"[INFO] Fallback baseline: PHASE_FREE ({len(random_epochs)} no-tic epochs)")
 
             for tic in tic_types: 
                 print(f"\n--- {phase} | {tic} ---")
@@ -162,6 +168,7 @@ def main():
             comparison =  f"{cond1} vs {cond2}"
             print(f"[INFO] Comparing {cond1} vs {cond2}")
 
+
             between_cluster_results = between_cluster_stats(X1, X2, n_permutations=STAT_PARAMS['n_permutations'], tail= STAT_PARAMS['tail'], threshold = STAT_PARAMS['threshold'], correction =STAT_PARAMS['correction'])
             fig2 = plot_cluster_results(roi_tfr, between_cluster_results, freqs, times, n, phase, comparison, sub)
 
@@ -169,7 +176,7 @@ def main():
             out_dir2 = PREPROC_DIR / sub / "stats" / 'between_cluster'/ phase
             out_dir2.mkdir(parents=True, exist_ok=True)
             fname2 = f"{sub}_{phase}_{comparison}tfr.png"
-            fig.savefig(out_dir2 / fname2, dpi=150)
+            fig2.savefig(out_dir2 / fname2, dpi=150)
             plt.close(fig2)
 
 
