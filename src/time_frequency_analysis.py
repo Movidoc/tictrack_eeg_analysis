@@ -68,7 +68,7 @@ def tfr_per_ROI_normalized(patient, pre_tic_epochs, random_epochs, epoch_type='p
         # log-transform to stabilize variance, add small value to avoid log(0)
         power_random.data = 10 * np.log(power_random.data + 1e-12)  # log-transform to stabilize variance, add small value to avoid log(0)
     
-    power_random_baseline = power_random.copy().crop(tmin=0.5, tmax=3.5) 
+    power_random_baseline = power_random.copy().crop(tmin=0.5, tmax=2.5) 
     """
     There will be high power in the low frequencies because if the 1/f noise
     That is the property of the EEG, it is correct, that is why the normalization is applied
@@ -93,9 +93,9 @@ def tfr_per_ROI_normalized(patient, pre_tic_epochs, random_epochs, epoch_type='p
         power.data = 10 * np.log(power.data + 1e-12)  # log-transform to stabilize variance, add small value to avoid log(0)
     if epoch_type == 'pre_tic':
         # =========== CHANGE FOR EPOCH CROPPING ======= #
-        power = power.crop(tmin=-1.5, tmax=0) 
+        power = power.crop(tmin=-1.5, tmax=0.5) 
     else:
-        power = power.crop(tmin = 0.5, tmax = 2.0)
+        power = power.crop(tmin = 0.5, tmax = 2.5)
 
     # Z-score normalize each epoch against the random baseline
     # (n_epochs, n_channels, n_freqs, n_times) - (1, n_channels, n_freqs, 1)
@@ -166,9 +166,9 @@ def plot_trf_roi(tfr_results, freqs, times, n, epoch_type='pre_tic', vmin=None, 
         data = tfr_results[roi_name]
         # =========== CHANGE FOR EPOCH CROPPING ======= #
         if epoch_type == 'pre_tic':
-            extent = [-1.5, 0, 1, 40]
+            extent = [-1.5, 0.5, 1, 40]
         else:
-            extent = [0.5, 2, 1, 40]
+            extent = [0.5, 2.5, 1, 40]
 
         all_data = np.concatenate([data.flatten() for data in tfr_results.values()])
     
