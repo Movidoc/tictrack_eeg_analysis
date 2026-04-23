@@ -271,7 +271,7 @@ def main():
             for phase_name, interval in phases_dict.items()
             if interval is not None
         }
-        no_tic_epochs, phase_nt  = no_tic_gaps(raw, tics_df, phase_boundaries  = phase_boundaries,epoch_duration = EPOCH_EXT_PARAMS["random_epoch_duration"] , min_gap = EPOCH_EXT_PARAMS["min_gap"])
+        no_tic_epochs, phase_nt  = no_tic_gaps(raw, tics_df, phase_boundaries  = phase_boundaries, epoch_duration = EPOCH_EXT_PARAMS["random_epoch_duration"] , min_gap = EPOCH_EXT_PARAMS["min_gap"])
 
         metadata_nt = pd.DataFrame({
             "phase": phase_nt

@@ -21,7 +21,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import mne
-from config.config import PATIENTS, PREPROC_DIR, EPOCH_EXT_PARAMS, EPOCH_EXT_PARAMS, CHANNELS_32, CHANNELS_64, ROI_LIST_32, ROI_LIST_64, ROI_COLORS, ANNOTATION_COLORS, ANNOTATION_COLORS_DEFAULT
+from config.config import PATIENTS, PREPROC_DIR, EPOCH_EXT_PARAMS, CHANNELS_32, CHANNELS_64, ROI_LIST_32, ROI_LIST_64, ROI_COLORS, ANNOTATION_COLORS, ANNOTATION_COLORS_DEFAULT
 from src.epoch_creation import extract_random_epochs_in_phase, extract_pre_tic_epochs
 
 PHASES = ["spontaneous", "imitated", "imitated_real", "suppressed", "suppressed_real"]

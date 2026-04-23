@@ -94,12 +94,12 @@ def main():
             sel = no_tic_epochs.metadata["phase"] == phase
             random_epochs = no_tic_epochs[sel]
             print(f"[INFO] Baseline: {phase} ({len(random_epochs)} no-tic epochs)")
-            # if len(random_epochs) < 5:
-            #     print(f"[WARN] Only {len(random_epochs)} no-tic epochs for {phase}, "
-            #         f"falling back to PHASE_FREE baseline.")
-            #     sel = no_tic_epochs.metadata["phase"] == "PHASE_FREE"
-            #     random_epochs = no_tic_epochs[sel]
-            #     print(f"[INFO] Fallback baseline: PHASE_FREE ({len(random_epochs)} no-tic epochs)")
+            if len(random_epochs) < 5:
+                print(f"[WARN] Only {len(random_epochs)} no-tic epochs for {phase}, "
+                    f"falling back to PHASE_FREE baseline.")
+                sel = no_tic_epochs.metadata["phase"] == "PHASE_FREE"
+                random_epochs = no_tic_epochs[sel]
+                print(f"[INFO] Fallback baseline: PHASE_FREE ({len(random_epochs)} no-tic epochs)")
 
             for tic in tic_types: 
                 print(f"\n--- {phase} | {tic} ---")

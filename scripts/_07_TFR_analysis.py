@@ -103,6 +103,15 @@ def main():
             sel = no_tic_epochs.metadata["phase"] == phase
             random_epochs = no_tic_epochs[sel]
             print(f"[INFO] Baseline: {phase} ({len(random_epochs)} no-tic epochs)")
+            if len(random_epochs) == 0:
+                print(f"[WARN] No no-tic epochs for {phase}, falling back to PHASE_FREE baseline.")
+                sel_fallback = no_tic_epochs.metadata["phase"] == "PHASE_FREE"
+                random_epochs = no_tic_epochs[sel_fallback]
+                if len(random_epochs) == 0:
+                    print(f"[ERROR] No PHASE_FREE epochs found either. Skipping {phase}.")
+                    continue
+            else:
+                random_epochs = random_epochs
 
             for tic in tic_types: 
                 print(f"\n--- {phase} | {tic} ---")
@@ -136,26 +145,26 @@ def main():
                 plt.close(fig)
 
                 # --- 4. Plot each epochs seperately 
-                print(f"\n{'='*60}")
-                print(f"[4/4] Plotting each epoch separately  ...")
-                print(f"{'='*60}")
-                for i in range(len(tic_epochs_sel)):
+                # print(f"\n{'='*60}")
+                # print(f"[4/4] Plotting each epoch separately  ...")
+                # print(f"{'='*60}")
+                # for i in range(len(tic_epochs_sel)):
 
-                    # -- Time-Frequency--
-                    sin_tfr, sin_freqs, sin_times, sin_n, _  = tfr_per_ROI_normalized(
-                    patient = cfg, pre_tic_epochs = tic_epochs_sel[i], 
-                    random_epochs = random_epochs, epoch_type='pre_tic', freqs=TFR_PARAMS["freqs"], normalization =TFR_PARAMS["normalization"] )
+                #     # -- Time-Frequency--
+                #     sin_tfr, sin_freqs, sin_times, sin_n, _  = tfr_per_ROI_normalized(
+                #     patient = cfg, pre_tic_epochs = tic_epochs_sel[i], 
+                #     random_epochs = random_epochs, epoch_type='pre_tic', freqs=TFR_PARAMS["freqs"], normalization =TFR_PARAMS["normalization"] )
 
-                    # -- Plot each epoch ---
-                    fig = plot_trf_roi(sin_tfr, sin_freqs, sin_times, sin_n, epoch_type='pre_tic', vmin=None, vmax=None)
+                #     # -- Plot each epoch ---
+                #     fig = plot_trf_roi(sin_tfr, sin_freqs, sin_times, sin_n, epoch_type='pre_tic', vmin=None, vmax=None)
 
-                    # --- output dir ---
-                    out_dir = PREPROC_DIR / sub / "tfr" / 'single_epoch'/ phase
-                    out_dir.mkdir(parents=True, exist_ok=True)
+                #     # --- output dir ---
+                #     out_dir = PREPROC_DIR / sub / "tfr" / 'single_epoch'/ phase
+                #     out_dir.mkdir(parents=True, exist_ok=True)
 
-                    fname = f"{sub}_{phase}_{tic}_{i}_tfr.png"
-                    fig.savefig(out_dir / fname, dpi=150)
-                    plt.close(fig)
+                #     fname = f"{sub}_{phase}_{tic}_{i}_tfr.png"
+                #     fig.savefig(out_dir / fname, dpi=150)
+                #     plt.close(fig)
 
 
         # -- 4. Analysis for no_tic epochs ---

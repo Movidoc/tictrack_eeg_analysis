@@ -118,7 +118,7 @@ def main():
 
         # -------------------- NO TIC ------------------- #
         print(f"[DEBUG] epoch_duration = {EPOCH_EXT_PARAMS['random_epoch_duration']}")
-        no_tic_epochs, phases_nt= no_tic_gaps(raw, tics_df, phase_boundaries  = phase_boundaries,epoch_duration = EPOCH_EXT_PARAMS["random_epoch_duration"] , min_gap = EPOCH_EXT_PARAMS["min_gap"], used_phases = None)
+        no_tic_epochs, phases_nt= no_tic_gaps(raw, tics_df, phase_boundaries  = phase_boundaries,epoch_duration = EPOCH_EXT_PARAMS["epoch_duration"] , min_gap = EPOCH_EXT_PARAMS["min_gap"], used_phases = None)
 
         # --- 3. Build DataFrame from the epochs in between tics ---
         print(f"\n{'='*60}")
@@ -126,7 +126,7 @@ def main():
         print(f"\n{'='*60}")
         no_tic_metadata = pd.DataFrame({
             "onset":    no_tic_epochs.events[:, 0] / raw.info["sfreq"],  # convert samples back to seconds
-            "duration": EPOCH_EXT_PARAMS["random_epoch_duration"],   
+            "duration": EPOCH_EXT_PARAMS["epoch_duration"],   
             "phase": phases_nt,
 
             })
@@ -187,15 +187,15 @@ def main():
         tic_metadata.to_csv(tsv_path, sep="\t", index=False)
         print(f"OK] Saved TSV: {tsv_path}")
 
-        # for i in range(len(tic_epochs)):
-        #     fig = tic_epochs[i].plot(
-        #         n_epochs   = 1,
-        #         n_channels = 20,
-        #         title      = f"Pre-Tic gap epochs — {sub}",
-        #         show = False
-        #     )
-        #     fig.savefig(out_dir / f"{sub}_ses-{SES}_task-{TASK}_pre_tic_epochs_{i}.png", dpi=150)
-        #     print(f"[OK] Plot saved: {out_dir / f'{sub}_ses-{SES}_task-{TASK}_pre_tic_epochs.png'}")
+        for i in range(len(tic_epochs)):
+            fig = tic_epochs[i].plot(
+                n_epochs   = 1,
+                n_channels = 20,
+                title      = f"Pre-Tic gap epochs — {sub}",
+                show = False
+            )
+            fig.savefig(out_dir / f"{sub}_ses-{SES}_task-{TASK}_pre_tic_epochs_{i}.png", dpi=150)
+            print(f"[OK] Plot saved: {out_dir / f'{sub}_ses-{SES}_task-{TASK}_pre_tic_epochs.png'}")
 
 
     print("\n[DONE] Epoch creation complete.")
