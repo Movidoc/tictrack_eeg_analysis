@@ -192,3 +192,76 @@ def plot_raw(
             plt.close(fig)
             print(f"[OK] Saved → {out_fig.name}")
         raw.set_annotations(orig_annotations)
+
+import pandas as pd
+import numpy as np
+
+def compute_start_to_key_d_delays(df, max_delay=3.0, same_phase=True):
+    """
+    Pair each Excel start_* event with the closest following KEY_D event.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Must contain columns: event, time, phase, source.
+
+    max_delay : float
+        Maximum allowed delay in seconds between start_* and KEY_D.
+        Use this to avoid pairing unrelated events.
+
+    same_phase : bool
+        If True, only match KEY_D events from the same phase.
+
+    Returns
+    -------
+    pairs : pandas.DataFrame
+        One row per matched start_* event.
+    """
+
+    df = df.copy()
+    df["time"] = pd.to_numeric(df["time"], errors="coerce")
+
+    # Excel start events only: start_24, start_25, etc.
+    starts = df[
+        df["event"].astype(str).str.match(r"^start_\d+$")
+        & (df["source"] == "Excel")
+    ].copy()
+
+    # EEG KEY_D events
+    key_d = df[df["event"] == "KEY_D"].copy()
+
+    results = []
+
+    for _, start_row in starts.iterrows():
+        start_time = start_row["time"]
+        start_phase = start_row["phase"]
+        start_event = start_row["event"]
+
+        candidates = key_d[key_d["time"] >= start_time].copy()
+
+        if same_phase:
+            candidates = candidates[candidates["phase"] == start_phase]
+
+        if candidates.empty:
+            continue
+
+        candidates["delay_s"] = candidates["time"] - start_time
+
+        # keep only close events
+        candidates = candidates[candidates["delay_s"] <= max_delay]
+
+        if candidates.empty:
+            continue
+
+        # nearest following KEY_D
+        best = candidates.sort_values("delay_s").iloc[0]
+
+        results.append({
+            "start_event": start_event,
+            "phase": start_phase,
+            "start_time": start_time,
+            "key_d_time": best["time"],
+            "delay_s": best["delay_s"],
+        })
+
+    return pd.DataFrame(results)

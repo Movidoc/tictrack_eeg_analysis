@@ -21,6 +21,10 @@ def tfr_per_ROI_normalized(patient, pre_tic_epochs, random_epochs, epoch_type='p
     channels_to_use_32 = ["Cz",  "Pz", "Fp1", "Fp2","C3","C4"] 
     channels_to_use_64 = ["Cz", "FCz",  "FC3", "CP3", "Pz", "Fp1", "AF3", "AF4", "FC4","Fp2","C3","C4","AFz","CPz","CP4"] 
 
+    if patient.sub_id == 'sub-CM33':
+            channels_to_use_64 = ["Cz", "FC3", "CP3", "Pz", "Fp1", "AF3", "AF4", "FC4","Fp2","C3","C4","AFz","CPz","CP4"] 
+
+  
     roi_lists_32 = {
         "midline_premotor":   ["Cz"],
         "left_sensorimotor":  ["C3"],
@@ -35,6 +39,17 @@ def tfr_per_ROI_normalized(patient, pre_tic_epochs, random_epochs, epoch_type='p
         "midline_posterior":  ["Pz", "CPz"],
         "midline_prefrontal": ["Fp1", "AF3", "AF4", "Fp2", "AFz"]
     }
+    if patient.sub_id == 'sub-CM33':
+          roi_lists_64 = {
+        "midline_premotor":   ["Cz"],
+        "left_sensorimotor":  ["FC3", "CP3", "C3"],
+        "right_sensorimotor": ["FC4", "C4", "CP4"],
+        "midline_posterior":  ["Pz", "CPz"],
+        "midline_prefrontal": ["Fp1", "AF3", "AF4", "Fp2", "AFz"]
+        }
+
+
+
 
     # Choose ROI and channels based on montage
     if patient.montage == "standard_1020":

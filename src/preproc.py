@@ -36,6 +36,9 @@ def preprocess_raw(raw: mne.io.BaseRaw, subject_name:str, montage_name:str, plot
 
     raw.set_montage(montage_name)
 
+    print(f"Total channels: {len(raw.ch_names)}")
+    print("Channel names:", raw.ch_names)
+
     if subject_name == 'sub-BB28':
         """
         Based on the visual inspection of the data the last 10s of the recording of patient BB28 was incorrect. Probable reason is EEG stopped woking. That is why, we crop the last second (meanigless for the analysis).
@@ -77,8 +80,24 @@ def Ransac_bad_channel_detection(raw, subject_name, plots_dir: Path):
         Based on the visual inspection 1 bad channels were identified for the patient MM30.
         """
         raw.info['bads'].append('AFz')
+
+    if subject_name == 'sub-CM33':
+        """
+        Based on the visual inspection 1 bad channels were identified for the patient CM33.
+        """
+        #raw.info['bads'].append('TP10')
+        raw.info['bads'].append('PO7')
+        raw.info['bads'].append('TP9')
+        raw.info['bads'].append('FT9')
+        raw.info['bads'].append('O1')
+
     
     bad_channels = raw.info['bads']
+    good_picks = mne.pick_types(raw.info, meg=False, eeg=True, exclude='bads')
+    data = raw.get_data(picks=good_picks)
+    ptp = np.ptp(data, axis=1)
+    max_idx = np.argmax(ptp)
+    print(f"Channel with highest amplitude: {raw.ch_names[good_picks[max_idx]]} ({ptp[max_idx] * 1e6:.2f} µV)")
     print("Ransac detected bad channels:", ransac.bad_chs_)
     print("All bad channels detected:", bad_channels)
 
