@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from config.config import PATIENTS, PREPROC_DIR, PHASES_TTL, TTL_MAP
-from src.helper_functions import plot_raw
+from src.helper_functions import plot_raw, compute_start_to_key_d_delays
 from src.excel_tic_extraction import extract_tics_from_excel
 
 
@@ -192,6 +192,15 @@ def main():
 
         # --- Sort by time and save ---
         df = pd.DataFrame(rows).sort_values("time").reset_index(drop=True)
+
+
+        # ===== CALCULATE THE DIFFERENCE BETWEEN D & START_ ==== #
+        pairs = compute_start_to_key_d_delays(df, max_delay=3.0)
+        out_path = out_dir / f"{sub}_ses-01_task-tictrack_start_diff.tsv"
+        pairs.to_csv(out_path, sep="\t", index=False)
+        print(f"[OK] Saved start to KEY_D differences: {out_path}")
+
+
         out_path = out_dir / f"{sub}_ses-01_task-tictrack_merged_events.tsv"
         df.to_csv(out_path, sep="\t", index=False)
         print(f"[OK] Saved: {out_path}")

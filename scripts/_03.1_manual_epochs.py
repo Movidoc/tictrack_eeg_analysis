@@ -5,7 +5,11 @@
 
 from __future__ import annotations
 
+
+import matplotlib
+matplotlib.use('Agg')
 import argparse
+import matplotlib.pyplot as plt
 from pathlib import Path
 import re
 from collections import Counter
@@ -13,6 +17,8 @@ import pandas as pd
 import mne
 import sys
 import os
+
+
 
 # This adds the parent directory to your Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -117,7 +123,7 @@ def main():
         }
 
         # -------------------- NO TIC ------------------- #
-        print(f"[DEBUG] epoch_duration = {EPOCH_EXT_PARAMS['random_epoch_duration']}")
+        print(f"[DEBUG] epoch_duration = {EPOCH_EXT_PARAMS['epoch_duration']}")
         no_tic_epochs, phases_nt= no_tic_gaps(raw, tics_df, phase_boundaries  = phase_boundaries,epoch_duration = EPOCH_EXT_PARAMS["epoch_duration"] , min_gap = EPOCH_EXT_PARAMS["min_gap"], used_phases = None)
 
         # --- 3. Build DataFrame from the epochs in between tics ---
@@ -154,7 +160,8 @@ def main():
         fig = no_tic_epochs.plot(
             n_epochs   = 5,
             n_channels = 20,
-            title      = f"No-tic gap epochs — {sub}"
+            title      = f"No-tic gap epochs — {sub}",
+            show = False,
         )
         fig.savefig(tsv_dir / f"{sub}_ses-{SES}_task-{TASK}_no_tic_epochs.png", dpi=150)
         print(f"[OK] Plot saved: {tsv_dir / f'{sub}_ses-{SES}_task-{TASK}_no_tic_epochs.png'}")

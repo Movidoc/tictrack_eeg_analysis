@@ -124,21 +124,28 @@ def main():
                 roi_tfr : dictionary of each ROI with (freqs, times) 
                 X : dictionary of each ROI with (epochs, freqs, times)
                 """
+
+                # ====== PLOTTING ERP ======== #
+                roi_erp = {roi_name: X_roi.mean(axis=1) for roi_name, X_roi in X.items()}
+
                 tfr_data[phase][tic] = {
                     "roi_tfr": roi_tfr,
                     "X": X,
                     "freqs": freqs,
                     "times": times,
-                    "n": n
+                    "n": n,
+                    "roi_erp": roi_erp,
                 }
-
+                
                 # ---3. Permutation Cluster 1 Sample Test
                 print(f"\n{'='*60}")
-                print(f"[3/5] Permutation Cluster 1 Sample Test and Plotting for {phase} & {tic}...")
+                print(f"[3/5] Permutation Cluster 1 Sample Test and Plotting for {phase} & {tic}..")
                 print(f"{'='*60}")
 
                 cluster_results = cluster_stats(X, n_permutations=STAT_PARAMS['n_permutations'], tail= STAT_PARAMS['tail'], threshold = STAT_PARAMS['threshold'], correction =STAT_PARAMS['correction'])
-                fig = plot_cluster_results(roi_tfr, cluster_results, freqs, times, n, phase, tic, sub)
+
+                fig = plot_cluster_results(roi_tfr, cluster_results, freqs, times, n, phase, tic, sub, roi_erp)
+
 
                 # ----------- Output folder ---------
                 out_dir = PREPROC_DIR / sub / "stats" / 'cluster_1sample'/ phase
