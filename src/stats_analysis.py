@@ -441,3 +441,103 @@ def _plot_erp_panel(ax, erp_data, times, roi_name):
     ax.set_ylabel("Amplitude (µV)")
     ax.set_title(f"{roi_name} – ERP", fontsize=9)
     ax.spines[["top", "right"]].set_visible(False)
+
+def plot_power_spectrum_per_roi(spectra, freqs, sub_ids, sig_bands=None):
+    """
+    Plot normalized power spectrum (1-40 Hz) for each ROI on one figure.
+    Each line = one subject. Grand average line added on top.
+
+    Parameters
+    ----------
+    spectra  : dict {roi_name: (n_subjects, n_freqs)}
+    freqs    : array-like (n_freqs,)
+    sub_ids  : list of str — subject labels for the legend
+    """
+    BANDS = {
+        "delta": (1, 4),
+        "theta": (4, 8),
+        "alpha": (8, 13),
+        "beta":  (13, 30),
+        "gamma": (30, 40),
+    }
+    BAND_COLORS = {
+        "delta": "#d0e8ff",
+        "theta": "#d0ffe8",
+        "alpha": "#fff5d0",
+        "beta":  "#ffd0d0",
+        "gamma": "#ead0ff",
+    }
+
+    roi_names = list(spectra.keys())
+    n_rois    = len(roi_names)
+    n_cols    = 3
+    n_rows    = int(np.ceil(n_rois / n_cols))
+
+    # One color per subject
+    cmap      = plt.cm.get_cmap("tab10", len(sub_ids))
+    sub_colors = {sub: cmap(i) for i, sub in enumerate(sub_ids)}
+
+    fig, axs = plt.subplots(n_rows, n_cols,
+                            figsize=(6 * n_cols, 4 * n_rows),
+                            constrained_layout=True)
+    fig.suptitle("Pre-tic power spectrum | PHASE_FREE | expressed",
+                 fontsize=16, fontweight="bold")
+
+    axs_flat = axs.flatten() if n_rois > 1 else [axs]
+
+    for i, roi_name in enumerate(roi_names):
+        ax = axs_flat[i]
+        data = spectra[roi_name]  # (n_subjects, n_freqs)
+
+        # Shade frequency bands
+        for band_name, (fmin, fmax) in BANDS.items():
+            ax.axvspan(fmin, fmax, color=BAND_COLORS[band_name],
+                       alpha=0.4, label=band_name)
+
+        # One line per subject
+        for j, sub_id in enumerate(sub_ids):
+            ax.plot(freqs, data[j], color=sub_colors[sub_id],
+                    linewidth=1.2, alpha=0.8, label=sub_id)
+
+
+
+        if sig_bands is not None and roi_name in sig_bands:
+            for j, sub_id in enumerate(sub_ids):
+                if sub_id not in sig_bands[roi_name]:
+                    continue
+                for band_name, (fmin, fmax) in BANDS.items():
+                    if sig_bands[roi_name][sub_id].get(band_name, False):
+                        # Place a small marker at the top of the band
+                        band_center = (fmin + fmax) / 2
+                        y_pos = 0.92 - (j * 0.06)  # stagger vertically per subject
+                        ax.plot(band_center, y_pos,
+                                marker="*", color=sub_colors[sub_id],
+                                markersize=8, transform=ax.get_xaxis_transform(),
+                                clip_on=False)
+
+        # Grand average line
+        grand_mean = data.mean(axis=0)
+        grand_sem  = data.std(axis=0) / np.sqrt(data.shape[0])
+        ax.plot(freqs, grand_mean, color="black",
+                linewidth=2.5, label="grand avg", zorder=5)
+        ax.fill_between(freqs, grand_mean - grand_sem, grand_mean + grand_sem,
+                        color="black", alpha=0.15)
+
+        ax.axhline(0, color="gray", linestyle=":", linewidth=0.8)
+        ax.set_title(roi_name, fontsize=12)
+        ax.set_xlabel("Frequency (Hz)")
+        ax.set_ylabel("Normalized power (z-score)")
+        ax.set_xlim(freqs[0], freqs[-1])
+        ax.set_ylim(-1, 1)
+        ax.spines[["top", "right"]].set_visible(False)
+
+    # Single legend for subjects + bands on last axis
+    handles, labels = axs_flat[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="lower right",
+               fontsize=8, ncol=2, framealpha=0.7)
+
+    # Hide unused axes
+    for j in range(n_rois, len(axs_flat)):
+        fig.delaxes(axs_flat[j])
+
+    return fig
