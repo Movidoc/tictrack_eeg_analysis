@@ -51,6 +51,9 @@ def main():
             raise RuntimeError(f"Subjects not found in config: {missing}")
     else:
         subjects = PATIENTS
+    
+    grand_avg_tfrs = []
+    grand_concat_tfrs = []
 
     for sub, cfg in subjects.items():
 
@@ -129,9 +132,18 @@ def main():
                 print(f"  random  tmin={random_epochs.tmin},  tmax={random_epochs.tmax}")
 
                 # Compute TFR
-                roi_tfr, freqs, times, n , _ = tfr_per_ROI_normalized(
+                roi_tfr, freqs, times, n , X = tfr_per_ROI_normalized(
                     patient = cfg, pre_tic_epochs = tic_epochs_sel, 
                     random_epochs = random_epochs, epoch_type='pre_tic', freqs=TFR_PARAMS["freqs"], normalization =TFR_PARAMS["normalization"] )
+                
+                # ====== Add average aross patients ====== #
+                if phase == "PHASE_FREE" and tic == 'expressed':
+                    grand_avg_tfrs.append(roi_tfr)
+                    grand_avg_freqs = freqs
+                    grand_avg_times = times
+
+                    grand_concat_tfrs.append(X)
+
 
             # -- 3. Plotting the TFR results
                 fig = plot_trf_roi(roi_tfr, freqs, times, n, epoch_type='pre_tic', vmin=None, vmax=None)
@@ -181,6 +193,44 @@ def main():
         fig_nt.savefig(out_dir_nt / fname_nt, dpi=150)
         plt.close(fig_nt)
 
+    # average across all patients 
+    out_dir_grand = PREPROC_DIR / "grand_average" / "tfr"
+    out_dir_grand.mkdir(parents=True, exist_ok=True)
+    if grand_avg_tfrs:
+        grand_avg = {}
+        print(f"\n{'='*60}")
+        print(f"[4/4] Plotting grand average across patients  ...")
+        print(f"{'='*60}")
+        print(f"[INFO] Computing grand average across {len(grand_avg_tfrs)} patients for PHASE_FREE | expressed condition.")
+        for roi in grand_avg_tfrs[0].keys():
+            grand_avg[roi] = np.mean([tfr[roi] for tfr in grand_avg_tfrs], axis=0)
+        fig_grand_avg = plot_trf_roi(grand_avg, grand_avg_freqs, grand_avg_times, n = len(grand_avg_tfrs), epoch_type='pre_tic', vmin=None, vmax=None)
+
+        fname_grand = f"grand_average_pre_tic_tfr.png"
+        fig_grand_avg.savefig(out_dir_grand / fname_grand, dpi=150)
+        plt.close(fig_grand_avg)
+
+    # average across all patients and epochs (concat)
+    if grand_concat_tfrs:
+        grand_concat = {}
+        total_epochs = 0
+        for roi in grand_concat_tfrs[0].keys():
+            all_epochs = np.concatenate(
+                [X[roi] for X in grand_concat_tfrs if roi in X], axis=0
+            )  # (total_epochs, n_freqs, n_times)
+            grand_concat[roi] = all_epochs.mean(axis=0)  # (n_freqs, n_times)
+            total_epochs = all_epochs.shape[0]
+            print(f"[INFO] ROI {roi}: {all_epochs.shape[0]} total epochs across subjects")
+    
+        fig_concat = plot_trf_roi(
+            grand_concat, grand_avg_freqs, grand_avg_times,
+            n=total_epochs, epoch_type='pre_tic', vmin=None, vmax=None
+        )
+        fname_concat = "grand_average_PHASE_FREE_expressed_concat_tfr.png"
+        fig_concat.savefig(out_dir_grand / fname_concat, dpi=150)
+        plt.close(fig_concat)
+        print(f"[OK] Grand average (concat, n={total_epochs} epochs) saved → {fname_concat}")
+            
 
 
 
