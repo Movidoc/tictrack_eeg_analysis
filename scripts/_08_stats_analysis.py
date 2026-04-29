@@ -161,10 +161,8 @@ def main():
                     "beta":  (13, 30),
                     "gamma": (30, 40),
                 }
-
-                # Number of tests for Bonferroni correction
-                n_tests = len(spectra_per_roi) * len(BANDS)  # n_rois * n_bands
-                alpha_corrected = 0.05 #/ n_tests
+                # not sure about the correction 
+                alpha_corrected = 0.05 / 5 
 
                 for roi, spectra_list in spectra_per_roi.items():
                     sig_bands[roi] = {}
@@ -178,7 +176,10 @@ def main():
                             time_mask = (grand_times >= SPECTRUM_TMIN) & (grand_times <= SPECTRUM_TMAX)
                             band_power = X_sub[:, freq_mask, :][:, :, time_mask].mean(axis=(1, 2))
                             t_stat, p_val = ttest_1samp(band_power, popmean=0)
-                            sig_bands[roi][sub_id][band_name] = p_val < alpha_corrected
+                            sig_bands[roi][sub_id][band_name] = {
+                                "significant": p_val < alpha_corrected,
+                                "t_stat": t_stat,
+                            }
                             if p_val < alpha_corrected:
                                 direction = "↑" if t_stat > 0 else "↓"
                                 print(f"  [{roi}] {sub_id} | {band_name}: p={p_val:.4f} {direction}")
