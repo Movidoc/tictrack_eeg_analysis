@@ -156,27 +156,27 @@ def main():
                 fig.savefig(out_dir / fname, dpi=150)
                 plt.close(fig)
 
-                # --- 4. Plot each epochs seperately 
-                # print(f"\n{'='*60}")
-                # print(f"[4/4] Plotting each epoch separately  ...")
-                # print(f"{'='*60}")
-                # for i in range(len(tic_epochs_sel)):
+                #--- 4. Plot each epochs seperately 
+                print(f"\n{'='*60}")
+                print(f"[4/4] Plotting each epoch separately  ...")
+                print(f"{'='*60}")
+                for i in range(len(tic_epochs_sel)):
 
-                #     # -- Time-Frequency--
-                #     sin_tfr, sin_freqs, sin_times, sin_n, _  = tfr_per_ROI_normalized(
-                #     patient = cfg, pre_tic_epochs = tic_epochs_sel[i], 
-                #     random_epochs = random_epochs, epoch_type='pre_tic', freqs=TFR_PARAMS["freqs"], normalization =TFR_PARAMS["normalization"] )
+                    # -- Time-Frequency--
+                    sin_tfr, sin_freqs, sin_times, sin_n, _  = tfr_per_ROI_normalized(
+                    patient = cfg, pre_tic_epochs = tic_epochs_sel[i], 
+                    random_epochs = random_epochs, epoch_type='pre_tic', freqs=TFR_PARAMS["freqs"], normalization =TFR_PARAMS["normalization"] )
 
-                #     # -- Plot each epoch ---
-                #     fig = plot_trf_roi(sin_tfr, sin_freqs, sin_times, sin_n, epoch_type='pre_tic', vmin=None, vmax=None)
+                    # -- Plot each epoch ---
+                    fig = plot_trf_roi(sin_tfr, sin_freqs, sin_times, sin_n, epoch_type='pre_tic', vmin=None, vmax=None)
 
-                #     # --- output dir ---
-                #     out_dir = PREPROC_DIR / sub / "tfr" / 'single_epoch'/ phase
-                #     out_dir.mkdir(parents=True, exist_ok=True)
+                    # --- output dir ---
+                    out_dir = PREPROC_DIR / sub / "tfr" / 'single_epoch'/ phase
+                    out_dir.mkdir(parents=True, exist_ok=True)
 
-                #     fname = f"{sub}_{phase}_{tic}_{i}_tfr.png"
-                #     fig.savefig(out_dir / fname, dpi=150)
-                #     plt.close(fig)
+                    fname = f"{sub}_{phase}_{tic}_{i}_tfr.png"
+                    fig.savefig(out_dir / fname, dpi=150)
+                    plt.close(fig)
 
 
         # -- 4. Analysis for no_tic epochs ---

@@ -25,9 +25,11 @@ from config.config import (
     TFR_PARAMS, STAT_PARAMS,
 )
 from src.time_frequency_analysis import tfr_per_ROI_normalized
-from src.stats_analysis import cluster_stats, plot_cluster_results, between_cluster_stats, plot_power_spectrum_per_roi
+from src.stats_analysis import cluster_stats, plot_cluster_results, between_cluster_stats, plot_power_spectrum_per_roi, save_cluster_results_to_csv
 
 from scipy.stats import ttest_1samp
+from scipy.stats import wilcoxon
+from mne.stats import fdr_correction
 
 TASK   = "tictrack"
 SES    = "01"
@@ -131,7 +133,10 @@ def main():
                 roi_tfr : dictionary of each ROI with (freqs, times) 
                 X : dictionary of each ROI with (epochs, freqs, times)
                 """
-                # === Add the stats o the average TFR ==== #
+                # === Add the stats of the grand average ==== #
+                print(f"\n{'='*60}")
+                print(f"[3/5] Calculating stats for the grand average  ...")
+                print(f"{'='*60}")
                 SPECTRUM_TMIN = -1.5
                 SPECTRUM_TMAX = 0.0
 
@@ -151,6 +156,8 @@ def main():
 
 
                 # -------- Significance of the power --------- #
+                print(f"\n{'='*60}")
+                print(f"[4/5] Calculating stats for the power spectrum for each frequency band  ...")
 
                 sig_bands = {}  # {roi: {sub_id: {band_name: bool}}}
 
@@ -162,7 +169,7 @@ def main():
                     "gamma": (30, 40),
                 }
                 # not sure about the correction 
-                alpha_corrected = 0.05 / 5 
+                #alpha_corrected = 0.05 / 5 
 
                 for roi, spectra_list in spectra_per_roi.items():
                     sig_bands[roi] = {}
@@ -170,23 +177,45 @@ def main():
                         sig_bands[roi][sub_id] = {}
                         # Get all epochs for this subject/roi: (n_epochs, n_freqs)
                         X_sub = grand_X[roi][j]  # (n_epochs, n_freqs, n_times)
+
+                        t_stats = []
+                        p_vals  = []
                         for band_name, (fmin, fmax) in BANDS.items():
                             freq_mask = (grand_freqs >= fmin) & (grand_freqs < fmax)
                             # Mean power per epoch in this band → (n_epochs,)
                             time_mask = (grand_times >= SPECTRUM_TMIN) & (grand_times <= SPECTRUM_TMAX)
                             band_power = X_sub[:, freq_mask, :][:, :, time_mask].mean(axis=(1, 2))
-                            t_stat, p_val = ttest_1samp(band_power, popmean=0)
+
+                            try:
+                                stat, p_val = wilcoxon(band_power)
+                                t_stat = np.mean(band_power) 
+                            except ValueError:
+                                stat, p_val, t_stat = 0.0, 1.0, 0.0
+                            t_stats.append(t_stat)
+                            p_vals.append(p_val)
+
+                        # ----- multiple comparison correction ----- #
+                        reject, pvals_corrected = fdr_correction(np.array(p_vals), alpha=0.05, method='indep')
+                                
+                            #t_stat, p_val = ttest_1samp(band_power, popmean=0) # one-sample t-test against zero
+                        band_names = list(BANDS.keys())
+                        for k, band_name in enumerate(band_names):  
                             sig_bands[roi][sub_id][band_name] = {
-                                "significant": p_val < alpha_corrected,
-                                "t_stat": t_stat,
+                                "significant": reject[k],
+                                "t_stat": t_stats[k],
+                                "p_val": pvals_corrected[k]
                             }
-                            if p_val < alpha_corrected:
-                                direction = "↑" if t_stat > 0 else "↓"
-                                print(f"  [{roi}] {sub_id} | {band_name}: p={p_val:.4f} {direction}")
+                            if reject[k]:
+                                direction = "↑" if t_stats[k] > 0 else "↓"
+                                print(f"  [{roi}] {sub_id} | {band_name}: p={pvals_corrected[k]:.4f} {direction}")
+
+                            # if p_val < alpha_corrected:
+                            #     direction = "↑" if t_stat > 0 else "↓"
+                            #     print(f"  [{roi}] {sub_id} | {band_name}: p={p_val:.4f} {direction}")
 
 
                 # ====== PLOTTING ERP ======== #
-                roi_erp = {roi_name: X_roi.mean(axis=1) for roi_name, X_roi in X.items()}
+                #roi_erp = {roi_name: X_roi.mean(axis=1) for roi_name, X_roi in X.items()}
 
                 tfr_data[phase][tic] = {
                     "roi_tfr": roi_tfr,
@@ -194,20 +223,21 @@ def main():
                     "freqs": freqs,
                     "times": times,
                     "n": n,
-                    "roi_erp": roi_erp,
+                    #"roi_erp": roi_erp,
                 }
                 
                 # ---3. Permutation Cluster 1 Sample Test
-                '''
+                
                 print(f"\n{'='*60}")
                 print(f"[3/5] Permutation Cluster 1 Sample Test and Plotting for {phase} & {tic}..")
                 print(f"{'='*60}")
 
                 cluster_results = cluster_stats(X, n_permutations=STAT_PARAMS['n_permutations'], tail= STAT_PARAMS['tail'], threshold = STAT_PARAMS['threshold'], correction =STAT_PARAMS['correction'])
-                '''
 
-                '''
-                fig = plot_cluster_results(roi_tfr, cluster_results, freqs, times, n, phase, tic, sub, roi_erp)
+                print(f"[INFO] Found {len(cluster_results)} significant clusters for {phase} | {tic}")
+
+
+                fig = plot_cluster_results(roi_tfr, cluster_results, freqs, times, n, phase, tic, sub)
 
 
                 # ----------- Output folder ---------
@@ -217,8 +247,16 @@ def main():
                 fig.savefig(out_dir / fname, dpi=150)
                 plt.close(fig)
 
+                save_cluster_results_to_csv(
+                    cluster_results=cluster_results,
+                    freqs=freqs, times=times,
+                    out_dir=out_dir,
+                    label=f"{sub}_{phase}_{tic}",
+                )
+                print(f"[OK] Cluster results saved to CSV for {phase} | {tic}")
+
             print(f"[OK] Saved → {fname}")
-            '''
+            
             # --- 4. Permutation cluster test ---
             '''
             print(f"\n{'='*60}")
@@ -241,8 +279,8 @@ def main():
 
 
             between_cluster_results = between_cluster_stats(X1, X2, n_permutations=STAT_PARAMS['n_permutations'], tail= STAT_PARAMS['tail'], threshold = STAT_PARAMS['threshold'], correction =STAT_PARAMS['correction'])
-            '''
-            '''
+            
+            
             fig2 = plot_cluster_results(roi_tfr, between_cluster_results, freqs, times, n, phase, comparison, sub)
 
             # ----- output folder -----
@@ -253,7 +291,7 @@ def main():
             plt.close(fig2)
             '''
 
-    '''
+    
     if grand_X:
         print(f"\n{'='*60}")
         print(f"[5/5] Grand average stats: PHASE_FREE | expressed ...")
@@ -269,7 +307,7 @@ def main():
 
         # Grand average TFR for plotting (mean across all epochs)
         roi_tfr_grand = {roi: arr.mean(axis=0) for roi, arr in X_grand.items()}
-        roi_erp_grand = {roi: arr.mean(axis=1) for roi, arr in X_grand.items()}
+        #roi_erp_grand = {roi: arr.mean(axis=1) for roi, arr in X_grand.items()}
         n_total = next(iter(X_grand.values())).shape[0]
 
         # 1-sample cluster permutation test against zero
@@ -280,13 +318,15 @@ def main():
             threshold=STAT_PARAMS['threshold'],
             correction=STAT_PARAMS['correction']
         )
+        print(f"[INFO] Found {len(cluster_results_grand)} significant clusters in grand average")
+
 
         fig_grand = plot_cluster_results(
             roi_tfr_grand, cluster_results_grand,
             grand_freqs, grand_times,
             n=n_total,
             phase="PHASE_FREE", tic="expressed", sub="grand_average",
-            roi_erp=roi_erp_grand
+            #roi_erp=roi_erp_grand
         )
 
         out_dir_grand = PREPROC_DIR / "grand_average" / "stats"
@@ -295,6 +335,14 @@ def main():
         fig_grand.savefig(out_dir_grand / fname_grand, dpi=150)
         plt.close(fig_grand)
         print(f"[OK] Grand average stats saved → {out_dir_grand / fname_grand}")
+
+        save_cluster_results_to_csv(
+            cluster_results=cluster_results_grand,
+            freqs=grand_freqs, times=grand_times,
+            out_dir=out_dir_grand,
+            label="grand_average_PHASE_FREE_expressed",
+            csv_name="grand_average_clusters.csv",   # single combined file
+        )
 
 
     # ──  average of per-subject averages  ──
@@ -311,7 +359,7 @@ def main():
 
         n_subjects = len(grand_avg_tfrs)
         roi_tfr_avg  = {roi: arr.mean(axis=0) for roi, arr in X_subject_level.items()}
-        roi_erp_avg  = {roi: arr.mean(axis=1) for roi, arr in X_subject_level.items()}
+        #roi_erp_avg  = {roi: arr.mean(axis=1) for roi, arr in X_subject_level.items()}
 
         cluster_results_avg = cluster_stats(
             X_subject_level,
@@ -326,7 +374,7 @@ def main():
             grand_freqs, grand_times,
             n=n_subjects,
             phase="PHASE_FREE", tic="expressed", sub="grand_average_subjects",
-            roi_erp=roi_erp_avg
+            #roi_erp=roi_erp_avg
         )
 
         out_dir_grand = PREPROC_DIR / "grand_average" / "stats"
@@ -335,7 +383,7 @@ def main():
         fig_avg.savefig(out_dir_grand / fname_avg, dpi=150)
         plt.close(fig_avg)
         print(f"[OK] Subject-level grand average stats saved → {out_dir_grand / fname_avg}")
-        '''
+        
     if spectra_per_roi:
 
         # Stack into (n_subjects, n_freqs) per ROI
