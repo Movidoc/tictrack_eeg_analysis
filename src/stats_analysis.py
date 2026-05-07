@@ -340,10 +340,10 @@ def plot_cluster_results(roi_tfr, cluster_results, freqs, times, n, phase, tic, 
                 f"(n_freqs, n_times)=({len(freqs)}, {len(times)})"
             )
         # ===== CHANGE THE SCALE ==== #
-        vmin = -1
-        vmax = 1
-        # vmax = np.nanmax(np.abs(signal_plot))
-        # vmin = -vmax
+        # vmin = -1
+        # vmax = 1
+        vmax = np.nanmax(np.abs(signal_plot))
+        vmin = -vmax
         extent = [times[0], times[-1], freqs[0], freqs[-1]]
 
         im = ax_tfr.imshow(
@@ -404,7 +404,7 @@ def plot_cluster_results(roi_tfr, cluster_results, freqs, times, n, phase, tic, 
             orientation="vertical",
             fraction=0.02,
             pad=0.04,
-            label="Actual TFR signal"
+            label="TFR signal"
         )
 
     return fig
@@ -478,7 +478,7 @@ def plot_power_spectrum_per_roi(spectra, freqs, sub_ids, sig_bands=None):
     sub_colors = {sub: cmap(i) for i, sub in enumerate(sub_ids)}
 
     fig, axs = plt.subplots(n_rows, n_cols,
-                            figsize=(6 * n_cols, 4 * n_rows),
+                            figsize=(6 * n_cols, 5 * n_rows),
                             constrained_layout=True)
     fig.suptitle("Pre-tic power spectrum | PHASE_FREE | expressed",
                  fontsize=16, fontweight="bold")
@@ -500,20 +500,45 @@ def plot_power_spectrum_per_roi(spectra, freqs, sub_ids, sig_bands=None):
                     linewidth=1.2, alpha=0.8, label=sub_id)
 
 
-
         if sig_bands is not None and roi_name in sig_bands:
             for j, sub_id in enumerate(sub_ids):
                 if sub_id not in sig_bands[roi_name]:
                     continue
                 for band_name, (fmin, fmax) in BANDS.items():
-                    if sig_bands[roi_name][sub_id].get(band_name, False):
-                        # Place a small marker at the top of the band
+                    band_result = sig_bands[roi_name][sub_id].get(band_name, {})
+                    if band_result.get("significant", False):
                         band_center = (fmin + fmax) / 2
-                        y_pos = 0.92 - (j * 0.06)  # stagger vertically per subject
-                        ax.plot(band_center, y_pos,
-                                marker="*", color=sub_colors[sub_id],
-                                markersize=8, transform=ax.get_xaxis_transform(),
-                                clip_on=False)
+                        t_stat = band_result["t_stat"]
+
+                        if t_stat > 0:
+                            # Star above the plot — staggered per subject
+                            y_pos = 0.97 - (j * 0.07)
+                            marker = "^"  # or "*"
+                        else:
+                            # Star below the plot — staggered per subject
+                            y_pos = 0.03 + (j * 0.07)
+                            marker = "v"  # or "*"
+
+                        ax.plot(
+                            band_center, y_pos,
+                            marker="*",
+                            color=sub_colors[sub_id],
+                            markersize=10,
+                            transform=ax.get_xaxis_transform(),
+                            clip_on=False,
+                            zorder=10,
+                        )
+                        # Small arrow indicating direction
+                        ax.annotate(
+                            "↑" if t_stat > 0 else "↓",
+                            xy=(band_center, y_pos),
+                            xycoords=ax.get_xaxis_transform(),
+                            fontsize=7,
+                            color=sub_colors[sub_id],
+                            ha="center",
+                            va="bottom" if t_stat > 0 else "top",
+                            clip_on=False,
+                        )
 
         # Grand average line
         grand_mean = data.mean(axis=0)
@@ -541,3 +566,215 @@ def plot_power_spectrum_per_roi(spectra, freqs, sub_ids, sig_bands=None):
         fig.delaxes(axs_flat[j])
 
     return fig
+
+"""
+save_cluster_results.py
+-----------------------
+Helper to log significant cluster details (p-value, freq range, time range)
+to a CSV file. Drop this function into src/stats_analysis.py or import it
+directly in your main script.
+
+Usage in main script:
+    from save_cluster_results import save_cluster_results_to_csv
+
+    save_cluster_results_to_csv(
+        cluster_results=cluster_results,
+        freqs=freqs,
+        times=times,
+        out_dir=out_dir,          # Path object or string
+        label=f"{sub}_{phase}_{tic}",
+    )
+"""
+
+import numpy as np
+import pandas as pd
+from pathlib import Path
+
+"""
+save_cluster_results.py
+-----------------------
+Helper to log significant cluster details (p-value, freq range, time range)
+to a CSV file. Drop this function into src/stats_analysis.py or import it
+directly in your main script.
+
+Usage in main script:
+    from save_cluster_results import save_cluster_results_to_csv
+
+    save_cluster_results_to_csv(
+        cluster_results=cluster_results,
+        freqs=freqs,
+        times=times,
+        out_dir=out_dir,
+        label=f"{sub}_{phase}_{tic}",
+    )
+"""
+"""
+save_cluster_results.py
+-----------------------
+Helper to log significant cluster details (p-value, freq range, time range)
+to a CSV file.
+
+MNE's permutation_cluster_1samp_test returns clusters as tuples of index
+arrays, e.g. (freq_indices_array, time_indices_array). This function handles
+that format correctly.
+
+Usage in main script:
+    from save_cluster_results import save_cluster_results_to_csv
+
+    save_cluster_results_to_csv(
+        cluster_results=cluster_results,
+        freqs=freqs,
+        times=times,
+        out_dir=out_dir,
+        label=f"{sub}_{phase}_{tic}",
+    )
+"""
+
+import numpy as np
+import pandas as pd
+from pathlib import Path
+
+
+def _cluster_to_mask(clust, shape):
+    """
+    Convert an MNE cluster (tuple of index arrays) to a boolean mask.
+
+    MNE returns clusters as a tuple of arrays, one per dimension, e.g.:
+        (array([0, 0, 1, 1, ...]), array([4, 5, 4, 5, ...]))
+    which means: mask[freq_idx, time_idx] = True for each paired entry.
+
+    Parameters
+    ----------
+    clust : tuple of np.ndarray
+        MNE-style cluster index arrays.
+    shape : tuple
+        Shape of the output mask, e.g. (n_freqs, n_times).
+
+    Returns
+    -------
+    np.ndarray of bool, shape == shape
+    """
+    mask = np.zeros(shape, dtype=bool)
+    mask[clust] = True
+    return mask
+
+
+def save_cluster_results_to_csv(
+    cluster_results: dict,
+    freqs: np.ndarray,
+    times: np.ndarray,
+    out_dir,
+    label: str = "",
+    csv_name: str | None = None,
+) -> Path:
+    """
+    Save cluster details (all clusters, flagged by significance) to a CSV.
+
+    Parameters
+    ----------
+    cluster_results : dict
+        Output of cluster_stats(). Expected structure:
+            {
+              roi_name: {
+                  "T_obs":            np.ndarray,          # (n_freqs, n_times)
+                  "clusters":         [tuple, ...],        # MNE index-array tuples
+                  "cluster_pv":       np.ndarray,          # raw p-values
+                  "pvals_corrected":  np.ndarray,          # FDR-corrected p-values
+                  "reject":           np.ndarray of bool,
+                  "H0":               np.ndarray,
+              },
+              ...
+            }
+    freqs : np.ndarray
+    times : np.ndarray
+    out_dir : str | Path
+    label : str
+        Added to every row, e.g. "sub-028_PHASE_FREE_expressed".
+    csv_name : str | None
+        Overrides default filename f"clusters_{label}.csv".
+
+    Returns
+    -------
+    Path  – full path of the written CSV.
+    """
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    tfr_shape = (len(freqs), len(times))
+    rows = []
+
+    for roi, result in cluster_results.items():
+        clusters        = result.get("clusters", [])
+        pvals_corrected = result.get("pvals_corrected", [])
+        reject          = result.get("reject", [])
+        T_obs           = result.get("T_obs", None)   # (n_freqs, n_times)
+
+        if len(clusters) == 0:
+            rows.append({
+                "label":        label,
+                "roi":          roi,
+                "cluster_idx":  None,
+                "significant":  None,
+                "p_value_corr": None,
+                "direction":    None,
+                "freq_min_hz":  None,
+                "freq_max_hz":  None,
+                "time_min_s":   None,
+                "time_max_s":   None,
+                "n_freq_bins":  None,
+                "n_time_bins":  None,
+                "mean_T":       None,
+                "peak_T":       None,
+            })
+            continue
+
+        for i, (clust, p_corr, sig) in enumerate(zip(clusters, pvals_corrected, reject)):
+
+            # --- convert MNE tuple → boolean mask ---
+            mask = _cluster_to_mask(clust, tfr_shape)
+
+            freq_indices = np.where(mask.any(axis=1))[0]
+            time_indices = np.where(mask.any(axis=0))[0]
+
+            freq_min = float(freqs[freq_indices[0]])
+            freq_max = float(freqs[freq_indices[-1]])
+            time_min = float(times[time_indices[0]])
+            time_max = float(times[time_indices[-1]])
+
+            if T_obs is not None:
+                cluster_T = T_obs[mask]
+                mean_T    = float(cluster_T.mean())
+                peak_T    = float(cluster_T[np.argmax(np.abs(cluster_T))])
+                direction = "positive" if mean_T > 0 else "negative"
+            else:
+                mean_T, peak_T, direction = None, None, None
+
+            rows.append({
+                "label":        label,
+                "roi":          roi,
+                "cluster_idx":  i + 1,
+                "significant":  bool(sig),
+                "p_value_corr": round(float(p_corr), 6),
+                "direction":    direction,
+                "freq_min_hz":  round(freq_min, 2),
+                "freq_max_hz":  round(freq_max, 2),
+                "time_min_s":   round(time_min, 4),
+                "time_max_s":   round(time_max, 4),
+                "n_freq_bins":  int(len(freq_indices)),
+                "n_time_bins":  int(len(time_indices)),
+                "mean_T":       round(mean_T, 4) if mean_T is not None else None,
+                "peak_T":       round(peak_T, 4) if peak_T is not None else None,
+            })
+
+    df = pd.DataFrame(rows, columns=[
+        "label", "roi", "cluster_idx", "significant", "p_value_corr", "direction",
+        "freq_min_hz", "freq_max_hz", "time_min_s", "time_max_s",
+        "n_freq_bins", "n_time_bins", "mean_T", "peak_T",
+    ])
+
+    fname = csv_name if csv_name else f"clusters_{label}.csv"
+    fpath = out_dir / fname
+    df.to_csv(fpath, index=False)
+    n_sig = int(df["significant"].sum()) if df["significant"].notna().any() else 0
+    print(f"[OK] Cluster results saved → {fpath}  ({len(df)} rows, {n_sig} significant)")
+    return fpath

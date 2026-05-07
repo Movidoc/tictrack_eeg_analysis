@@ -90,7 +90,22 @@ def Ransac_bad_channel_detection(raw, subject_name, plots_dir: Path):
         raw.info['bads'].append('TP9')
         raw.info['bads'].append('FT9')
         raw.info['bads'].append('O1')
-
+    
+    if subject_name == 'sub-NA32':
+        # raw.info['bads'].append('Pz')
+        # raw.info['bads'].append('PO7')
+        # raw.info['bads'].append('FC5')
+        raw.info['bads'].append('AF4') # important
+        # raw.info['bads'].append('TP9')
+        # raw.info['bads'].append('FT9')
+        # raw.info['bads'].append('F5')
+        # raw.info['bads'].append('AFz')
+        raw.info['bads'].append('Fp1') #important exclusion based on the butterfly plot
+        raw.info['bads'].append('P7') # important
+        raw.info['bads'].append('F5') # important 
+        raw.info['bads'].append('FT8') #important
+        #raw.info['bads'].append('F6') 
+        raw.info['bads'].append('FCz')
     
     bad_channels = raw.info['bads']
     good_picks = mne.pick_types(raw.info, meg=False, eeg=True, exclude='bads')
