@@ -23,7 +23,8 @@ from config.config import (
     ROI_LIST_32, ROI_LIST_64,
     ROI_COLORS, ANNOTATION_COLORS, ANNOTATION_COLORS_DEFAULT
 )
-from src.manual_tic_epochs import create_tic_epochs, no_tic_gaps
+from src.manual_tic_epochs import create_tic_epochs, no_tic_gaps, plot_eo_ec_spectrum_no_tic_by_roi
+
 
 TASK   = "tictrack"
 SES    = "01"
@@ -280,6 +281,17 @@ def main():
          
         no_epochs_fif = PREPROC_DIR / sub / "tics_manual" /"no_tic" / f"{sub}_ses-01_task-tictrack_no_tic_epo.fif"
         no_tic_epochs.save(no_epochs_fif, overwrite=True)
+
+
+        # ==== Alpha spectrum for no-tic epochs by ROI ==== #
+        spectra_out_dir = PREPROC_DIR / sub / "spectra" / "no_tic_EO_EC_by_roi"
+
+        plot_eo_ec_spectrum_no_tic_by_roi(
+            no_tic_epochs = no_tic_epochs,
+            patient       = cfg,
+            patient_id    = sub,
+            out_dir       = spectra_out_dir,
+        )
 
     print("\n[DONE] All epochs saved.")
 

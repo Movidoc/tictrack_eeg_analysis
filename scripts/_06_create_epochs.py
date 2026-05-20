@@ -24,8 +24,10 @@ import mne
 from config.config import PATIENTS, PREPROC_DIR, EPOCH_EXT_PARAMS, CHANNELS_32, CHANNELS_64, ROI_LIST_32, ROI_LIST_64, ROI_COLORS, ANNOTATION_COLORS, ANNOTATION_COLORS_DEFAULT
 from src.epoch_creation import extract_random_epochs_in_phase, extract_pre_tic_epochs
 
-PHASES = ["spontaneous", "imitated", "imitated_real", "suppressed", "suppressed_real"]
+PHASES = ["PHASE_EC", "PHASE_EO", "spontaneous", "imitated", "imitated_real", "suppressed", "suppressed_real"]
 PHASE_NAME_MAP = {
+    "PHASE_EC":        "PHASE_EC",
+    "PHASE_EO":        "PHASE_EO",
     "spontaneous":     "PHASE_FREE",
     "imitated":        "PHASE_MIM",
     "imitated_real":   "PHASE_MIM",

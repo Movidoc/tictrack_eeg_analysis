@@ -26,7 +26,7 @@ from src.time_frequency_analysis import tfr_per_ROI_normalized, plot_trf_roi
 TASK   = "tictrack"
 SES    = "01"
 RUN = "01"
-PHASES = ["PHASE_FREE", "PHASE_MIM", "PHASE_SUP"]
+PHASES = ["PHASE_EO", "PHASE_EC", "PHASE_FREE", "PHASE_MIM", "PHASE_SUP"]
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -179,19 +179,19 @@ def main():
                     plt.close(fig)
 
 
-        # -- 4. Analysis for no_tic epochs ---
-        roi_tfr_nt, freqs_nt, times_nt, n_nt, _  = tfr_per_ROI_normalized(
-            patient = cfg, pre_tic_epochs = random_epochs, 
-            random_epochs = random_epochs, epoch_type='random', freqs=TFR_PARAMS["freqs"], normalization =TFR_PARAMS["normalization"] )
-        fig_nt = plot_trf_roi(roi_tfr_nt, freqs_nt, times_nt, n_nt, epoch_type='random', vmin=None, vmax=None)
+            # -- 4. Analysis for no_tic epochs ---
+            roi_tfr_nt, freqs_nt, times_nt, n_nt, _  = tfr_per_ROI_normalized(
+                patient = cfg, pre_tic_epochs = random_epochs, 
+                random_epochs = random_epochs, epoch_type='random', freqs=TFR_PARAMS["freqs"], normalization =TFR_PARAMS["normalization"] )
+            fig_nt = plot_trf_roi(roi_tfr_nt, freqs_nt, times_nt, n_nt, epoch_type='random', vmin=None, vmax=None)
 
-        # save the ouputs 
-        out_dir_nt = PREPROC_DIR / sub / "tfr" / "no_tic"
-        out_dir_nt.mkdir(parents=True, exist_ok=True)
+            # save the ouputs 
+            out_dir_nt = PREPROC_DIR / sub / "tfr" / "no_tic" / phase
+            out_dir_nt.mkdir(parents=True, exist_ok=True)
 
-        fname_nt = f"{sub}_baseline_tfr.png"
-        fig_nt.savefig(out_dir_nt / fname_nt, dpi=150)
-        plt.close(fig_nt)
+            fname_nt = f"{sub}_baseline_tfr.png"
+            fig_nt.savefig(out_dir_nt / fname_nt, dpi=150)
+            plt.close(fig_nt)
 
     # average across all patients 
     out_dir_grand = PREPROC_DIR / "grand_average" / "tfr"

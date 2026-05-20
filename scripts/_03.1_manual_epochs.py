@@ -26,7 +26,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from config.config import EPOCH_EXT_PARAMS, DATASET_DIR, PREPROC_DIR, PATIENTS, PHASES_TTL
 from src.manual_tic_epochs import no_tic_gaps,  create_tic_epochs
-
 TASK = "tictrack"
 SES = "01"
 RUN = "01"
@@ -138,6 +137,7 @@ def main():
             })
         no_tic_epochs.metadata = no_tic_metadata
         print(f"[DEBUG] no_tic_epochs tmax = {no_tic_epochs.tmax}")
+
 
         # # --- Print epoch counts per phase ---
         print("\n[INFO] No-tic epoch counts per phase:")
