@@ -165,12 +165,17 @@ def plot_cluster_results_before(roi_tfr, cluster_results, freqs, times, n, phase
 
         # Symmetric color scale around 0
         # ===== CHANGE THE SCALE ==== #
-        vmin = -1
-        vmax = 1
-        # vmax = np.nanmax(np.abs(signal_plot))
-        # vmin = -vmax
+        # vmin = -1
+        # vmax = 1
+        global_vmax = max(
+        np.nanmax(np.abs(signal_plot))
+        for signal_plot in signal_plots.values()
+        )
 
-        extent = [times[0], times[-1], freqs[0], freqs[-1]]
+        vmin = -global_vmax
+        vmax = global_vmax
+
+        
 
         # -------------------------------
         # 2. Plot actual TFR signal
@@ -276,7 +281,7 @@ def between_cluster_stats(X1, X2, n_permutations=1024, threshold = None, tail=0,
     return cluster_results
 
 # ======== PLOTTING ERP ======== #
-def plot_cluster_results(roi_tfr, cluster_results, freqs, times, n, phase, tic, sub,
+def plot_cluster_results_wrongscaling(roi_tfr, cluster_results, freqs, times, n, phase, tic, sub,
                          roi_erp=None):
     """
     Plot actual TFR signal with significant clusters contoured.
@@ -408,7 +413,163 @@ def plot_cluster_results(roi_tfr, cluster_results, freqs, times, n, phase, tic, 
         )
 
     return fig
+def plot_cluster_results(roi_tfr, cluster_results, freqs, times, n, phase, tic, sub,
+                         roi_erp=None):
+    """
+    Plot actual TFR signal with significant clusters contoured.
+    If roi_erp is provided, an ERP (mean ± SEM) is plotted beneath each TFR panel.
 
+    Color scale is shared across ROIs within the same figure.
+    """
+
+    roi_names = list(roi_tfr.keys())
+    n_rois = len(roi_names)
+    n_cols = 3
+    n_tfr_rows = 2
+
+    # -------------------------------------------------
+    # Prepare all TFRs first
+    # -------------------------------------------------
+    signal_plots = {}
+
+    for roi_name in roi_names:
+        signal = roi_tfr[roi_name]
+
+        if signal.ndim == 3:
+            signal_plot = signal.mean(axis=0)
+        elif signal.ndim == 2:
+            signal_plot = signal
+        else:
+            raise ValueError(
+                f"{roi_name}: expected 2D or 3D array, got shape {signal.shape}"
+            )
+
+        if signal_plot.shape != (len(freqs), len(times)):
+            raise ValueError(
+                f"{roi_name}: signal shape {signal_plot.shape} does not match "
+                f"(n_freqs, n_times)=({len(freqs)}, {len(times)})"
+            )
+
+        signal_plots[roi_name] = signal_plot
+
+    # -------------------------------------------------
+    # Shared symmetric color scale across all ROIs
+    # -------------------------------------------------
+    global_vmax = max(
+        np.nanmax(np.abs(signal_plot))
+        for signal_plot in signal_plots.values()
+    )
+
+    vmin = -global_vmax
+    vmax = global_vmax
+
+    # -------------------------------------------------
+    # Create figure
+    # -------------------------------------------------
+    if roi_erp is not None:
+        fig, axs = plt.subplots(
+            n_tfr_rows * 2, n_cols,
+            figsize=(18, 14),
+            constrained_layout=True,
+            gridspec_kw={"height_ratios": [3, 1, 3, 1]}
+        )
+    else:
+        fig, axs = plt.subplots(2, 3, figsize=(18, 10), constrained_layout=True)
+
+    fig.suptitle(f"{sub} | {phase} | {tic} | n={n}", fontsize=18, fontweight="bold")
+
+    im = None
+    extent = [times[0], times[-1], freqs[0], freqs[-1]]
+
+    for i, roi_name in enumerate(roi_names):
+        col = i % n_cols
+        tfr_row_block = (i // n_cols) * (2 if roi_erp is not None else 1)
+
+        ax_tfr = axs[tfr_row_block, col]
+
+        signal_plot = signal_plots[roi_name]
+
+        # -------------------------------------------------
+        # Plot TFR using shared scale
+        # -------------------------------------------------
+        im = ax_tfr.imshow(
+            signal_plot,
+            cmap="RdBu_r",
+            extent=extent,
+            aspect="auto",
+            origin="lower",
+            vmin=vmin,
+            vmax=vmax
+        )
+
+        # -------------------------------------------------
+        # Significant cluster contours
+        # -------------------------------------------------
+        clusters = cluster_results[roi_name]["clusters"]
+        reject = cluster_results[roi_name]["reject"]
+
+        sig_mask = np.zeros_like(signal_plot, dtype=bool)
+
+        for cluster, signif in zip(clusters, reject):
+            if signif:
+                sig_mask[cluster] = True
+
+        if sig_mask.any():
+            ax_tfr.contour(
+                times,
+                freqs,
+                sig_mask,
+                levels=[0.5],
+                colors="black",
+                linewidths=2
+            )
+
+        n_sig = np.sum(reject)
+        ax_tfr.set_title(f"{roi_name} | sig clusters: {n_sig}")
+        ax_tfr.set_xlabel("Time (s)")
+        ax_tfr.set_ylabel("Frequency (Hz)")
+        ax_tfr.axvline(0, color="k", linestyle="--", linewidth=0.8)
+
+        # -------------------------------------------------
+        # ERP panel
+        # -------------------------------------------------
+        if roi_erp is not None and roi_name in roi_erp:
+            ax_erp = axs[tfr_row_block + 1, col]
+            _plot_erp_panel(ax_erp, roi_erp[roi_name], times, roi_name)
+
+    # -------------------------------------------------
+    # Hide unused axes
+    # -------------------------------------------------
+    all_axes = axs.flatten()
+    n_axes_per_roi = 2 if roi_erp is not None else 1
+
+    used_indices = set()
+    for i in range(n_rois):
+        col = i % n_cols
+        tfr_row_block = (i // n_cols) * n_axes_per_roi
+        used_indices.add(tfr_row_block * n_cols + col)
+
+        if roi_erp is not None:
+            used_indices.add((tfr_row_block + 1) * n_cols + col)
+
+    for j, ax in enumerate(all_axes):
+        if j not in used_indices:
+            fig.delaxes(ax)
+
+    # -------------------------------------------------
+    # Shared colorbar
+    # -------------------------------------------------
+    if im is not None:
+        fig.colorbar(
+            im,
+            ax=axs,
+            orientation="vertical",
+            fraction=0.02,
+            pad=0.04,
+            label="TFR signal"
+        )
+
+    return fig
 
 def _plot_erp_panel(ax, erp_data, times, roi_name):
     """

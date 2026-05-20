@@ -265,3 +265,180 @@ def compute_start_to_key_d_delays(df, max_delay=3.0, same_phase=True):
         })
 
     return pd.DataFrame(results)
+
+
+def plot_alpha_spectrum_eo_ec_no_tic_by_roi(
+    no_tic_epochs: mne.Epochs,
+    patient,
+    patient_id: str,
+    out_dir: Path,
+    fmin: float = 2.0,
+    fmax: float = 30.0,
+    alpha_band: tuple[float, float] = (8.0, 12.0),
+):
+    """
+    Plot power spectrum for no-tic epochs during eyes open and eyes closed,
+    separately for each ROI.
+
+    For each ROI, the function:
+    - selects ROI channels
+    - selects PHASE_EO and PHASE_EC no-tic epochs
+    - computes Welch PSD
+    - averages across epochs and ROI channels
+    - plots EO vs EC spectrum
+    - prints mean alpha power difference
+    """
+
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    if no_tic_epochs.metadata is None:
+        print("[SKIP] no_tic_epochs has no metadata.")
+        return
+
+    if "phase" not in no_tic_epochs.metadata.columns:
+        print("[SKIP] no_tic_epochs metadata does not contain a 'phase' column.")
+        return
+
+    # Select ROI list based on montage
+    if patient.montage == "standard_1020":
+        roi_lists = ROI_LIST_32
+    elif patient.montage == "standard_1005":
+        roi_lists = ROI_LIST_64
+    else:
+        raise ValueError(f"Unknown montage: {patient.montage}")
+
+    # Select no-tic EO and EC epochs once
+    eo_epochs_all = no_tic_epochs[
+        no_tic_epochs.metadata["phase"].values == "PHASE_EO"
+    ]
+
+    ec_epochs_all = no_tic_epochs[
+        no_tic_epochs.metadata["phase"].values == "PHASE_EC"
+    ]
+
+    if len(eo_epochs_all) == 0:
+        print(f"[SKIP] No PHASE_EO no-tic epochs for {patient_id}.")
+        return
+
+    if len(ec_epochs_all) == 0:
+        print(f"[SKIP] No PHASE_EC no-tic epochs for {patient_id}.")
+        return
+
+    print(f"[INFO] {patient_id}: EO no-tic epochs = {len(eo_epochs_all)}")
+    print(f"[INFO] {patient_id}: EC no-tic epochs = {len(ec_epochs_all)}")
+
+    results = []
+
+    for roi_name, roi_channels in roi_lists.items():
+
+        available_roi_channels = [
+            ch for ch in roi_channels
+            if ch in no_tic_epochs.ch_names
+        ]
+
+        if len(available_roi_channels) == 0:
+            print(f"[SKIP] {patient_id} | {roi_name}: no available channels.")
+            continue
+
+        print(f"\n[INFO] Processing ROI: {roi_name}")
+        print(f"[INFO] Channels used: {available_roi_channels}")
+
+        eo_epochs = eo_epochs_all.copy().pick(available_roi_channels)
+        ec_epochs = ec_epochs_all.copy().pick(available_roi_channels)
+
+        # Compute PSD
+        psd_eo = eo_epochs.compute_psd(
+            method="welch",
+            fmin=fmin,
+            fmax=fmax,
+            picks=available_roi_channels,
+            verbose=False,
+        )
+
+        psd_ec = ec_epochs.compute_psd(
+            method="welch",
+            fmin=fmin,
+            fmax=fmax,
+            picks=available_roi_channels,
+            verbose=False,
+        )
+
+        freqs = psd_eo.freqs
+
+        # Shape: epochs x channels x freqs
+        power_eo = psd_eo.get_data()
+        power_ec = psd_ec.get_data()
+
+        # Average across epochs and channels
+        mean_eo = power_eo.mean(axis=(0, 1))
+        mean_ec = power_ec.mean(axis=(0, 1))
+
+        # Log-transform for visualization
+        mean_eo_log = np.log10(mean_eo)
+        mean_ec_log = np.log10(mean_ec)
+
+        # Alpha band summary
+        alpha_mask = (freqs >= alpha_band[0]) & (freqs <= alpha_band[1])
+
+        alpha_eo = mean_eo_log[alpha_mask].mean()
+        alpha_ec = mean_ec_log[alpha_mask].mean()
+        alpha_diff = alpha_ec - alpha_eo
+
+        print(f"[RESULT] {patient_id} | {roi_name} | alpha EO: {alpha_eo:.4f}")
+        print(f"[RESULT] {patient_id} | {roi_name} | alpha EC: {alpha_ec:.4f}")
+        print(f"[RESULT] {patient_id} | {roi_name} | EC - EO: {alpha_diff:.4f}")
+
+        results.append({
+            "subject": patient_id,
+            "roi": roi_name,
+            "n_eo_epochs": len(eo_epochs),
+            "n_ec_epochs": len(ec_epochs),
+            "channels": ", ".join(available_roi_channels),
+            "alpha_eo_log10": alpha_eo,
+            "alpha_ec_log10": alpha_ec,
+            "alpha_ec_minus_eo_log10": alpha_diff,
+        })
+
+        # Plot
+        fig, ax = plt.subplots(figsize=(8, 5))
+
+        ax.plot(freqs, mean_eo_log, label=f"Eyes open no-tic, n={len(eo_epochs)}")
+        ax.plot(freqs, mean_ec_log, label=f"Eyes closed no-tic, n={len(ec_epochs)}")
+
+        ax.axvspan(
+            alpha_band[0],
+            alpha_band[1],
+            alpha=0.2,
+            label="Alpha band 8-12 Hz"
+        )
+
+        ax.set_title(f"{patient_id}: {roi_name} spectrum during no-tic epochs")
+        ax.set_xlabel("Frequency (Hz)")
+        ax.set_ylabel("Log10 power")
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+
+        safe_roi_name = str(roi_name).replace(" ", "_").replace("/", "-")
+
+        fname = (
+            f"{patient_id}_ses-{SES}_task-{TASK}"
+            f"_no_tic_EO_vs_EC_{safe_roi_name}_alpha_spectrum.png"
+        )
+
+        fig.savefig(out_dir / fname, dpi=150, bbox_inches="tight")
+        plt.close(fig)
+
+        print(f"[OK] Saved ROI spectrum plot -> {fname}")
+
+    # Save summary CSV
+    if results:
+        results_df = pd.DataFrame(results)
+
+        csv_name = (
+            f"{patient_id}_ses-{SES}_task-{TASK}"
+            f"_no_tic_EO_vs_EC_alpha_by_roi.csv"
+        )
+
+        results_df.to_csv(out_dir / csv_name, index=False)
+        print(f"\n[OK] Saved ROI alpha summary -> {csv_name}")

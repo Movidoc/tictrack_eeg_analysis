@@ -50,7 +50,6 @@ def tfr_per_ROI_normalized(patient, pre_tic_epochs, random_epochs, epoch_type='p
 
 
 
-
     # Choose ROI and channels based on montage
     if patient.montage == "standard_1020":
         channels_to_use = channels_to_use_32
