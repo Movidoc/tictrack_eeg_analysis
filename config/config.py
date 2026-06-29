@@ -167,20 +167,6 @@ DATASET_DIR = BASE_DIR / "dataset"
 DERIVATIVES_DIR = DATASET_DIR / "derivatives"
 PREPROC_DIR = DERIVATIVES_DIR / "preproc"
 
-# --- 4. PIPELINE PARAMETERS ---
-PIPE_PARAMS = {
-    "sampling_rate": 1000,      # Hz
-    "l_freq": 1.0,              # High-pass filter
-    "h_freq": 100.0,            # Low-pass filter
-    "notch_freq": 50.0,         # Line noise
-    "epoch_windows": {
-        "t_tic": [-2.0, 1.0],
-        "t_urge": [-3.0, 0.0],
-        "t_mimic": [-2.0, 1.0],
-        "t_kp": [-1.0, 1.0]
-    },
-    "baseline": (-1.5, -1.0),   # Baseline period for TFR
-}
 
 # --- 3. TRIGGER DEFINITION (Integers) ---
 
@@ -265,6 +251,7 @@ def build_phases_ttl(ttl_labels: dict) -> dict:
 
 PHASES_TTL = build_phases_ttl(TTL_LABELS)
 
+
 # --- 6. PATIENT REGISTRY ---
 
 PATIENTS = {
@@ -325,6 +312,71 @@ PATIENTS = {
     sub_id="sub-SC31",
     vhdr_path= DATASET_DIR / "sub-SC31" / "ses-01"/ "eeg"/ "sub-SC31_task-tictrack.vhdr",
     excel_path=DATASET_DIR / "sub-SC31" / "ses-01"/ "excel"/ "sub-SC31_task-tictrack.xlsx",
+    fps=30,
+    montage="standard_1005", # 64 electrodes
+    #eog_chs=["VEOG", "HEOG"],
+    #ecg_ch="ECG",
+    #rename_chs={"FP1": "Fp1"},   # example if needed
+    bads=[],
+    notes="",
+    ),
+
+    "sub-CM33": SubjectConfig(
+    sub_id="sub-CM33",
+    vhdr_path= DATASET_DIR / "sub-CM33" / "ses-01"/ "eeg"/ "sub-CM33_task-tictrack.vhdr",
+    excel_path=DATASET_DIR / "sub-CM33" / "ses-01"/ "excel"/ "sub-CM33_task-tictrack.xlsx",
+    fps=30,
+    montage="standard_1005", # 64 electrodes
+    #eog_chs=["VEOG", "HEOG"],
+    #ecg_ch="ECG",
+    #rename_chs={"FP1": "Fp1"},   # example if needed
+    bads=[],
+    notes="",
+    ),
+
+    # "sub-NA32": SubjectConfig(
+    # sub_id="sub-NA32",
+    # vhdr_path= DATASET_DIR / "sub-NA32" / "ses-01"/ "eeg"/ "sub-NA32_task-tictrack.vhdr",
+    # excel_path=DATASET_DIR / "sub-NA32" / "ses-01"/ "excel"/ "sub-NA32_task-tictrack.xlsx",
+    # fps=30,
+    # montage="standard_1005", # 64 electrodes
+    # #eog_chs=["VEOG", "HEOG"],
+    # #ecg_ch="ECG",
+    # #rename_chs={"FP1": "Fp1"},   # example if needed
+    # bads=[],
+    # notes="",
+    # ),
+
+    "sub-GS38": SubjectConfig(
+    sub_id="sub-GS38",
+    vhdr_path= DATASET_DIR / "sub-GS38" / "ses-01"/ "eeg"/ "sub-GS38_task-tictrack.vhdr",
+    excel_path=DATASET_DIR / "sub-GS38" / "ses-01"/ "excel"/ "sub-GS38_task-tictrack.xlsx",
+    fps=30,
+    montage="standard_1005", # 64 electrodes
+    #eog_chs=["VEOG", "HEOG"],
+    #ecg_ch="ECG",
+    #rename_chs={"FP1": "Fp1"},   # example if needed
+    bads=[],
+    notes="",
+    ),
+
+    "sub-GS3812": SubjectConfig(
+    sub_id="sub-GS3812",
+    vhdr_path= DATASET_DIR / "sub-GS3812" / "ses-01"/ "eeg"/ "sub-GS3812_task-tictrack.vhdr",
+    excel_path=DATASET_DIR / "sub-GS3812" / "ses-01"/ "excel"/ "sub-GS3812_task-tictrack.xlsx",
+    fps=30,
+    montage="standard_1005", # 64 electrodes
+    #eog_chs=["VEOG", "HEOG"],
+    #ecg_ch="ECG",
+    #rename_chs={"FP1": "Fp1"},   # example if needed
+    bads=[],
+    notes="",
+    ),
+
+    "sub-GS3813": SubjectConfig(
+    sub_id="sub-GS3813",
+    vhdr_path= DATASET_DIR / "sub-GS3813" / "ses-01"/ "eeg"/ "sub-GS3813_task-tictrack.vhdr",
+    excel_path=DATASET_DIR / "sub-GS3813" / "ses-01"/ "excel"/ "sub-GS3813_task-tictrack.xlsx",
     fps=30,
     montage="standard_1005", # 64 electrodes
     #eog_chs=["VEOG", "HEOG"],
@@ -400,11 +452,12 @@ PREPROC_PARAMS = {
 Manually identified ICA components to exclude for each subject. This is based on visual inspection of the ICA decomposition and may be updated after further review.
 """
 ICA_EXCLUSIONS = {
-    "sub-BB28": [0, 1, 2, 4, 5, 7, 9, 11, 13, 15, 16, 18, 19],
-    "sub-BC29": [0, 1, 3, 7, 8, 9, 10, 11, 12, 16, 17, 18],
-    "sub-DS26": [0, 1, 3, 6, 7, 8, 9, 11, 15, 16, 17, 18],
-    "sub-MM30": [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 15, 17 ],
-    "sub-SC31": [0, 1, 4, 5, 7, 9, 10, 11, 12, 13, 14, 15, 19],
+    "sub-BB28": [0, 1, 2, 6, 7, 8, 10, 11, 12, 14, 15, 19],
+    "sub-BC29": [0, 1, 5, 6, 7, 8, 11, 12, 13, 15, 16, 17, 18, 19],
+    "sub-DS26": [0, 1, 4, 5, 6, 7, 10, 12, 16, 19 ],
+    "sub-MM30": [0, 1, 3, 4, 5, 7, 8, 9, 10, 14, 17, 19 ],
+    "sub-SC31": [0, 1, 2, 3, 4, 5, 6, 9, 12, 14, 15, 16, 17, 18, 19 ],
+    "sub-CM33":[0, 1, 2, 3, 4, 5, 6, 9, 12, 14, 15, 16, 17, 18, 19],
 }
 
 # --- 11. PRE-TIC EXCTRACTION ---
@@ -424,12 +477,13 @@ TIC_EXT_PARAMS = {
 # --- 12. EPOCH EXTRACTION ---
 
 EPOCH_EXT_PARAMS = {
-    "random_n_epochs" : 50,
-    "random_epoch_duration" : 2.5,
+    "random_epoch_duration" : 4,
     "pre_seconds" : 3.0,
     "post_seconds" : 3.0,
     "epoch_duration" : 2.0,
+    "random_epoch_duration" : 3.0,
     "min_gap" : 2.0,
+    "urge_dur": 2.0,
 }
 # --- 13. TIME-FREQUENCY ANALYSIS
 TFR_PARAMS = {
@@ -440,6 +494,13 @@ TFR_PARAMS = {
 
 }
 
+# --- 14. STATISTICAL ANALYSIS
+STAT_PARAMS = {
+    'threshold': None,
+    'n_permutations': 1024, 
+    'tail' : 0, # two-sided 
+    'correction': None,
+}
 
 if __name__ == "__main__":
     print(f"[INFO] Configuration file loaded successfully.")
