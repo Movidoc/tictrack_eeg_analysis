@@ -3,8 +3,9 @@
 # Author: Martyna
 # ---------------------------------------------- #
 """
-After the inspection of the events TTLs & excel annotations the start and end of each tic was manually annotated. We will use the start of the tic as the center of the epoch. However, we will study the signal precedeing the tic onset. 
+After the inspection of the events TTLs & excel annotations the start and end of each tic/urge was manually annotated. We will use the start of the tic/urge as the center of the epoch. However, we will study the signal precedeing the tic/urge onset. 
 For the ICA we will use the gaps in between the tics to make sure we do not reject muscle or eye signal present during the tic. We find artefacts in the signal that does not capture the tic signal.
+To control for the posterior alpha power we will compare the power spectrum of the no tic epochs during eyes open and eyes closed phases, separately for each ROI. We expect to see stronger alpha power during eyes closed than eyes open, especially in posterior ROIs. This will be a sanity check that our no tic epochs capture expected physiological differences between EO and EC states.
 """
 import numpy as np
 import mne
@@ -116,7 +117,7 @@ def create_tic_epochs(raw, tics_df, phase_boundaries  = None):
             continue
 
         phase_tics = tics_df[tics_df["phase"]== phase]
-        print(f"phase={phase}, n_tics={len(phase_tics)}")  # ← add this
+        print(f"phase={phase}, n_tics={len(phase_tics)}")  
         
         for _, column in phase_tics.iterrows():
             epochs_onsets.append(column["start"])

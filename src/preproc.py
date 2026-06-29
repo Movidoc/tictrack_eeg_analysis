@@ -1,8 +1,7 @@
 
 # ---------------------------------------------------- 
 # Function: Pre-processing of EEG data
-# Author: Martyna Siatka 
-# Module: scr/preprocessing.py
+# Author: Martyna  
 # Goal: Functions for the full pre-processing pipeline, each result is saved in the plots directory for visual inspection.
 # ----------------------------------------------------
 import matplotlib
@@ -221,11 +220,10 @@ def apply_ICA(epochs_ica, raw, subject_name:str, ica_exclusions: dict, plots_dir
 
     return raw
 
-
+"""
 def local_Autoreject(epochs, subject_name, plots_dir: Path):
     """
     Applies the Autoreject algorithm to the epochs to identify and correct bad epochs and channels.
-    Used only on epochs 
     """
     n_epochs = len(epochs)
     
@@ -252,6 +250,7 @@ def local_Autoreject(epochs, subject_name, plots_dir: Path):
     plt.close(fig)
 
     return epochs_clean
+"""
 
 def apply_rest_reference(raw, subject_name, plots_dir: Path):
     """
