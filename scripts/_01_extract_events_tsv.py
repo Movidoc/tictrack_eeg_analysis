@@ -1,6 +1,6 @@
 
 # ❀ ---------------------------------------------- ❀
-# Project : 01_extract_events_tsv.py
+# Script : 01_extract_events_tsv.py
 # Author  : LizbethMG
 # Goal: Extract TTL events from BrainVision .vhdr files and save as BIDS-like events.tsv
 # ❀ ---------------------------------------------- ❀
