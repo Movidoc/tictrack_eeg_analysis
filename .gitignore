@@ -42,3 +42,9 @@ _04_Movidoc_full_pipeline_analysis_patients.py
 _05_Movidoc_tictrack_urge_extraction_function.py
 _06_Movidoc_tictrack_TFR_functions.py
 Exploratory_Analysis_MS/
+.DS_Store
+scripts/_03.1_manual_epochs.py
+scripts/_04_preprocess.py
+scripts/_05_exctract_epochs.py
+scripts/_06.1_plot_epochs.py
+scripts/_06_create_epochs.py
