@@ -49,3 +49,4 @@ scripts/_05_exctract_epochs.py
 scripts/_06.1_plot_epochs.py
 scripts/_06_create_epochs.py
 scripts/.DS_Store
+scr/.DS_Store
