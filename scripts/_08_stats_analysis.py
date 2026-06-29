@@ -1,9 +1,20 @@
 # ---------------------------------------------- #
+# Script: _08_stats_analysis.py
 # Function: Statistical analysis of TFR results
 # Author: Martyna Siatka
 # -------------------------------------------- #
 """"
-For each condition and each ROI we will do the statistical test to find the clusters that show statistically significance difference across time and frequency
+This script performs statistical analysis on time-frequency representations (TFRs)
+of tic-related vs. baseline EEG epochs, per subject, phase, ROI, and condition.
+For each subject it:
+1. Loads preprocessed epochs for tic and no-tic intervals.
+2. Computes TFRs for tic epochs normalized by no-tic epochs, per ROI.
+3. Performs permutation cluster tests against zero for each phase/condition.
+4. Performs between-condition cluster tests (e.g. mimicked vs expressed).
+5. Performs power spectrum analysis for predefined frequency bands with multiple comparison correction.
+6. Plots significant clusters on TFRs and saves results.
+
+Finally, it aggregates data across subjects for grand average stats and plots.
 """
 
 from __future__ import annotations
