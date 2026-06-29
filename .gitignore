@@ -37,3 +37,5 @@ derivatives
 01_Movidoc_tictrack_prepro.py
 Movidoc_tictrack_prepro_TTL_extraction_patients_functions
 _03_Movidoc_tictrack_tic_extraction_patients.py
+data/
+_04_Movidoc_full_pipeline_analysis_patients.py
