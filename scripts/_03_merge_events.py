@@ -1,10 +1,15 @@
-# ❀ ---------------------------------------------- ❀
-# Project : TicTrack EEG - Premonitory Urge & Tic Suppression
-# Author  : Martyna
-# Module  : scripts/04_merge_events.py
-# Goal    : Merge EEG TTL events and Excel tic annotations
-#           into one tidy .tsv file with event, time, phase
-# ❀ ---------------------------------------------- ❀
+# -----------------------------------------------------------
+# Script: _03_merge_events.py
+# Function: Merge EEG TTL events and Excel tic annotations into one tidy .tsv file with event, time, phase
+# Author: Martyna 
+# ------------------------------------------------------------
+"""
+Merging EEG TTL events with tics extracted from the Excel file. 
+The rules of the tic extraction are defined in the extract_tics_from_excel function in excel_tic_extraction.py.
+Creating one file with TTL events and tic events, sorted by time, and with the phase label for each event.
+Further, adding annotations (TTLs and EXCEL) to the raw data for visual inspection and later usage in the analysis.
+Here, we also create a file with the delay between KEY_D and the start of each tic, which will be used in the analysis to check if tics are more likely to occur after a certain delay from the KEY_D event.
+"""
 
 from __future__ import annotations
 
@@ -20,7 +25,7 @@ import matplotlib.pyplot as plt
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from config.config import PATIENTS, PREPROC_DIR, PHASES_TTL, TTL_MAP
-from src.helper_functions import plot_raw, compute_start_to_key_d_delays
+from src.helper_functions import plot_raw, compute_key_d_to_start_delays
 from src.excel_tic_extraction import extract_tics_from_excel
 
 
@@ -74,7 +79,7 @@ def get_phase(time: float, phases_dict: dict) -> str | None:
 def add_annotations(raw: mne.io.BaseRaw, df: pd.DataFrame):
     """
     Add annotations from merged events (TTL & EXCEL) to the raw recalibrated data.
-    Visual feedback was added as a control and will not be needed in the analysis. That is why, for cleaner data we will ommit it in the annotations in the raw data.
+    Visual feedback (FB) was added as a control and will not be needed in the analysis. That is why, for cleaner data we will ommit it in the annotations in the raw data.
     """
     # --- Remove FB_ events ---
     df_clean = df[~df["event"].str.startswith("FB_")].copy()
@@ -195,7 +200,7 @@ def main():
 
 
         # ===== CALCULATE THE DIFFERENCE BETWEEN D & START_ ==== #
-        pairs = compute_start_to_key_d_delays(df, max_delay=3.0)
+        pairs = compute_key_d_to_start_delays(df, max_delay=3.0)
         out_path = out_dir / f"{sub}_ses-01_task-tictrack_start_diff.tsv"
         pairs.to_csv(out_path, sep="\t", index=False)
         print(f"[OK] Saved start to KEY_D differences: {out_path}")
