@@ -1,7 +1,27 @@
 # ------------------------------------------------ #
+# Script: _07_TFR_analysis.py
 # Function: Time_Frequency Analysis
 # Author: Martyna
 # ------------------------------------------------ #
+
+"""
+This runs a time-frequency (TFR) analysis pipeline for tic-related EEG data, per subject, phase, and tic type.
+
+For each subject it:
+  1. Loads pre-computed "tic" epochs (time-locked to premonitory urge onsets report or tic start) and "no-tic" epochs
+     (baseline segments), both with metadata containing "phase" and "tic_type".
+  2. For each experimental phase (PHASE_EO, PHASE_EC, PHASE_FREE, PHASE_MIM, PHASE_SUP):
+       - selects matching no-tic epochs to use as a baseline 
+       - for each tic type, selects the corresponding tic epochs and computes a
+         normalized TFR per ROI (tfr_per_ROI_normalized), comparing tic vs. baseline
+       - plots and saves the averaged TFR per phase/tic-type, plus a plot for every
+         single epoch individually
+       - computes and saves a TFR for the no-tic/baseline epochs themselves
+  3. Collects PHASE_FREE | "expressed" tic results across subjects to build:
+       - a grand average TFR (mean of per-subject TFRs)
+       - a grand concatenated average TFR (mean across all epochs from all subjects)
+     and saves both as summary plots.
+"""
 
 from __future__ import annotations
 
