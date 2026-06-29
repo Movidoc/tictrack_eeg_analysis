@@ -1,7 +1,8 @@
 # -----------------------------------------------------------
-# Function: realingn the Excel file times with EEG recording times (based on the green led)
-# Author: Martyna (structure) & Indira (code)
-# Goal: to create a new Excel file with the realigned times
+# Script: _02_realign_excel_eeg.py
+# Function: Realign the Excel file times with EEG recording times (based on the green led)
+# Author: Martyna 
+# Goal: Realign the EEG data to the green led and collect all the TTLs.
 # ------------------------------------------------------------
 
 """
